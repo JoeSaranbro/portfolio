@@ -19,7 +19,7 @@ const Login = ( {setUser} ) => {
 
 
   return (
-    <div className='flex justify-center absolute top-1/2 left-1/2 -translate-x-1/2 bg-red'>
+    <div className='flex justify-center absolute top-1/2 left-1/2 -translate-x-1/2 bg-black'>
     <section className='section'>
       <form className='form' onSubmit={handleSubmit}>
         <h5>login</h5>
