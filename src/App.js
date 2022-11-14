@@ -9,6 +9,7 @@ import { ButtonAddNums } from "./FunctionsDetail"
 import { MapPrac } from "./FunctionsDetail"
 import  {CRUD}  from "./FunctionsDetail"
 import  Functions  from "./Functions"
+import { HashRouter } from 'react-router-dom'
 
 
 
@@ -18,7 +19,7 @@ function App() {
   const [user,setUser] =useState(null)
   return (
     <div className="flex flex-col flex-wrap">
-       <BrowserRouter>
+       <HashRouter>
       <Routes>
       <Route path='/'  element={<SharedLayout />} >
           <Route index   element={<Home />} />
@@ -37,7 +38,7 @@ function App() {
           <Route path='*'         element={<Error />} /> */}
          </Route>
       </Routes>
-      </BrowserRouter> 
+      </HashRouter> 
       
       
 
