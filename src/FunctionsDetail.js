@@ -171,7 +171,7 @@ export function CRUD(){
     
      
   }
-
+  
   function closeModal() {
     setCurrentId([currentId,])
     setEdit([""])
@@ -242,31 +242,7 @@ export function CRUD(){
  }
  
  
-  //สำรอง 
-//   const confirmEdit = (e) => {
-//     if (newTask == "") {
-//       alert("This field can not be blank.")
-//       e.preventDefault()
-//     } else {
-//       const updatedData = todoList.map((obj) => {
-//         if (obj.id === currentId[1]) {
-//           return { ...obj, taskName: newTask };
-//         } else return obj;
-//       })
-//       setTodoList(updatedData);
-//       console.log(updatedData)
-//       e.preventDefault()
-//       setNewTask("");
-      
-//       setEditIsOpen(false);
-//     }
-    
-//     setTodoList([...todoList, todoList.find(findId => findId.id === currentId[1]).taskName = newTask]);
-//      const findId = todoList.find(findId => findId.id === currentId[1])
-//      console.log(todoList.find(findId => findId.id === currentId[1]).taskName)
-//      const tt = todoList.filter((task) => task.id == currentId[1]);
-   
-//  }
+  
   
  
   const handleDelete = (id) => {
@@ -279,9 +255,10 @@ export function CRUD(){
      setDeleteIsOpen(false);
   }
   
+  
 
   return(
-    <div>
+    <div className="border-b-4 border-white-500 pb-4">
       <div className="flex pt-2">
         <div className="TitleofFunction">3.CRUD Function</div>
         <div className="sticky left-1/2 -translate-x-1/2">
@@ -304,7 +281,7 @@ export function CRUD(){
                 <p>{task.taskName}</p>
                   <div className="grid grid-cols-2 mx-auto"> 
                     <button type = "button" onClick={() => handleEdit(task.id)} className="text-white w-24 h-11 border-4 border-white rounded-lg flex"><img src={editbtn} width="24px" className="mt-1 ml-1"></img><p className="ml-4 pt-1 font-medium text-xl">Edit</p></button> 
-                    <button type = "button" onClick={() => handleDelete(task.id)} className="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 w-24 h-11 rounded-lg mr-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900"><p className="text-xl font-medium">Delete</p></button>
+                    <button type = "button" onClick={() => handleDelete(task.id)} className="text-white bg-red-700 hover:bg-red-800  w-24 h-11 rounded-lg mr-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 "><p className="text-xl font-medium">Delete</p></button>
                     
                   </div>
               </div>

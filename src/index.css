@@ -16,7 +16,49 @@ margin-left: 1rem;
 
 }
 
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  padding-top: 100px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  
+}
 
+/* Modal Content */
+.modal-content {  
+  height: 100vh;
+  max-height: 32rem;
+  max-width: 34rem;
+  background-color: #0F0F0F;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  
+}
+
+/* The Close Button */
+.close {
+  color: white;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  background-color: whitesmoke;
+  text-decoration: none;
+  cursor: pointer;
+}
 
 
 @layer components{
@@ -32,6 +74,8 @@ margin-left: 1rem;
   .inputTodoDetails{
     @apply bg-zinc-800 rounded-lg outline-0 pl-1.5 
   }
-  
+  .btnGray{
+   @apply text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700
+  }
 
 }
