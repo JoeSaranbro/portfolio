@@ -16,6 +16,7 @@ margin-left: 1rem;
 
 }
 
+/* Modal */
 .modal {
   display: none; /* Hidden by default */
   position: fixed; /* Stay in place */
@@ -44,7 +45,7 @@ margin-left: 1rem;
   
 }
 
-/* The Close Button */
+/* Start The Close Button */
 .close {
   color: white;
   float: right;
@@ -59,6 +60,58 @@ margin-left: 1rem;
   text-decoration: none;
   cursor: pointer;
 }
+/* End The Close Button */
+/* Start Fade In Animation*/
+.text {
+  position:relative;
+  overflow:hidden;
+  margin:0 auto;
+  font-size: 5em; 
+}
+.fadingEffect {
+  position:absolute;
+  top:0; bottom:0; right:0;
+  width:0%;
+  background:#0F0F0F;
+  /*background:#0F0F0F;*/
+  -moz-animation: showHide 5s ease-in alternate ; /* Firefox */
+  -webkit-animation: showHide 5s ease-in alternate ; /* Safari and Chrome */
+  -ms-animation: showHide 5s ease-in alternate ; /* IE10 */
+  -o-animation: showHide 5s ease-in alternate ; /* Opera */
+  animation: showHide 5s ease-in alternate ;
+}
+@-webkit-keyframes showHide { /* Chrome, Safari */
+  0% {width:100%}
+  40% {width:0%}
+  60% {width:0%;}
+  100% {width:0%;}
+}
+@-moz-keyframes showHide { /* FF */
+  0% {width:0%}
+  40% {width:0%}
+  60% {width:0%;}
+  100% {width:0%;}
+}
+@-ms-keyframes showHide { /* IE10 */
+  0% {width:100%}
+  40% {width:0%}
+  60% {width:0%;}
+  100% {width:0%;}
+}
+@-o-keyframes showHide { /* Opera */
+  0% {width:100%}
+  40% {width:0%}
+  60% {width:0%;}
+  100% {width:0%;}
+}
+@keyframes showHide {
+  0% {width:100%}
+  40% {width:0%}
+  60% {width:0%;}
+  100% {width:0%;}
+}
+
+/* End Fade In Animation*/
 
 
 @layer components{

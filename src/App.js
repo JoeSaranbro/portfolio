@@ -22,7 +22,7 @@ function App() {
        <BrowserRouter>
       <Routes>
       <Route path='/'  element={<SharedLayout />} >
-          <Route index   element={<Home />} />
+          <Route index path="portfolio"   element={<Home />} />
           <Route path='mapprac'    element={<MapPrac />} />
           <Route path='btnaddnums' element={<ButtonAddNums />} />
           <Route path='crud' element={<CRUD />} />

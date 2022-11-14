@@ -1,11 +1,14 @@
 const Home = () => {
   return (
-    <>
-    
-    <section className='section'>
-      <h2>Home Page</h2>
-    </section>
-    </>
+    <div>
+      <div className="header">
+        <div class="text">Welcome to my Portfolio.
+        <div class="fadingEffect"></div>
+        </div>
+        <div></div>
+      </div>
+   
+    </div>
   );
 };
 export default Home;

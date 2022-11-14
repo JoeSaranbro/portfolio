@@ -1,5 +1,7 @@
 import {NavLink} from 'react-router-dom'
 import logo from './fb_profile.jpg';
+import reactIcon from './logo192.png'
+
 const StyledNavbar = () => {
   const checkIfActive = ({isActive}) => {
     return isActive?'underline bg-slate-600 rounded-lg px-2 py-2':'hover:bg-slate-600 rounded-lg px-2 py-2'
@@ -10,8 +12,8 @@ const StyledNavbar = () => {
       <div className=''>
         <div className=''>
           <ul className='flex gap-10 pt-3 ml-4' >
-            <li><img src={logo} class='h-11 w-auto' alt="Logo"/></li>
-            <li><NavLink to='/' className={checkIfActive}>Home</NavLink></li>
+            <li><img src={reactIcon} class='h-11 w-auto' alt="Logo"/></li>
+            <li><NavLink to='/portfolio' className={checkIfActive}>Home</NavLink></li>
             <li><NavLink to='/mapprac' className={checkIfActive}>Map Practice</NavLink></li>
             <li><NavLink to='/btnaddnums' className={checkIfActive}>Button Add Numbers</NavLink></li>
             <li><NavLink to='/crud' className={checkIfActive}>CRUD</NavLink></li>
