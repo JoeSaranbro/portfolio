@@ -62,12 +62,21 @@ margin-left: 1rem;
 }
 /* End The Close Button */
 /* Start Fade In Animation*/
-.text {
+.text-welcome {
   position:relative;
   overflow:hidden;
   margin:0 auto;
   font-size: 5em; 
 }
+.text-name {
+  position:relative;
+  /* background-color: white; */
+  overflow:hidden;
+  margin-top: 1cm;
+  margin-left: 3cm;
+  font-size: 3em; 
+}
+
 .fadingEffect {
   position:absolute;
   top:0; bottom:0; right:0;
@@ -112,6 +121,35 @@ margin-left: 1rem;
 }
 
 /* End Fade In Animation*/
+
+/* Start Arrow Fade In Left Animation*/
+.fadein-left {
+  position:relative;
+  animation:animateleft 2.2s ease-in alternate infinite;
+}
+@keyframes animateleft{
+  0%{left:-100px;opacity:0} 
+  70%{left:50px;opacity:1}
+  100%{left:50px;opacity:1}
+}
+
+/* End Arrow Fade In Left Animation*/
+
+/* Start Profile_pic Fade In Bottom Animation*/
+.fadein-bottom {
+  position:relative;
+  animation:animatebottom 1.3s;
+  animation-fill-mode: both;
+}
+@keyframes animatebottom{
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to { opacity: 1 }
+}
+
+/* End Profile_pic Fade In Bottom Animation*/
 
 
 @layer components{
