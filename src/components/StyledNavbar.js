@@ -14,9 +14,7 @@ const StyledNavbar = () => {
           <ul className='flex gap-10 pt-3 ml-4' >
             <li><img src={reactIcon} class='h-11 w-auto' alt="Logo"/></li>
             <li><NavLink to='/portfolio' className={checkIfActive}>Home</NavLink></li>
-            <li><NavLink to='/mapprac' className={checkIfActive}>Map Practice</NavLink></li>
-            <li><NavLink to='/btnaddnums' className={checkIfActive}>Button Add Numbers</NavLink></li>
-            <li><NavLink to='/crud' className={checkIfActive}>CRUD</NavLink></li>
+            <li><NavLink to='/portfolio_2' className={checkIfActive}>Portfolio_2</NavLink></li>
             <li><NavLink to='/functions' className={checkIfActive}>Functions</NavLink></li>
             <li><NavLink to='/login' className={checkIfActive}>Login</NavLink></li>
           </ul>

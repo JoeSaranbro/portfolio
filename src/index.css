@@ -144,6 +144,35 @@ img {
 
 /* End Arrow Fade In Left Animation*/
 
+/* Start Arrow Fade In Up Animation*/
+.fadein-up-arrow {
+  opacity: 0;
+  position:relative;
+  animation:animateup 2.5s ease-in alternate infinite;
+  
+  
+}
+@keyframes animateup{
+  0%{left:25px;bottom:0px;opacity:0} 
+  70%{left:25px;bottom:70px;opacity:1}
+  100%{left:25px;bottom:70px;opacity:1}
+}
+
+.fadein-up-arrow-gonext {
+  opacity: 0;
+  position:relative;
+  animation:animateup-gonext 2.5s ease-in alternate infinite;
+  
+}
+@keyframes animateup-gonext{
+  0%{left:-150px;bottom:-60px;opacity:0} 
+  70%{left:-150px;bottom:-40px;opacity:1}
+  100%{left:-150px;bottom:-40px;opacity:1}
+}
+
+
+/* End Arrow Fade In Up Animation*/
+
 /* Start Profile_pic Fade In Bottom Animation*/
 .fadein-bottom {
   position:relative;
@@ -188,6 +217,10 @@ img {
   }
   }
 
+.showProj{
+  display:hidden;
+  
+}
 
 @layer components{
   .TitleofFunction{

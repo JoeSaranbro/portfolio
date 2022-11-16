@@ -9,6 +9,7 @@ import { ButtonAddNums } from "./FunctionsDetail"
 import { MapPrac } from "./FunctionsDetail"
 import  {CRUD}  from "./FunctionsDetail"
 import  Functions  from "./Functions"
+import  Portfolio_2  from "./Portfolio_2";
 
 
 
@@ -23,9 +24,7 @@ function App() {
       <Routes>
       <Route path='/'  element={<SharedLayout />} >
           <Route index path="portfolio"   element={<Home />} />
-          <Route path='mapprac'    element={<MapPrac />} />
-          <Route path='btnaddnums' element={<ButtonAddNums />} />
-          <Route path='crud' element={<CRUD />} />
+          <Route path='portfolio_2'    element={<Portfolio_2 />} />
           <Route path='functions' element={<Functions />} />
           <Route path='login' element={<Login />} /> 
           {/* <Route path='login' element={<Login setUser={setUser}></Login>} />

@@ -280,7 +280,7 @@ export function CRUD(){
               <div className="grid grid-cols-2 mt-5">
                 <p>{task.taskName}</p>
                   <div className="grid grid-cols-2 mx-auto"> 
-                    <button type = "button" onClick={() => handleEdit(task.id)} className="text-white w-24 h-11 border-4 border-white rounded-lg flex"><img src={editbtn} width="24px" className="mt-1 ml-1"></img><p className="ml-4 pt-1 font-medium text-xl">Edit</p></button> 
+                    <button type = "button" onClick={() => handleEdit(task.id)} className="text-white w-24 h-11 border-4 border-white rounded-lg flex"><img src={editbtn} className="mt-1 ml-1 w-7"></img><p className="ml-4 pt-1 font-medium text-xl">Edit</p></button> 
                     <button type = "button" onClick={() => handleDelete(task.id)} className="text-white bg-red-700 hover:bg-red-800  w-24 h-11 rounded-lg mr-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 "><p className="text-xl font-medium">Delete</p></button>
                     
                   </div>
