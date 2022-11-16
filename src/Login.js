@@ -12,6 +12,7 @@ const Login = ( {setUser} ) => {
     const handleEsc = (event) => {
       if (event.key === "Escape") {
         document.getElementById("openmodal").blur();
+        console.log(document.getElementById("openmodal"))
         setModal(false);
       }
     };
@@ -53,7 +54,7 @@ const Login = ( {setUser} ) => {
    
 
   return (
-    <div className='h-screen '>
+    <div className='h-screen'>
       <div>
       <button id="openmodal" onClick={()=> {setModal(true)}} className="btnGray">Login</button>
         <div id="myModal" className="modal" style={isModalOpen === true ? {display: "block"}:{display: "none"}}>
