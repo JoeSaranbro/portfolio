@@ -37,8 +37,8 @@ img {
   
 }
 
-/* Modal Content */
-.modal-content {  
+/* Start Modal Content Login*/
+.modal-content-login {  
   height: 100vh;
   max-height: 32rem;
   max-width: 34rem;
@@ -49,6 +49,21 @@ img {
   width: 80%;
   
 }
+/* End Modal Content Login*/
+
+/* Start Modal Content Register*/
+.modal-content-register {  
+  height: 100vh;
+  max-height: 32rem;
+  max-width: 34rem;
+  background-color: #0F0F0F;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  
+}
+/* End Modal Content Register*/
 
 /* Start The Close Button */
 .close {
@@ -238,5 +253,27 @@ img {
   .btnGray{
    @apply text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700
   }
+
+  .form-col{
+    @apply flex flex-col mt-3
+  }
+
+  .form-label{
+    @apply text-base font-bold
+  }
+
+  .form-button-login {
+    @apply bg-zinc-700 hover:bg-zinc-900 py-2 px-4 rounded font-bold
+  }
+
+  .form-button-signup {
+    @apply bg-sky-500 hover:bg-sky-700 py-2 px-4 rounded font-bold
+  }
+
+  .form-input {
+    @apply bg-zinc-700 focus:bg-black mt-2 rounded
+  }
+  
+  
 
 }
