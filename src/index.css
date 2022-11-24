@@ -40,7 +40,7 @@ img {
 /* Start Modal Content Login*/
 .modal-content-login {  
   height: 100vh;
-  max-height: 32rem;
+  max-height: 20rem;
   max-width: 34rem;
   background-color: #0F0F0F;
   margin: auto;
@@ -51,8 +51,8 @@ img {
 }
 /* End Modal Content Login*/
 
-/* Start Modal Content Register*/
-.modal-content-register {  
+/* Start Modal Content Signup*/
+.modal-content-signup {  
   height: 100vh;
   max-height: 32rem;
   max-width: 34rem;
@@ -63,7 +63,7 @@ img {
   width: 80%;
   
 }
-/* End Modal Content Register*/
+/* End Modal Content Signup*/
 
 /* Start The Close Button */
 .close {

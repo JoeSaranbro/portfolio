@@ -1,23 +1,28 @@
 import { useState ,useRef, useEffect, useContext } from 'react';
+import AuthContext from './context/AuthProvider';
 import { Link } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
 
+  const { setAuth } = useContext(AuthContext);
   const userRef = useRef();
   const errRef = useRef();
   const ref = useRef();
 
-  const [userName, setUser] = useState('');
-  const [email, setEmail] = useState('');
-  const [pwd, setPwd] = useState('');
-  const [errMsg, setErrMsg] = useState('');
+  const LoginAndSignupInitialValue = {id:"",username:"",email:"",password:""}
+  const [inputSignup, setInputSignup] = useState(LoginAndSignupInitialValue)
+  const [inputLogin, setInputLogin] = useState(LoginAndSignupInitialValue)
+  const [userName, setUser] = useState("");
+  const [email, setEmail] = useState("");
+  const [pwd, setPwd] = useState("");
+  const [errMsg, setErrMsg] = useState("");
   const [success, setSuccess] = useState(false);
   const [isSignup, setIsSignup] = useState(false);
   const [isModalOpen, setModal] = useState(false);
   
   
-  console.log("signup =  " +isSignup)
+  
   
   useEffect(() => {
     userRef.current.focus();
@@ -28,7 +33,13 @@ const Login = () => {
   }, [userName, pwd]);
 
   
- 
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+  }
+
+  const handleSignupSubmit = async (e) => {
+    e.preventDefault();
+  }
   
   
 
@@ -44,7 +55,7 @@ const Login = () => {
           </div>
           
           <div className=''>
-          <form className='form'>
+          <form onSubmit={handleLoginSubmit} className='form'>
             <div className='form-col'>
               <label htmlFor='username' className='form-label'>
                 Username/Email
@@ -54,8 +65,9 @@ const Login = () => {
                 id='username'
                 className='form-input'
                 ref={userRef}
-                value={userName}
-                onChange={(e) => setUser(e.target.value)}
+                value={inputLogin.username}
+                onChange={(e) => setInputLogin({...inputLogin,username:e.target.value})}
+                required
               />
             </div>
             <div className='form-col'>
@@ -66,8 +78,9 @@ const Login = () => {
                 type='password'
                 className='form-input'
                 id='password'
-                value={pwd}
-                onChange={(e) => setPwd(e.target.value)}
+                value={inputLogin.password}
+                onChange={(e) => setInputLogin({...inputLogin,password:e.target.value})}
+                required
               />
               <div className="mt-2 text-base text-blue-600 hover:text-blue-800 hover:underline"><Link to="/portfolio">Forgot Password?</Link></div>
             </div>
@@ -75,7 +88,7 @@ const Login = () => {
             <button type='submit' className='form-button-login'>
               <p>Login</p>
             </button>
-            <button type="button" onClick={()=> {setIsSignup(true)}} className='ml-4 form-button-signup'>
+            <button type="button" onClick={()=> {setIsSignup(true);setInputLogin(LoginAndSignupInitialValue);}} className='ml-4 form-button-signup'>
             <p>Sign up</p>
             </button>
             </div>
@@ -89,7 +102,7 @@ const Login = () => {
     const SignUpForm = () => {
       return (
       <div id="signupModal" className="modal" style={isModalOpen === true ? {display: "block"}:{display: "none"}}>
-        <div ref={ref} className="modal-content-register ">
+        <div ref={ref} className="modal-content-signup ">
           <div id="header" className='text-center'>
           <span className='text-2xl font-bold'>Sign up<span className="close rounded-lg" onClick={(e)=> {(setModal(false))(setIsSignup(false))}}>&times;</span></span>
           
@@ -97,7 +110,7 @@ const Login = () => {
           </div>
           
           <div className=''>
-          <form className='form'>
+          <form onSubmit={handleSignupSubmit} className='form'>
             <div className='form-col'>
               <label htmlFor='username' className='form-label'>
                 Username
@@ -107,8 +120,9 @@ const Login = () => {
                 id='username'
                 className='form-input'
                 ref={userRef}
-                value={userName}
-                onChange={(e) => setUser(e.target.value)}
+                value={inputSignup.username}
+                onChange={(e) => setInputSignup({...inputSignup,username:e.target.value})}
+                required
               />
             </div>
             <div className='form-col'>
@@ -120,8 +134,9 @@ const Login = () => {
                 id='email'
                 className='form-input'
                 ref={userRef}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={inputSignup.email}
+                onChange={(e) => setInputSignup({...inputSignup,email:e.target.value})}
+                required
               />
             </div>
             <div className='form-col'>
@@ -132,12 +147,13 @@ const Login = () => {
                 type='password'
                 className='form-input'
                 id='password'
-                value={pwd}
-                onChange={(e) => setPwd(e.target.value)}
+                value={inputSignup.password}
+                onChange={(e) => setInputSignup({...inputSignup,password:e.target.value})}
+                required
               />
             </div>
             <div className='mt-4'>
-            <button onClick={()=> {setIsSignup(false)}} type='submit' className='form-button-login'>
+            <button onClick={()=> {setIsSignup(false);setInputSignup(LoginAndSignupInitialValue)}} type='submit' className='form-button-login'>
               <p>Back to Login</p>
             </button>
             <button onClick={(e)=> {e.preventDefault()}} className='ml-4 form-button-signup'>
@@ -154,9 +170,10 @@ const Login = () => {
     const handleEsc = (event) => {
       if (event.key === "Escape") {
         document.getElementById("openmodal").blur();
-        console.log(document.getElementById("openmodal"))
         setModal(false);
         setIsSignup(false);
+        setInputLogin(LoginAndSignupInitialValue)
+        setInputSignup(LoginAndSignupInitialValue)
       }
     };
   
@@ -164,6 +181,8 @@ const Login = () => {
       if (!ref.current.contains(event.target)) {
         setModal(false);
         setIsSignup(false);
+        setInputLogin(LoginAndSignupInitialValue)
+        setInputSignup(LoginAndSignupInitialValue)
        // console.log(ref)
         
       }
@@ -171,11 +190,11 @@ const Login = () => {
   
     useEffect(() => {
       document.addEventListener("keydown", handleEsc, true);
-      document.addEventListener("click", handleClickOutside, true);
+      document.addEventListener("mousedown", handleClickOutside, true);
       document.addEventListener("touchend", handleClickOutside, true);
       return () => {
         document.removeEventListener("keydown", handleEsc, true);
-        document.removeEventListener("click", handleClickOutside, true);
+        document.removeEventListener("mousedown", handleClickOutside, true);
         document.removeEventListener("touchend", handleClickOutside, true);
       };
     });
@@ -194,7 +213,9 @@ const Login = () => {
     <div className='h-screen'>
       <div>
       <button id="openmodal" onClick={()=> setModal(true)} className="btnGray">Login</button>
-      {isSignup ? <SignUpForm/>:<LoginForm/>}
+      {isSignup ? SignUpForm():LoginForm()}
+      
+
       
       
       

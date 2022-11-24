@@ -150,12 +150,11 @@ export function CRUD(){
 
   const handleChange = (event) => {
     setNewTask(event.target.value);
-    
   }
   //----Set up Modal----- >
   Modal.setAppElement('#root');
   
-  
+  console.count("crud");
 
   
 
