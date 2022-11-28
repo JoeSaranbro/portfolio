@@ -31,7 +31,7 @@ const Portfolio_2 = () => {
                         <p className='pl-4'><span className='font-bold text-3xl underline align-top'>Language:</span><span className='inline-block text-2xl'> Thai-Native<br/> English-Intermediate <br/>(TOEIC 635)</span> </p>
                     </div>
                     <div className='my-2'>
-                        <p className='pl-4'><span className='font-bold text-3xl underline align-top'>Github:</span><span className='inline-block text-2xl ml-4'> <a href='https://github.com/JoeSaranbro/portfolio' className='text-blue-600 dark:text-blue-500 hover:underline'>github.com/JoeSaranbro/portfolio</a></span> </p>
+                        <p className='pl-4'><span className='font-bold text-3xl underline align-top'>Github:</span><span className='inline-block text-2xl ml-4'> <a href='https://github.com/JoeSaranbro/portfolio/tree/J1' className='text-blue-600 dark:text-blue-500 hover:underline'>github.com/JoeSaranbro/portfolio</a></span> </p>
                         <p className='pl-4 mt-4'><span className='font-bold text-3xl underline align-top'>Contact:</span><span className='inline-block text-2xl ml-4'> Tel. 095-114-9151 <br/>  E-mail: sarankunsutha@gmail.com</span> </p>
                     </div>
                 </div>
