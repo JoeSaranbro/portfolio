@@ -13,6 +13,7 @@ body{
 
 .content {
 margin-left: 1rem;
+margin-right: 1rem;
 }
 
 img {
@@ -274,6 +275,13 @@ img {
     @apply bg-zinc-700 focus:bg-black mt-2 rounded
   }
   
-  
+  .item {
+    @apply border-b-2 border-white pb-4
+    
+  }
+  .item-title {
+    @apply font-bold text-xl 
+    
+  }
 
 }

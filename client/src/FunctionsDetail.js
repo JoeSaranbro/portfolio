@@ -34,7 +34,7 @@ export function ButtonAddNums() {
     //     return <User name={user.name} age={user.age} />
     //   })}
     <div className="">
-      <div className="border-b-4 border-white-500 pb-4">
+      <div className="border-b-4 border-white pb-4">
         <div className="grid grid-cols-3 text-2xl ">
           <div className="TitleofFunction">1.Button Number Function</div>
           <div className=""><p class="text-center font-bold">Numbers Count <span class="text-4xl" style={{color: random}}>&nbsp;&nbsp;{count}</span></p> </div>
@@ -101,7 +101,7 @@ export function MapPrac(){
         //cannamedwhatever.isGasPlanet === true ?  gasplanets.push(cannamedwhatever.name) : nongasplanets.push(cannamedwhatever.name)
       })}
 
-          <div className="border-b-4 border-white-500 pb-3">
+          <div className="border-b-4 border-white pb-3">
             <div className="TitleofFunction">2.Map Practice </div>
               <div className="grid grid-cols-3 gap-4 pt-3">
               <div className="">
@@ -257,7 +257,7 @@ export function CRUD(){
   
 
   return(
-    <div className="border-b-4 border-white-500 pb-4">
+    <div className="border-b-4 border-white pb-4">
       <div className="flex pt-2">
         <div className="TitleofFunction">3.CRUD Function</div>
         <div className="sticky left-1/2 -translate-x-1/2">
@@ -298,9 +298,9 @@ export function CRUD(){
                 <form>
                   <div className="">
                     <div className="">
-                      <p className="font-bold text-2xl text-white">Delete Confirmation</p>
+                      <p className="font-bold text-2xl text-white pl-2 pt-2">Delete Confirmation</p>
                       <hr className="border-1 border-neutral-400 mt-3"/>
-                      <p className="text-white text-xl pt-6">Are you sure you want to delete this item?</p>
+                      <p className="text-white text-xl pt-6 pl-2">Are you sure you want to delete this item?</p>
                       <hr className="border-1 border-neutral-400 mt-6"/>
                     </div>
                     <div className="flex flex-row-reverse pt-2">

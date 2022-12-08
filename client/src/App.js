@@ -1,15 +1,16 @@
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useState } from 'react';
-import {Outlet} from "react-router-dom"
+import {Outlet} from "react-router-dom";
 import SharedLayout from './SharedLayout';
 import Login from './Login';
 import Home from './Home';
-import { ButtonAddNums } from "./FunctionsDetail"
-import { MapPrac } from "./FunctionsDetail"
-import  {CRUD}  from "./FunctionsDetail"
-import  Functions  from "./Functions"
+import { ButtonAddNums } from "./FunctionsDetail";
+import { MapPrac } from "./FunctionsDetail";
+import  {CRUD}  from "./FunctionsDetail";
+import  Functions  from "./Functions";
 import  Portfolio_2  from "./Portfolio_2";
+import Todo_items from "./Todo_items";
 
 
 
@@ -26,6 +27,7 @@ function App() {
           <Route index path="portfolio"   element={<Home />} />
           <Route path='portfolio_2'    element={<Portfolio_2 />} />
           <Route path='functions' element={<Functions />} />
+          <Route path='todo_items' element={<Todo_items />} /> 
           <Route path='login' element={<Login />} /> 
           {/* <Route path='login' element={<Login setUser={setUser}></Login>} />
           <Route path='dashboard' 
