@@ -260,7 +260,7 @@ export function CRUD(){
     <div className="border-b-4 border-white pb-4">
       <div className="flex pt-2">
         <div className="TitleofFunction">3.CRUD Function</div>
-        <div className="sticky left-1/2 -translate-x-1/2">
+        <div className="sticky left-1/2 -translate-x-1/4">
           <form className="">
           <input onChange={handleChange} type="text" value={newTask} maxlength="50" className="text-black pl-2"/>
           <button onClick={addTask} type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-4 ml-4 rounded">Add Task</button>
@@ -276,11 +276,11 @@ export function CRUD(){
         <div className="">
             {todoList.map((task) => {
               return (
-              <div className="grid grid-cols-2 mt-5">
-                <p>{task.taskName}</p>
+              <div className="grid grid-cols-2 mt-5" key={task.id}>
+                <div className="qqq"><p className="break-words">{task.taskName}</p></div>
                   <div className="grid grid-cols-2 mx-auto"> 
                     <button type = "button" onClick={() => handleEdit(task.id)} className="text-white w-24 h-11 border-4 border-white rounded-lg flex"><img src={editbtn} className="mt-1 ml-1 w-7"></img><p className="ml-4 pt-1 font-medium text-xl">Edit</p></button> 
-                    <button type = "button" onClick={() => handleDelete(task.id)} className="text-white bg-red-700 hover:bg-red-800  w-24 h-11 rounded-lg mr-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 "><p className="text-xl font-medium">Delete</p></button>
+                    <button type = "button" onClick={() => handleDelete(task.id)} className="text-white bg-red-700 hover:bg-red-800  w-24 h-11 rounded-lg mr-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700"><p className="text-xl font-medium">Delete</p></button>
                     
                   </div>
               </div>
