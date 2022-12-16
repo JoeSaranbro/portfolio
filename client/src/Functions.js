@@ -5,6 +5,7 @@ import  {CRUD}  from "./FunctionsDetail"
 import { UseEffectPrac } from './UseEffectPrac'
 
 const Functions = () => {
+  
   return (
     <div className='content'>
         <div className=''><ButtonAddNums /></div>

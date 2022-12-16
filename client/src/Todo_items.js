@@ -10,15 +10,16 @@ import { BsThreeDots } from "react-icons/bs"
 
 
 const Todo_items = () => {
-  const [isSelected, setSelected] = useState("");
+  const [isSelected, setSelected] = useState(null);
   const [todoItems, setTodoItems] = useState([]);
-
+  const [editTitleModal, isETMOpen] = useState(false);
   
-
+  
  
 
 
 useEffect(() => {
+  
   const fetchAllTodoItems = async () => {
     try {
         const res = await axios.get("http://localhost:8800/todo_items")
@@ -32,36 +33,59 @@ useEffect(() => {
   
 }, []);
 
+const handleSelected = (id) => {
+ const showData = todoItems.find((k)=> k.id === id);
+ setSelected(showData);
+ 
+}
+
 
 const SelectTodoId = () => {
-  const show = todoItems.find((k)=> k.id === isSelected)
-  if (isSelected == "") {
+  
+    let id = null;
+    let title = null;
+    let details = null;
+
+  if (isSelected === null) {
     return null;
   } else {
+     id = isSelected.id
+     title = isSelected.title;
+     details = isSelected.details;
+     
     return(
-      <div className="item" show={show.id}>
+      <div className="item" key={id}>
           <div className="item-title">
-          <p>{show.title}</p>
+          <p>{title}</p>
           </div>
           <div className="item-details">
-          <p>{show.details}</p>
+          <p>{details}</p>
           </div>
   
       </div>
     )
   }
-  
+ 
   
 }
+
+
+
+
+
+
+  
+
+
 // style={isHovering ? {visibility:"visible"}:{visibility:"hidden"} }
 
   return (
       <div className='content flex w-screen'>
-      <div className="todolist-sidebar w-1/5 bg-[#555353] bg-opacity-25 mr-2">
+      <div className="todolist-sidebar w-full max-w-[18rem] bg-[#555353] bg-opacity-25 mr-2">
         
-        <div className="addTodo w-full justify-center">
-          <button className=' bg-sky-500 hover:bg-sky-700 rounded ml-12 mt-2'>
-            <p className='font-bold text-xl py-2 px-4 flex'>Add New Todo <span className='pl-2'><IoMdAddCircleOutline className='' size={30} /></span></p> 
+        <div className="addTodo flex justify-center">
+          <button className=' bg-sky-500 hover:bg-sky-700 rounded mt-2'>
+            <p className='font-bold text-xl py-2 px-4 flex'>New Todo <span className='pl-2'><IoMdAddCircleOutline className='' size={30} /></span></p> 
             </button> 
         </div>
         <div className="todo_items mt-3">
@@ -69,8 +93,8 @@ const SelectTodoId = () => {
           <div className="items ">
             {todoItems.map((todo)=> (
               <div className="flex flex-row bg-neutral-700 bg-opacity-50 mt-4 group hover:bg-neutral-600" key={todo.id} style={{cursor: "pointer"}}>
-                <div className='basis-1/12 pt-1'><GiNotebook size={30} /> </div>
-                <div className=" item-title basis-10/12 " onClick={()=> {setSelected(todo.id)}} >
+                <div className='basis-1/12 pt-1' onClick={()=> {handleSelected(todo.id)}} ><GiNotebook size={30} /> </div>
+                <div className=" item-title basis-10/12 " onClick={()=> {handleSelected(todo.id)}} >
                 <p className='pl-2 '>{todo.title}</p>
                 </div>
                 <div className="basis-1/12 my-2 invisible group-hover:visible "  ><BsThreeDots size={20}/></div>
@@ -90,6 +114,7 @@ const SelectTodoId = () => {
           {todoItems ? 
           <div className="items">
             <SelectTodoId />
+            
           </div> 
           : <div>There has no Todo Items</div>}
           

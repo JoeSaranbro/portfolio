@@ -21,7 +21,7 @@ const Login = () => {
   const [isSignup, setIsSignup] = useState(false);
   const [isModalOpen, setModal] = useState(false);
   
-  
+  console.count("l")
   
   
   useEffect(() => {
@@ -104,7 +104,7 @@ const Login = () => {
       <div id="signupModal" className="modal" style={isModalOpen === true ? {display: "block"}:{display: "none"}}>
         <div ref={ref} className="modal-content-signup ">
           <div id="header" className='text-center'>
-          <span className='text-2xl font-bold'>Sign up<span className="close rounded-lg" onClick={(e)=> {(setModal(false))(setIsSignup(false))}}>&times;</span></span>
+          <span className='text-2xl font-bold'>Sign up<span className="close rounded-lg" onClick={(e)=> {setModal(false);setIsSignup(false);}}>&times;</span></span>
           
           <hr className='mt-4 border-2'/>
           </div>
@@ -153,7 +153,7 @@ const Login = () => {
               />
             </div>
             <div className='mt-4'>
-            <button onClick={()=> {setIsSignup(false);setInputSignup(LoginAndSignupInitialValue)}} type='submit' className='form-button-login'>
+            <button onClick={()=> {setIsSignup(false);setInputSignup(LoginAndSignupInitialValue);}} type='submit' className='form-button-login'>
               <p>Back to Login</p>
             </button>
             <button onClick={(e)=> {e.preventDefault()}} className='ml-4 form-button-signup'>
@@ -167,48 +167,47 @@ const Login = () => {
     </div>
     )}
   
-    const handleEsc = (event) => {
-      if (event.key === "Escape") {
-        document.getElementById("openmodal").blur();
-        setModal(false);
-        setIsSignup(false);
-        setInputLogin(LoginAndSignupInitialValue)
-        setInputSignup(LoginAndSignupInitialValue)
-      }
-    };
-  
+    
+
+    
+    
     const handleClickOutside = (event) => {
+      
       if (!ref.current.contains(event.target)) {
         setModal(false);
         setIsSignup(false);
         setInputLogin(LoginAndSignupInitialValue)
         setInputSignup(LoginAndSignupInitialValue)
-       // console.log(ref)
         
       }
-    };
+  };
   
-    console.log('dsdsds')
+  const handleEsc = (event) => {
+    
+    if (event.key === "Escape") {
+      
+      document.getElementById("openmodal").blur();
+      setModal(false);
+      setIsSignup(false);
+      setInputLogin(LoginAndSignupInitialValue)
+      setInputSignup(LoginAndSignupInitialValue)
+      
+    }
+};
     useEffect(() => {
+      if (isModalOpen === true) {
       document.addEventListener("keydown", handleEsc, true);
       document.addEventListener("mousedown", handleClickOutside, true);
       document.addEventListener("touchend", handleClickOutside, true);
+      }
+      
       return () => {
+        
         document.removeEventListener("keydown", handleEsc, true);
         document.removeEventListener("mousedown", handleClickOutside, true);
         document.removeEventListener("touchend", handleClickOutside, true);
       };
     });
-  
-    
-  
-  
-
-  
-  
-  
- 
-   
 
   return (
     <div className='h-screen'>
@@ -216,12 +215,6 @@ const Login = () => {
       <button id="openmodal" onClick={()=> setModal(true)} className="btnGray">Login</button>
       {isSignup ? SignUpForm():LoginForm()}
       
-
-      
-      
-      
-      
-        
         </div>
       <h2>1111111111111</h2>
       

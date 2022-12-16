@@ -37,7 +37,7 @@ export function ButtonAddNums() {
       <div className="border-b-4 border-white pb-4">
         <div className="grid grid-cols-3 text-2xl ">
           <div className="TitleofFunction">1.Button Number Function</div>
-          <div className=""><p class="text-center font-bold">Numbers Count <span class="text-4xl" style={{color: random}}>&nbsp;&nbsp;{count}</span></p> </div>
+          <div className=""><p className="text-center font-bold">Numbers Count <span className="text-4xl" style={{color: random}}>&nbsp;&nbsp;{count}</span></p> </div>
           <div></div> 
             
         </div>
@@ -67,15 +67,15 @@ export function ButtonAddNums() {
 //------------------------------------------------------map practice---------------------------------------------------
 export function MapPrac(){
     const planets = [
-      { name: "Mars", isGasPlanet: false },
-      { name: "Earth", isGasPlanet: false },
-      { name: "Jupiter", isGasPlanet: true },
-      { name: "Venus", isGasPlanet: false },
-      { name: "Neptune", isGasPlanet: true },
-      { name: "Uranus", isGasPlanet: true },
-      { name: "test1", isGasPlanet: true },
-      { name: "test2", isGasPlanet: true },
-      { name: "test3", isGasPlanet: true },
+      { name: "Mars", isGasPlanet: false ,id: 0},
+      { name: "Earth", isGasPlanet: false ,id: 1},
+      { name: "Jupiter", isGasPlanet: true ,id: 2},
+      { name: "Venus", isGasPlanet: false ,id: 3},
+      { name: "Neptune", isGasPlanet: true ,id: 4},
+      { name: "Uranus", isGasPlanet: true ,id: 5},
+      { name: "test1", isGasPlanet: true ,id: 6},
+      { name: "test2", isGasPlanet: true ,id: 7},
+      { name: "test3", isGasPlanet: true ,id: 8},
     ];
     const gasplanets = []
     const nongasplanets = []
@@ -108,7 +108,7 @@ export function MapPrac(){
                   <div className="font-bold">All Planets</div>
                   <div className="">
                     <h2>{planets.map((allplanets) => {
-                      return <div>{allplanets.name} </div>
+                      return <div key={allplanets.id}>{allplanets.name} </div>
                     })}</h2>
                   </div>
                 </div>
@@ -154,12 +154,12 @@ export function CRUD(){
   //----Set up Modal----- >
   Modal.setAppElement('#root');
   
-  console.count("crud");
+  
 
   
 
-  const [deleteModalIsOpen, setDeleteIsOpen] = React.useState(false);
-  const [editModalIsOpen, setEditIsOpen] = React.useState(false);
+  const [deleteModalIsOpen, setDeleteIsOpen] = useState(false);
+  const [editModalIsOpen, setEditIsOpen] = useState(false);
 
   function openModal() {
     setDeleteIsOpen(true);
@@ -241,7 +241,7 @@ export function CRUD(){
  }
  
  
-  
+ 
   
  
   const handleDelete = (id) => {
@@ -262,7 +262,7 @@ export function CRUD(){
         <div className="TitleofFunction">3.CRUD Function</div>
         <div className="sticky left-1/2 -translate-x-1/4">
           <form className="">
-          <input onChange={handleChange} type="text" value={newTask} maxlength="50" className="text-black pl-2"/>
+          <input onChange={handleChange} type="text" value={newTask} maxLength="50" className="text-black pl-2"/>
           <button onClick={addTask} type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-4 ml-4 rounded">Add Task</button>
           </form>
         </div>
@@ -334,7 +334,7 @@ export function CRUD(){
                           name="TodoName"
                           value={newTask}
                           onChange={(e) => setNewTask(e.target.value)}
-                          maxlength="50"
+                          maxLength="50"
                           className="inputTodoName"
                           //{todoList.filter((task) => task.id == currentId[1])}
                           //onChange={e => setFirstName(e.target.value)}
@@ -351,7 +351,7 @@ export function CRUD(){
                           name="TodoDetails"
                           value={newDetails}
                           onChange={(e) => setNewDetails(e.target.value)}
-                          maxlength="500"
+                          maxLength="500"
                           className="inputTodoDetails h-full"></textarea>
                         </div>
                       </div>

@@ -12,7 +12,7 @@ const StyledNavbar = () => {
       <div className=''>
         <div className=''>
           <ul className='flex gap-10 pt-3 ml-4' >
-            <li><img src={reactIcon} class='h-11 w-auto' alt="Logo"/></li>
+            <li><img src={reactIcon} className='h-11 w-auto' alt="Logo"/></li>
             <li><NavLink to='/portfolio' className={checkIfActive}>Home</NavLink></li>
             <li><NavLink to='/portfolio_2' className={checkIfActive}>Portfolio_2</NavLink></li>
             <li><NavLink to='/functions' className={checkIfActive}>Functions</NavLink></li>
