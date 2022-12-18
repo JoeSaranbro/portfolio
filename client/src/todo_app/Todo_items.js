@@ -11,8 +11,9 @@ import { BsThreeDots } from "react-icons/bs"
 
 const Todo_items = () => {
   const [isSelected, setSelected] = useState(null);
+  const [isSelectedTitle, setSelectedTitle] = useState(null);
   const [todoItems, setTodoItems] = useState([]);
-  const [editTitleModal, isETMOpen] = useState(false);
+  const [editTitleModal, setIsETMOpen] = useState(false);
   
   
  
@@ -68,8 +69,16 @@ const SelectTodoId = () => {
  
   
 }
-
-
+  const handleThreedots = (index) => {
+    setSelectedTitle(index);
+    if (editTitleModal && index === (isSelectedTitle) || (null)) {
+      setIsETMOpen(false)
+    } else {
+      setIsETMOpen(true)
+    }
+  }
+  
+  
 
 
 
@@ -91,13 +100,25 @@ const SelectTodoId = () => {
         <div className="todo_items mt-3">
           {todoItems ? 
           <div className="items ">
-            {todoItems.map((todo)=> (
-              <div className="flex flex-row bg-neutral-700 bg-opacity-50 mt-4 group hover:bg-neutral-600" key={todo.id} style={{cursor: "pointer"}}>
+            {todoItems.map((todo , index)=> (
+              
+              <div  className="flex flex-row bg-neutral-700 bg-opacity-50 mt-4 group hover:bg-neutral-600"  style={{cursor: "pointer"}} key={todo.id}>
                 <div className='basis-1/12 pt-1' onClick={()=> {handleSelected(todo.id)}} ><GiNotebook size={30} /> </div>
                 <div className=" item-title basis-10/12 " onClick={()=> {handleSelected(todo.id)}} >
                 <p className='pl-2 '>{todo.title}</p>
                 </div>
-                <div className="basis-1/12 my-2 invisible group-hover:visible "  ><BsThreeDots size={20}/></div>
+                <div className="relative basis-1/12 my-2 pl-0.5 invisible group-hover:visible hover:hover:bg-neutral-400 rounded-md" 
+                onClick={()=>handleThreedots(index)} 
+                style={editTitleModal&& index === isSelectedTitle ? {visibility:"visible"}:{} }
+                ><BsThreeDots size={20}/>
+                <div className ="ETM hidden absolute w-32 -left-28 bg-black" style={editTitleModal&& index === isSelectedTitle ?  {display:"block"}:{}}>
+                  <ul>
+                  <li>rename</li>
+                  <li>delete</li>
+                  </ul>
+                </div>
+                  
+                </div>
                 
 
               </div>

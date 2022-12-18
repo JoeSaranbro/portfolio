@@ -3,14 +3,12 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useState } from 'react';
 import {Outlet} from "react-router-dom";
 import SharedLayout from './SharedLayout';
-import Login from './Login';
+import Login from './todo_app/Login';
 import Home from './Home';
-import { ButtonAddNums } from "./FunctionsDetail";
-import { MapPrac } from "./FunctionsDetail";
-import  {CRUD}  from "./FunctionsDetail";
+
 import  Functions  from "./Functions";
 import  Portfolio_2  from "./Portfolio_2";
-import Todo_items from "./Todo_items";
+import Todo_items from "./todo_app/Todo_items";
 
 
 

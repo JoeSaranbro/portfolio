@@ -1,5 +1,5 @@
 import { useState ,useRef, useEffect, useContext } from 'react';
-import AuthContext from './context/AuthProvider';
+import AuthContext from '../context/AuthProvider';
 import { Link } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
 
