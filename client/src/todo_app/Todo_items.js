@@ -1,5 +1,5 @@
 import React from 'react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef} from 'react'
 import axios from 'axios'
 import { IconContext } from "react-icons";
 import { IoMdAddCircleOutline } from "react-icons/io"
@@ -15,7 +15,7 @@ const Todo_items = () => {
   const [todoItems, setTodoItems] = useState([]);
   const [editTitleModal, setIsETMOpen] = useState(false);
   
-  
+  const ThreeDots = useRef();
  
 
 
@@ -39,6 +39,8 @@ const handleSelected = (id) => {
  setSelected(showData);
  
 }
+
+
 
 
 const SelectTodoId = () => {
@@ -69,9 +71,15 @@ const SelectTodoId = () => {
  
   
 }
+
+
   const handleThreedots = (index) => {
+    console.log(index)
+    console.log(isSelectedTitle)
+
     setSelectedTitle(index);
-    if (editTitleModal && index === (isSelectedTitle) || (null)) {
+    if (editTitleModal && (index == (isSelectedTitle)) ) {
+      
       setIsETMOpen(false)
     } else {
       setIsETMOpen(true)
@@ -79,6 +87,26 @@ const SelectTodoId = () => {
   }
   
   
+  const handleClickOutside = (event) => {
+      
+    if (!ThreeDots.current.contains(event.target)) {
+      setIsETMOpen(false);
+    }
+  };
+  
+  useEffect(() => {
+    if (editTitleModal === true) {
+    document.addEventListener("mousedown", handleClickOutside, true);
+    document.addEventListener("touchend", handleClickOutside, true);
+    console.log("ue run")
+    }
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside, true);
+      document.removeEventListener("touchend", handleClickOutside, true);
+      console.log("ue run return")
+    };
+  });
 
 
 
@@ -110,11 +138,11 @@ const SelectTodoId = () => {
                 <div className="relative basis-1/12 my-2 pl-0.5 invisible group-hover:visible hover:hover:bg-neutral-400 rounded-md" 
                 onClick={()=>handleThreedots(index)} 
                 style={editTitleModal&& index === isSelectedTitle ? {visibility:"visible"}:{} }
-                ><BsThreeDots size={20}/>
-                <div className ="ETM hidden absolute w-32 -left-28 bg-black" style={editTitleModal&& index === isSelectedTitle ?  {display:"block"}:{}}>
-                  <ul>
-                  <li>rename</li>
-                  <li>delete</li>
+                ref={ThreeDots} ><BsThreeDots size={20}/>
+                <div className ="ETM hidden absolute w-32 -left-28 bg-stone-900" style={editTitleModal&& index === isSelectedTitle ?  {display:"block"}:{}}>
+                  <ul className="ThreeDotsDropdown">
+                  <li className="">Rename</li>
+                  <li className="">Delete</li>
                   </ul>
                 </div>
                   

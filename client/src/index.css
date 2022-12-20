@@ -281,5 +281,8 @@ img {
     @apply font-bold text-xl 
     
   }
+   .ThreeDotsDropdown li { 
+    @apply pl-2 hover:bg-stone-600 h-7
 
+  }
 }
