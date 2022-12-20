@@ -10,12 +10,15 @@ import { BsThreeDots } from "react-icons/bs"
 
 
 const Todo_items = () => {
-  const [isSelected, setSelected] = useState(null);
+  const [isSelectedDetails, setSelectedDetails] = useState(null);
   const [isSelectedTitle, setSelectedTitle] = useState(null);
   const [todoItems, setTodoItems] = useState([]);
   const [editTitleModal, setIsETMOpen] = useState(false);
   
-  const ThreeDots = useRef();
+  const threeDotsRef = useRef(new Array());
+  
+
+ 
  
 
 
@@ -36,7 +39,7 @@ useEffect(() => {
 
 const handleSelected = (id) => {
  const showData = todoItems.find((k)=> k.id === id);
- setSelected(showData);
+ setSelectedDetails(showData);
  
 }
 
@@ -49,12 +52,12 @@ const SelectTodoId = () => {
     let title = null;
     let details = null;
 
-  if (isSelected === null) {
+  if (isSelectedDetails === null) {
     return null;
   } else {
-     id = isSelected.id
-     title = isSelected.title;
-     details = isSelected.details;
+     id = isSelectedDetails.id
+     title = isSelectedDetails.title;
+     details = isSelectedDetails.details;
      
     return(
       <div className="item" key={id}>
@@ -74,38 +77,41 @@ const SelectTodoId = () => {
 
 
   const handleThreedots = (index) => {
-    console.log(index)
-    console.log(isSelectedTitle)
-
+    
+    
     setSelectedTitle(index);
-    if (editTitleModal && (index == (isSelectedTitle)) ) {
+    if (editTitleModal && (index === (isSelectedTitle)) ) {
       
       setIsETMOpen(false)
     } else {
       setIsETMOpen(true)
     }
+    
+    
   }
   
-  
   const handleClickOutside = (event) => {
-      
-    if (!ThreeDots.current.contains(event.target)) {
+    
+    if (!threeDotsRef.current[isSelectedTitle].contains(event.target)) {
       setIsETMOpen(false);
+      console.log('chk')
     }
   };
   
   useEffect(() => {
+    
     if (editTitleModal === true) {
-    document.addEventListener("mousedown", handleClickOutside, true);
+    document.addEventListener("click", handleClickOutside, true);
     document.addEventListener("touchend", handleClickOutside, true);
-    console.log("ue run")
+    
     }
     
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside, true);
+      document.removeEventListener("click", handleClickOutside, true);
       document.removeEventListener("touchend", handleClickOutside, true);
-      console.log("ue run return")
+      
     };
+    
   });
 
 
@@ -136,10 +142,12 @@ const SelectTodoId = () => {
                 <p className='pl-2 '>{todo.title}</p>
                 </div>
                 <div className="relative basis-1/12 my-2 pl-0.5 invisible group-hover:visible hover:hover:bg-neutral-400 rounded-md" 
-                onClick={()=>handleThreedots(index)} 
-                style={editTitleModal&& index === isSelectedTitle ? {visibility:"visible"}:{} }
-                ref={ThreeDots} ><BsThreeDots size={20}/>
-                <div className ="ETM hidden absolute w-32 -left-28 bg-stone-900" style={editTitleModal&& index === isSelectedTitle ?  {display:"block"}:{}}>
+                onClick={()=>(handleThreedots(index))} 
+                style={(editTitleModal) && (index === isSelectedTitle) ? {visibility:"visible"}:{} }
+                ref={(element)=> threeDotsRef.current.push(element)} 
+                >
+                <BsThreeDots size={20}/>
+                <div className ="ETM hidden absolute w-32 -left-28 bg-stone-900" style={(editTitleModal) && (index === isSelectedTitle) ?  {display:"block"}:{}} >
                   <ul className="ThreeDotsDropdown">
                   <li className="">Rename</li>
                   <li className="">Delete</li>
