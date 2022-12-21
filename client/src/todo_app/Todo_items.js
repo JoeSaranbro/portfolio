@@ -115,7 +115,7 @@ const SelectTodoId = () => {
   });
 
 
-
+console.count(1)
 
   
 
@@ -149,7 +149,7 @@ const SelectTodoId = () => {
                 <BsThreeDots size={20}/>
                 <div className ="ETM hidden absolute w-32 -left-28 bg-stone-900" style={(editTitleModal) && (index === isSelectedTitle) ?  {display:"block"}:{}} >
                   <ul className="ThreeDotsDropdown">
-                  <li className="">Rename</li>
+                  <li className="" onClick={()=> console.log("q")}>Rename</li>
                   <li className="">Delete</li>
                   </ul>
                 </div>

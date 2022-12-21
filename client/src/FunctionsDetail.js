@@ -141,7 +141,7 @@ export function MapPrac(){
 }
 //---------------------------------------------------------CRUD---------------------------------------------
 export function CRUD(){
-  const [checkDelete, setCheckDelete] = useState(false);
+  
   const [currentId, setCurrentId] = useState();
   const [todoList, setTodoList] = useState([]);
   const [newTask, setNewTask] = useState("");
@@ -262,7 +262,7 @@ export function CRUD(){
         <div className="TitleofFunction">3.CRUD Function</div>
         <div className="sticky left-1/2 -translate-x-1/4">
           <form className="">
-          <input onChange={handleChange} type="text" value={newTask} maxLength="50" className="text-black pl-2"/>
+          <input onChange={handleChange} type="text" value={editModalIsOpen?"":newTask} maxLength="50" className="text-black pl-2"/>
           <button onClick={addTask} type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-4 ml-4 rounded">Add Task</button>
           </form>
         </div>
