@@ -94,25 +94,26 @@ const SelectTodoId = () => {
     
     if (!threeDotsRef.current[isSelectedTitle].contains(event.target)) {
       setIsETMOpen(false);
-      console.log('chk')
+      
     }
   };
   
   useEffect(() => {
     
-    if (editTitleModal === true) {
+    
     document.addEventListener("click", handleClickOutside, true);
     document.addEventListener("touchend", handleClickOutside, true);
     
-    }
+    
     
     return () => {
       document.removeEventListener("click", handleClickOutside, true);
       document.removeEventListener("touchend", handleClickOutside, true);
       
+      
     };
     
-  });
+  },[editTitleModal]);
 
 
 console.count(1)

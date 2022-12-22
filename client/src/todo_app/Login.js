@@ -9,7 +9,7 @@ const Login = () => {
   const userRef = useRef();
   const errRef = useRef();
   const ref = useRef();
-
+  
   const LoginAndSignupInitialValue = {id:"",username:"",email:"",password:""}
   const [inputSignup, setInputSignup] = useState(LoginAndSignupInitialValue)
   const [inputLogin, setInputLogin] = useState(LoginAndSignupInitialValue)
@@ -20,6 +20,8 @@ const Login = () => {
   const [success, setSuccess] = useState(false);
   const [isSignup, setIsSignup] = useState(false);
   const [isModalOpen, setModal] = useState(false);
+
+  
   
   console.count("l")
   
@@ -169,8 +171,18 @@ const Login = () => {
   
     
 
+    const handleEsc = (event) => {
     
-    
+      if (event.key === "Escape") {
+        
+        document.getElementById("openmodal").blur();
+        setModal(false);
+        setIsSignup(false);
+        setInputLogin(LoginAndSignupInitialValue)
+        setInputSignup(LoginAndSignupInitialValue)
+        
+      }
+  };
     const handleClickOutside = (event) => {
       
       if (!ref.current.contains(event.target)) {
@@ -182,25 +194,18 @@ const Login = () => {
         
       }
   };
-  
-  const handleEsc = (event) => {
     
-    if (event.key === "Escape") {
-      
-      document.getElementById("openmodal").blur();
-      setModal(false);
-      setIsSignup(false);
-      setInputLogin(LoginAndSignupInitialValue)
-      setInputSignup(LoginAndSignupInitialValue)
-      
-    }
-};
+
     useEffect(() => {
-      if (isModalOpen === true) {
-      document.addEventListener("keydown", handleEsc, true);
-      document.addEventListener("mousedown", handleClickOutside, true);
-      document.addEventListener("touchend", handleClickOutside, true);
+      
+      
+      if (isModalOpen) {
+          document.addEventListener("keydown", handleEsc, true);
+          document.addEventListener("mousedown", handleClickOutside, true);
+          document.addEventListener("touchend", handleClickOutside, true);
       }
+      
+      
       
       return () => {
         
@@ -208,7 +213,7 @@ const Login = () => {
         document.removeEventListener("mousedown", handleClickOutside, true);
         document.removeEventListener("touchend", handleClickOutside, true);
       };
-    });
+    },[isModalOpen]);
 
   return (
     <div className='h-screen'>
@@ -217,7 +222,7 @@ const Login = () => {
       {isSignup ? SignUpForm():LoginForm()}
       
         </div>
-      <h2>1111111111111</h2>
+      
       
     </div>
   );

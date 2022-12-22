@@ -321,9 +321,7 @@ export default function CRUD2(){
   const handleDelete = (id) => {
     setCurrentId([currentId,id])
     setDeleteIsOpen(true);
-    
   }
-  
   const confirmDelete = () => {
      setTodoList(todoList.filter((task) => task.id !== currentId[1]));
      setDeleteIsOpen(false);
