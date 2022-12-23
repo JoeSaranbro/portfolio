@@ -5,6 +5,7 @@ import { IconContext } from "react-icons";
 import { IoMdAddCircleOutline } from "react-icons/io"
 import { GiNotebook } from "react-icons/gi"
 import { BsThreeDots } from "react-icons/bs"
+import useAxios from './useAxios';
 
 
 
@@ -12,30 +13,41 @@ import { BsThreeDots } from "react-icons/bs"
 const Todo_items = () => {
   const [isSelectedDetails, setSelectedDetails] = useState(null);
   const [isSelectedTitle, setSelectedTitle] = useState(null);
-  const [todoItems, setTodoItems] = useState([]);
+  const [todoItems, setTodoItems] = useState(null);
   const [editTitleModal, setIsETMOpen] = useState(false);
   
   const threeDotsRef = useRef(new Array());
   
+  
 
+  
+ 
+  const { data, isLoading, error, setError } = useAxios("http://localhost:8800/todo_items")
+
+  
+  console.log("error")
+  console.log(error)
+  console.log("--------------")
+  console.log("data")
+  console.log(data)
+  useEffect(()=> {
+
+  if (data && error === null) {
+    setError("There has no todo item!")
+  } else if(data !== null){
+    
+    setTodoItems(data)
+  }
+  
+  },[ data, error ])
+  
+  
  
  
 
 
-useEffect(() => {
-  
-  const fetchAllTodoItems = async () => {
-    try {
-        const res = await axios.get("http://localhost:8800/todo_items")
-        setTodoItems(res.data);
-        
-    } catch (err) {
-        console.log(err)
-    }
-  };
-  fetchAllTodoItems();
-  
-}, []);
+
+
 
 const handleSelected = (id) => {
  const showData = todoItems.find((k)=> k.id === id);
@@ -77,11 +89,8 @@ const SelectTodoId = () => {
 
 
   const handleThreedots = (index) => {
-    
-    
     setSelectedTitle(index);
     if (editTitleModal && (index === (isSelectedTitle)) ) {
-      
       setIsETMOpen(false)
     } else {
       setIsETMOpen(true)
@@ -91,11 +100,14 @@ const SelectTodoId = () => {
   }
   
   const handleClickOutside = (event) => {
-    
-    if (!threeDotsRef.current[isSelectedTitle].contains(event.target)) {
-      setIsETMOpen(false);
-      
+    if (editTitleModal) {
+
+      if (!threeDotsRef.current[isSelectedTitle].contains(event.target)) {
+        setIsETMOpen(false);
+        
+      }
     }
+    
   };
   
   useEffect(() => {
@@ -116,7 +128,7 @@ const SelectTodoId = () => {
   },[editTitleModal]);
 
 
-console.count(1)
+
 
   
 
@@ -162,7 +174,7 @@ console.count(1)
               
             ))}
           </div> 
-          : <div>There has no Todo Items</div>}
+          : <div>{error}</div>}
           
         </div>
       </div>
@@ -174,7 +186,7 @@ console.count(1)
             <SelectTodoId />
             
           </div> 
-          : <div>There has no Todo Items</div>}
+          : <div> {error} </div>}
           
         </div>
       </div>

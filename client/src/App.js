@@ -10,6 +10,7 @@ import  Functions  from "./Functions";
 import  Portfolio_2  from "./Portfolio_2";
 import Todo_items from "./todo_app/Todo_items";
 import CRUD2 from "./FunctionsDetail copy";
+import Prac_React from './todo_app/prac/Prac_React';
 
 
 
@@ -28,7 +29,7 @@ function App() {
           <Route path='functions' element={<Functions />} />
           <Route path='todo_items' element={<Todo_items />} /> 
           <Route path='login' element={<Login />} /> 
-          <Route path='funcdetails' element={<CRUD2 />} /> 
+          <Route path='prac_react' element={<Prac_React />} /> 
           {/* <Route path='login' element={<Login setUser={setUser}></Login>} />
           <Route path='dashboard' 
           element={
