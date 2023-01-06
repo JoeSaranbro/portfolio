@@ -2,14 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-html,body {
-  width: 100%;
+html, body, #root, .App {
   height: 100%;
 }
+
 body{
   background-color: #0F0F0F;
   color:white;
-  
 }
 
 .content {

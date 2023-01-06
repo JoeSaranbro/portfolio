@@ -3,27 +3,40 @@ import axios from 'axios'
 const useFetch = (url) => {
     const [data, setData] = useState(null)
     const [isLoading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
+    const [error, setError] = useState([])
     useEffect(() => {
-  
-        const fetchAllItems = async () => {
+          
+     setTimeout(() => {
+        const fetchData = async () => {
           try {
-              const res = await axios.get(url)
+              const res =  await axios.get(url)
               if (res.data.errno) {
-                setError("Something went wrong")
+                setLoading(false)
+                setError(res.data.code)
+                
+              } else if (res.data.fatal === false)  {
+                setLoading(false)
+                setError(res.data.code)
               } else {
+                setLoading(false)
                 setData(res.data);
               }
               
               
-          } catch (err) {
-              setError(err)
-              console.log(error)
+          } catch (error) {
+              setLoading(false)
+              setError(error.message)
+            
+              
           }
         };
-        fetchAllItems();
+        fetchData();
+      }, 1000);
+        
+        
         
       }, [url]);
+      
 
   return { data, isLoading, error, setError }
 }

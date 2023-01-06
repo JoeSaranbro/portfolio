@@ -11,7 +11,6 @@ const Functions = () => {
         <div className=''><ButtonAddNums /></div>
         <div className=''><MapPrac /></div>
         <div className=''><CRUD /></div>
-        <div className=''><UseEffectPrac /></div>
     </div>
   )
 }

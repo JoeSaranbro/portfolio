@@ -30,14 +30,19 @@ const Todo_items = () => {
   console.log("--------------")
   console.log("data")
   console.log(data)
+  console.log("--------------")
+  console.log("loading")
+  console.log(isLoading)
   useEffect(()=> {
-
-  if (data && error === null) {
-    setError("There has no todo item!")
-  } else if(data !== null){
-    
-    setTodoItems(data)
+  if (data !== null) {
+    if(data.length !== 0){
+      setTodoItems(data)
+    } else if (data.length === 0) {
+      setError("There has no todo item.")
+      //There has no todo item.
+    }
   }
+  
   
   },[ data, error ])
   
@@ -145,6 +150,12 @@ const SelectTodoId = () => {
             </button> 
         </div>
         <div className="todo_items mt-3">
+          {isLoading ? 
+            <div className='loading-spinner flex justify-center'>
+              <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 border-black border-t-blue-600 rounded-full" role="status">
+              </div>
+            </div>
+          : null } 
           {todoItems ? 
           <div className="items ">
             {todoItems.map((todo , index)=> (
@@ -152,7 +163,7 @@ const SelectTodoId = () => {
               <div  className="flex flex-row bg-neutral-700 bg-opacity-50 mt-4 group hover:bg-neutral-600"  style={{cursor: "pointer"}} key={todo.id}>
                 <div className='basis-1/12 pt-1' onClick={()=> {handleSelected(todo.id)}} ><GiNotebook size={30} /> </div>
                 <div className=" item-title basis-10/12 " onClick={()=> {handleSelected(todo.id)}} >
-                <p className='pl-2 '>{todo.title}</p>
+                <p className='pl-2 break-all'>{todo.title}</p>
                 </div>
                 <div className="relative basis-1/12 my-2 pl-0.5 invisible group-hover:visible hover:hover:bg-neutral-400 rounded-md" 
                 onClick={()=>(handleThreedots(index))} 
@@ -174,7 +185,7 @@ const SelectTodoId = () => {
               
             ))}
           </div> 
-          : <div>{error}</div>}
+          : <div className='break-all'>{error}</div>}
           
         </div>
       </div>

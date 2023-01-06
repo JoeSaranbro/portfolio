@@ -18,7 +18,7 @@ const StyledNavbar = () => {
             <li><NavLink to='/functions' className={checkIfActive}>Functions</NavLink></li>
             <li><NavLink to='/todo_items' className={checkIfActive}>todo</NavLink></li>
             <li><NavLink to='/login' className={checkIfActive}>Login</NavLink></li>
-            <li><NavLink to='/prac_react' className={checkIfActive}>Prac_React</NavLink></li>
+            <li><NavLink to='/prac_home' className={checkIfActive}>Prac_React</NavLink></li>
           </ul>
           
         </div>
