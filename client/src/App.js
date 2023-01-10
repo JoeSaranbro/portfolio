@@ -14,7 +14,8 @@ import Prac_React_App from './todo_app/prac/Prac_React_App';
 import Prac_Create from './todo_app/prac/Prac_Create'
 import Prac_BlogDetails from './todo_app/prac/Prac_BlogDetails';
 import Prac_Navbar from './todo_app/prac/Prac_Navbar';
-
+import Test from "./todo_app/prac/Test"
+import NotFound from './NotFound';
 
 function App() {
   
@@ -35,6 +36,7 @@ function App() {
             <Route path='prac_home' element={<Prac_React_App />} />
             <Route path='prac_create' element={<Prac_Create />} /> 
             <Route path='blogs/:id' element={<Prac_BlogDetails />}/>
+            <Route path='test' element={<Test />}/>
             
             
           
@@ -47,6 +49,7 @@ function App() {
           } />
           <Route path='*'         element={<Error />} /> */}
          </Route>
+         <Route path='*'         element={<NotFound />} />
          
       </Routes>
       </BrowserRouter> 
