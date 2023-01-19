@@ -33,12 +33,25 @@ app.get("/todo_items", (req,res) => {
     });
 });
 
-app.post("/add", (req,res)=>{
+app.post("/todo_items", (req,res)=>{
     const q = "INSERT INTO todo_item (`title`,`details`) VALUES (?)";
     const values = [req.body.title,
                     req.body.details];
 
     db.query(q, [values], (err,data) => {
+        if (data) {
+            return res.json(data);
+        } else {
+            return res.json(err);
+        }
+    });
+});
+
+app.delete("/todo_items/:id", (req,res)=>{
+    const bookId = req.params.id
+    const q = "DELETE FROM todo_item WHERE id = ?";
+  
+    db.query(q, [bookId], (err,data) => {
         if (data) {
             return res.json(data);
         } else {

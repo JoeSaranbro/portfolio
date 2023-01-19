@@ -270,16 +270,28 @@ img {
   .form-button-signup {
     @apply bg-sky-500 hover:bg-sky-700 py-2 px-4 rounded font-bold
   }
+  
 
   .form-input {
     @apply bg-zinc-700 focus:bg-neutral-900 mt-2 rounded pl-2
   }
   
   
-  .item-title {
+  .item-title-sidebar {
     @apply font-bold text-xl 
     
   }
+
+  .item-title-body {
+    @apply font-bold text-4xl 
+    
+  }
+
+  .item-details {
+    @apply text-lg mt-2
+    
+  }
+
    .ThreeDotsDropdown li { 
     @apply pl-2 hover:bg-stone-600 h-7
 

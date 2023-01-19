@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect} from 'react'
 
 const Test = () => {
+  console.count("Test")
 
   const [data, setData] = useState(0)
 
@@ -139,13 +140,66 @@ const Test = () => {
         
         return  arr
       }
+      // console.log(reducePrac())
+
       
-     // console.log(reducePrac())
-      
+
+      const [test,setTest] = useState(0)
+      const numberRef = useRef(0)
+
+      const ACom = () => {
+        const [data,setData] = useState(0)
+        
+        useEffect(() => {
+          
+          console.log(numberRef.current)
+      }, [numberRef])
+
+        console.count("Acom")
+
+        const handleqqq = () => {
+          
+          setData(prev => prev + 1)
+          
+        }
+
+        
+
+        return(
+          <div>
+            <div className='mt-4'>
+             Acom =  {data} 
+            </div>
+            <div>
+              <button onClick={handleqqq}> Add</button>
+            </div>
+            
+          </div>
+        )
+
+      }
+     
+      const New = ( props ) => {
+        console.count("New")
+        return(
+          <p> {props.data} </p>
+        )
+      }
+
+      console.log(numberRef.current)
+
       return (
     
-        <div >
-          sdsdsds
+        <div className='  w-full h-full'>
+          Test Component 
+          <div>Test = {test}</div>
+          <div> <button onClick={() => setTest(prev => prev + 1)} > Add</button></div>
+          <div>
+          <ACom />
+          </div>
+          <div className='bg-white text-black mt-5'> <New data={numberRef.current} />
+            <button onClick={()=> numberRef.current += 1}> REF ADD</button>
+          </div>
           
         </div>
       )

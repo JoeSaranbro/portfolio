@@ -22,7 +22,7 @@ function App() {
    
   const [user,setUser] =useState(null)
   return (
-    <div className="h-full">
+    <div className="h-full w-full min-w-[48rem]">
        <BrowserRouter>
       <Routes>
       <Route path='/'  element={<SharedLayout />} >
