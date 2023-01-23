@@ -48,10 +48,10 @@ app.post("/todo_items", (req,res)=>{
 });
 
 app.delete("/todo_items/:id", (req,res)=>{
-    const bookId = req.params.id
+    const todoId = req.params.id
     const q = "DELETE FROM todo_item WHERE id = ?";
   
-    db.query(q, [bookId], (err,data) => {
+    db.query(q, [todoId], (err,data) => {
         if (data) {
             return res.json(data);
         } else {

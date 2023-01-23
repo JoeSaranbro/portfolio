@@ -9,7 +9,7 @@ import useAxios from './useAxios';
 import editbtn from "../components/edit.png"
 
 import Add from "./Add"
-import Update from "./Update"
+import Edit from "./Edit"
 
 //./components/edit.png
 
@@ -19,7 +19,10 @@ const Todo_items = () => {
 
   
   const [todoItems, setTodoItems] = useState(null);
+
+  const [isEditing, setEditing] = useState(false)
   const [currentTodo, setCurrentTodo] = useState(null)
+  const [currentThreeDots, setCurrentThreeDots] = useState(null)
 
   const [threeDotsModal, setThreeDotsModal] = useState(false);
   const threeDotsRef = useRef([]);
@@ -45,36 +48,41 @@ const Todo_items = () => {
   
   },[ data, error ])
 
-
+  
   const handleThreedots = (index) => {
-    setCurrentTodo((prev)=>({...prev, ["index"] : index}) )
     
-    if (threeDotsModal && (index === (currentTodo.index)) ) {
+    setCurrentThreeDots((prev)=>({...prev, ["index"] : index}))
+    if (threeDotsModal && index === currentThreeDots.index ) {
       setThreeDotsModal(false)
-    } else {
-      setThreeDotsModal(true)
+      
+    } 
+    else {
+      setThreeDotsModal((prev)=> !prev)
+      
     }
   }
   
+
+ 
   
   const closeAddModal = () => {
       setAddModal(false);
       setUserInput(initialTodoInput)
   }
-
+ 
   const handleClickOutside = (event) => {
-    if (threeDotsModal) {
-      if (!threeDotsRef.current[currentTodo.index].contains(event.target)) {
-        setThreeDotsModal(false);
-      }
-    } else if (isAddModalOpen) {
-      if (!addRef.current.contains(event.target)) {
+    if (threeDotsModal && !threeDotsRef.current[currentThreeDots.index].contains(event.target)) {
+      setThreeDotsModal(false);
+
+    }
+   else if (isAddModalOpen && !addRef.current.contains(event.target)) {
         setAddModal(false);
         setUserInput(initialTodoInput)
-      }
     }
     
   };
+
+  
 
   const handleEsc = (event) => {
     
@@ -86,10 +94,12 @@ const Todo_items = () => {
   
   useEffect(() => {
     
+    if (threeDotsModal || isAddModalOpen) {
+      document.addEventListener("click", handleClickOutside, true);
+      document.addEventListener("touchend", handleClickOutside, true);
+      document.addEventListener("keydown", handleEsc, true);
+    }
     
-    document.addEventListener("click", handleClickOutside, true);
-    document.addEventListener("touchend", handleClickOutside, true);
-    document.addEventListener("keydown", handleEsc, true);
     
     
     return () => {
@@ -108,7 +118,7 @@ const Todo_items = () => {
     
   }
 
-  console.count("all")
+  
   const handleClickAdd = async (e) => {
 
     if (!userInput.title) {
@@ -136,26 +146,38 @@ const Todo_items = () => {
         
   }
   
-
-  const handleClickDelete = async (id) => {
+  
+  
+  const handleClickDelete = (id) => {
 
     
-    try {
-      await axios.delete("http://localhost:8800/todo_items/" + id)
 
+   // console.log(index)
+    try {
+      //axios.delete("http://localhost:8800/todo_items/" + id)
+      const index = todoItems.findIndex(obj => obj.id === id)
+      todoItems.splice(index,1)
+      const newdata = [...todoItems]
+      setTodoItems(newdata)
+      setThreeDotsModal(false)
+      alert("Deleted Successfully!")
+      console.log("Deleted")
     } catch (error) {
       console.log(error)
+      alert("Delete Error!")
     }
         
   }
  
+
+  
+
+ console.log(currentTodo)
   
 
   
 
-  
 
-// style={isHovering ? {visibility:"visible"}:{visibility:"hidden"} }
 
   return (
     <div className='content'>
@@ -181,20 +203,23 @@ const Todo_items = () => {
             {todoItems.map((todo , index)=> (
               
               <div  className="flex flex-row bg-neutral-700 bg-opacity-50 mt-4 group hover:bg-neutral-600"   style={{cursor: "pointer"}} key={todo.id}>
-                <div className='basis-1/12 pt-1' onClick={()=> setCurrentTodo(todo)} ><GiNotebook size={30} /> </div>
-                <div className=" item-title-sidebar basis-10/12 " onClick={()=> setCurrentTodo(todo)} >
+                
+                <div className='basis-1/12 pt-1' onClick={()=> [setCurrentTodo(todo),setEditing(true)]} ><GiNotebook size={30} /> </div>
+                <div className=" item-title-sidebar basis-10/12 " onClick={()=>  [setCurrentTodo(todo),setEditing(true)]} >
                 <p className='pl-2 break-all'>{todo.title}</p>
                 </div>
                 <div className="relative basis-1/12 my-2 pl-0.5 invisible group-hover:visible hover:hover:bg-neutral-400 rounded-md" 
-                onClick={()=>(handleThreedots(index))} 
-                style={(threeDotsModal) && (index === currentTodo.index) ? {visibility:"visible"}:{} }
-                ref={(element)=> threeDotsRef.current.push(element)} 
+                 
+                style={(threeDotsModal) && (index === currentThreeDots.index) ? {visibility:"visible"}:{} }
+                
+                
+                ref={(el)=>threeDotsRef.current[index] = el}  
                 >
-                <BsThreeDots size={20}/>
-                <div className ="threedotsmodal hidden absolute w-32 -left-28 bg-stone-900" style={(threeDotsModal) && (index === currentTodo.index) ?  {display:"block"}:{}} >
+                <BsThreeDots size={20} onClick={()=>[handleThreedots(index)]}/>
+                <div className ="threedotsmodal hidden absolute w-32 -left-28 bg-stone-900" style={(threeDotsModal) && (index === currentThreeDots.index) ?  {display:"block"}:{}} >
                   <ul className="ThreeDotsDropdown">
                   <li className="">Rename</li>
-                  <li className="" onClick={()=> handleClickDelete(todo.id)}>Delete</li>
+                  <li className="" onClick={()=> [handleClickDelete(todo.id)]}>Delete</li>
                   </ul>
                 </div>
                   
@@ -212,9 +237,9 @@ const Todo_items = () => {
       <div className="todolist-content w-full">
         
         
-          {todoItems ? 
+          {isEditing ? 
           <div className="items">
-            <Update currentTodo={currentTodo} />
+            <Edit currentTodo={currentTodo}  todoItems={todoItems}  setTodoItems={setTodoItems} setEditing={setEditing} />
             
           </div> 
           : <div> {error} </div>}
@@ -225,7 +250,8 @@ const Todo_items = () => {
       {isAddModalOpen? <Add isAddModalOpen={isAddModalOpen}  addRef={addRef} closeAddModal={closeAddModal} handleInputOnchange={handleInputOnchange} userInput={userInput} handleClickAdd={handleClickAdd} /> : null}
       
       
-    </div>  
+    </div> 
+    <div><button className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 w-26 font-medium rounded-lg text-l px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">click</button></div> 
     </div>
   )
 }

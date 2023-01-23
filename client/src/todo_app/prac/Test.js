@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect} from 'react'
 
+
 const Test = () => {
   console.count("Test")
 
@@ -26,6 +27,8 @@ const Test = () => {
         "list": ["sigha","sprinkle","sta maria"]
       }
     ]
+
+    
 
     // const newArr = output.map(p =>
     //   p.list.find((k,i)=> k === 'aquafina')
@@ -180,26 +183,48 @@ const Test = () => {
       }
      
       const New = ( props ) => {
-        console.count("New")
+        const [num, setNum] = useState(19)
+
+        const click = ( id ) => {
+
+        }
         return(
           <p> {props.data} </p>
         )
       }
 
-      console.log(numberRef.current)
+
+      //output = output.push(output.map((data,i) ))
+     // output[0].id = 0
+      output.map((data,i) => output[i].id = i)
+
+      console.log(output)
+
+      //<New data={numberRef.current} />
 
       return (
     
-        <div className='  w-full h-full'>
+        <div className='w-full h-full'>
           Test Component 
           <div>Test = {test}</div>
           <div> <button onClick={() => setTest(prev => prev + 1)} > Add</button></div>
           <div>
           <ACom />
           </div>
-          <div className='bg-white text-black mt-5'> <New data={numberRef.current} />
-            <button onClick={()=> numberRef.current += 1}> REF ADD</button>
+
+          <div className='text-white mt-5'> 
+          {output.map((data,i)=> (
+            <div>
+             <div>{data.letter} <span className='ml-4'> {data.list + " "} </span> 
+              <button className='bg-sky-500 hover:bg-sky-700 rounded mt-2' onClick={()=> numberRef.current += 1}> REF ADD</button>
+             </div>  
+            
+            </div>
+          ))}
+          
+            
           </div>
+          
           
         </div>
       )
