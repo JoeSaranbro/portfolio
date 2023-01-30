@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect} from 'react'
-
+import axios from 'axios'
 
 const Test = () => {
   console.count("Test")
@@ -182,16 +182,7 @@ const Test = () => {
 
       }
      
-      const New = ( props ) => {
-        const [num, setNum] = useState(19)
-
-        const click = ( id ) => {
-
-        }
-        return(
-          <p> {props.data} </p>
-        )
-      }
+      
 
 
       //output = output.push(output.map((data,i) ))
@@ -201,6 +192,30 @@ const Test = () => {
       console.log(output)
 
       //<New data={numberRef.current} />
+      const [data2, setData2] = useState()
+      const [error,setError] = useState()
+      useEffect(()=> {
+        const fetchData = async () => {
+          
+          try {
+           const res =  await axios.get("https://randomuser.me/api")
+           if (res.data.errno) {
+            setError(res.data.code)
+          } else if (res.data.fatal === false)  {
+            setError(res.data.code)
+          } else {
+            setData2(res.data);
+          } 
+          } catch (error) {
+            setError(error.message)
+          }
+          
+         
+        
+        }
+        fetchData();
+      },[])
+      console.log(data2)
 
       return (
     
@@ -222,6 +237,12 @@ const Test = () => {
             </div>
           ))}
           
+            
+          </div>
+
+          <div className='text-white mt-5 border-t-4 border-t-white ' >
+            <p>Challenge</p>
+            {JSON.stringify(data2, null, 2)}
             
           </div>
           

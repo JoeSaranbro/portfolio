@@ -1,12 +1,12 @@
 import React from 'react'
 import { useState, useEffect, useRef} from 'react'
 import axios from 'axios'
-import { IconContext } from "react-icons";
+
 import { IoMdAddCircleOutline } from "react-icons/io"
 import { GiNotebook } from "react-icons/gi"
 import { BsThreeDots } from "react-icons/bs"
 import useAxios from './useAxios';
-import editbtn from "../components/edit.png"
+
 
 import Add from "./Add"
 import Edit from "./Edit"
@@ -27,12 +27,11 @@ const Todo_items = () => {
   const [threeDotsModal, setThreeDotsModal] = useState(false);
   const threeDotsRef = useRef([]);
 
-  const initialTodoInput = {title: "", details: ""}
-  const [userInput , setUserInput] = useState({title: "", details: ""})
   const [isAddModalOpen, setAddModal] = useState(false);
   const addRef = useRef();
-
-  const { data, isLoading, error, setError } = useAxios("http://localhost:8800/todo_items")
+  
+  const { data, isLoading, error, setError} = useAxios("http://localhost:8800/todo_items")
+  
   
  
   useEffect(()=> {
@@ -44,14 +43,15 @@ const Todo_items = () => {
       //There has no todo item.
     }
   }
-  
+
   
   },[ data, error ])
-
+  
+  //console.log(data)
   
   const handleThreedots = (index) => {
     
-    setCurrentThreeDots((prev)=>({...prev, ["index"] : index}))
+    setCurrentThreeDots((prev)=>({...prev, "index" : index}))
     if (threeDotsModal && index === currentThreeDots.index ) {
       setThreeDotsModal(false)
       
@@ -65,10 +65,7 @@ const Todo_items = () => {
 
  
   
-  const closeAddModal = () => {
-      setAddModal(false);
-      setUserInput(initialTodoInput)
-  }
+  
  
   const handleClickOutside = (event) => {
     if (threeDotsModal && !threeDotsRef.current[currentThreeDots.index].contains(event.target)) {
@@ -77,7 +74,7 @@ const Todo_items = () => {
     }
    else if (isAddModalOpen && !addRef.current.contains(event.target)) {
         setAddModal(false);
-        setUserInput(initialTodoInput)
+        
     }
     
   };
@@ -88,7 +85,7 @@ const Todo_items = () => {
     
     if (event.key === "Escape") {
       setAddModal(false);
-      setUserInput(initialTodoInput)
+      
     }
 };
   
@@ -112,59 +109,52 @@ const Todo_items = () => {
     
   },[threeDotsModal,isAddModalOpen]);
   
-  const handleInputOnchange = (e) => {
-    setUserInput((prev)=> ({...prev , [e.target.name]: e.target.value}))
-    
-    
-  }
+ 
 
   
-  const handleClickAdd = async (e) => {
+  // const handleClickAdd = async (e) => {
 
-    if (!userInput.title) {
-      alert("Todo title must be filled.")
-      e.preventDefault();
-    } else {
-        try {
-          e.preventDefault();
-          await axios.post("http://localhost:8800/todo_items", userInput);
+  //   if (!userInput.title) {
+  //     alert("Todo title must be filled.")
+  //     e.preventDefault();
+  //   } else {
+  //       try {
+  //         e.preventDefault();
+  //         await axios.post("http://localhost:8800/todo_items", userInput);
+  //         const res = await axios.get("http://localhost:8800/todo_items")
+  //         setTodoItems(res.data)
+  //         setUserInput(initialTodoInput)
+  //         setAddModal(false);
+  //         alert("Item added successfully")
           
-          setTodoItems([...todoItems,{id: todoItems.length === 0 ?  1: todoItems.at(-1).id +1 , title: userInput.title, details: userInput.details}])
-          setUserInput(initialTodoInput)
-          setAddModal(false);
-          alert("Item added successfully")
-          
-        } catch (err) {
-          console.log(err);
-          alert("Failed to add item!")
-          setAddModal(false);
-          setUserInput(initialTodoInput)
-          e.preventDefault();
-        }
+  //       } catch (err) {
+  //         console.log(err);
+  //         alert("Failed to add item!")
+  //         setAddModal(false);
+  //         setUserInput(initialTodoInput)
+  //         e.preventDefault();
+  //       }
         
-    }
+  //   }
         
-  }
+  // }
   
+  //console.log(todoItems)
   
-  
-  const handleClickDelete = (id) => {
-
-    
-
+  const handleClickDelete = async (id) => {
    // console.log(index)
     try {
-      //axios.delete("http://localhost:8800/todo_items/" + id)
-      const index = todoItems.findIndex(obj => obj.id === id)
-      todoItems.splice(index,1)
-      const newdata = [...todoItems]
-      setTodoItems(newdata)
+      await axios.delete("http://localhost:8800/todo_items/" + id)
+      const res = await axios.get("http://localhost:8800/todo_items")
+      setTodoItems(res.data)
       setThreeDotsModal(false)
+      setEditing(false)
+
       alert("Deleted Successfully!")
-      console.log("Deleted")
     } catch (error) {
       console.log(error)
-      alert("Delete Error!")
+      alert("Error!")
+      setEditing(false)
     }
         
   }
@@ -172,7 +162,7 @@ const Todo_items = () => {
 
   
 
- console.log(currentTodo)
+ 
   
 
   
@@ -247,7 +237,7 @@ const Todo_items = () => {
         
       </div>
       
-      {isAddModalOpen? <Add isAddModalOpen={isAddModalOpen}  addRef={addRef} closeAddModal={closeAddModal} handleInputOnchange={handleInputOnchange} userInput={userInput} handleClickAdd={handleClickAdd} /> : null}
+      {isAddModalOpen? <Add setTodoItems={setTodoItems} isAddModalOpen={isAddModalOpen} setAddModal={setAddModal} addRef={addRef}  /> : null}
       
       
     </div> 

@@ -47,6 +47,24 @@ app.post("/todo_items", (req,res)=>{
     });
 });
 
+app.put("/todo_items/:id", (req, res) => {
+    const todoId = req.params.id;
+    const q = "UPDATE todo_item SET `title`= ?, `details`= ? WHERE id = ?";
+  
+    const values = [
+        req.body.title,
+        req.body.details
+    ];
+  
+    db.query(q, [...values,todoId], (err, data) => {
+        if (data) {
+            return res.json(data);
+        } else {
+            return res.json(err);
+        }
+    });
+  });
+
 app.delete("/todo_items/:id", (req,res)=>{
     const todoId = req.params.id
     const q = "DELETE FROM todo_item WHERE id = ?";

@@ -1,6 +1,47 @@
 import React from 'react'
+import { useState } from 'react'
+import axios from 'axios'
 
-const Add = ({ isAddModalOpen, addRef, closeAddModal, handleInputOnchange, userInput, handleClickAdd }) => {
+const Add = ({  setTodoItems, isAddModalOpen, setAddModal, addRef }) => {
+  
+  const [userInput , setUserInput] = useState({title: "", details: ""})
+
+  const handleInputOnchange = (e) => {
+    setUserInput((prev)=> ({...prev , [e.target.name]: e.target.value}))
+    
+    
+  }
+
+  const closeAddModal = () => {
+    setAddModal(false);
+}
+
+  const handleClickAdd = async (e) => {
+
+    if (!userInput.title) {
+      alert("Todo title must be filled.")
+      e.preventDefault();
+    } else {
+        try {
+          e.preventDefault();
+          await axios.post("http://localhost:8800/todo_items", userInput);
+          const res = await axios.get("http://localhost:8800/todo_items")
+          setTodoItems(res.data)
+          
+          setAddModal(false);
+          alert("Item added successfully")
+          
+        } catch (err) {
+          console.log(err);
+          alert("Failed to add item!")
+          setAddModal(false);
+          //setUserInput(initialTodoInput)
+          e.preventDefault();
+        }
+        
+    }
+        
+  }
 
     
   return (
