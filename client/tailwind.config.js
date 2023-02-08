@@ -6,6 +6,9 @@ module.exports = {
       screens:{
         'deletemodal': '745px',
       },
+      screens:{
+        'input_date': '840px',
+      },
     },
     minHeight: {
       'vh': '40vh',

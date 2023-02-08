@@ -49,11 +49,13 @@ app.post("/todo_items", (req,res)=>{
 
 app.put("/todo_items/:id", (req, res) => {
     const todoId = req.params.id;
-    const q = "UPDATE todo_item SET `title`= ?, `details`= ? WHERE id = ?";
+    const q = "UPDATE todo_item SET `title`= ?, `details`= ?, `date_start` = ?, `date_end` = ? WHERE id = ?";
   
     const values = [
         req.body.title,
-        req.body.details
+        req.body.details,
+        req.body.date_start,
+        req.body.date_end,
     ];
   
     db.query(q, [...values,todoId], (err, data) => {

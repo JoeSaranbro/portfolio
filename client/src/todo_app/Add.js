@@ -46,7 +46,7 @@ const Add = ({  setTodoItems, isAddModalOpen, setAddModal, addRef }) => {
     
   return (
   <div id="signupModal" className="modal" style={isAddModalOpen === true ? {display: "block"}:{display: "none"}}>
-    <div ref={addRef} className="h-full max-h-[39rem] w-10/12 max-w-[34rem] absolute left-1/2 -translate-x-1/2 bg-zinc-900 rounded-lg m-auto p-3">
+    <div ref={addRef} className="h-full max-h-[39rem] w-full max-w-[34rem] absolute left-1/2 -translate-x-1/2 bg-zinc-900 rounded-lg m-auto p-3">
       <div id="header" className='text-center'>
       <span className='text-2xl font-bold'>New Todo<span className="close rounded-lg" onClick={closeAddModal} >&times;</span></span>
       
@@ -65,7 +65,7 @@ const Add = ({  setTodoItems, isAddModalOpen, setAddModal, addRef }) => {
             id='todoname'
             className='form-input'
             name="title"
-            maxLength="20"
+            maxLength="15"
            // value={userInput.title}
             onChange={handleInputOnchange}
             

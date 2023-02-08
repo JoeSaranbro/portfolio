@@ -6,8 +6,8 @@ import { IoMdAddCircleOutline } from "react-icons/io"
 import { GiNotebook } from "react-icons/gi"
 import { BsThreeDots } from "react-icons/bs"
 import useAxios from './useAxios';
-
-
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime'
 import Add from "./Add"
 import Edit from "./Edit"
 
@@ -15,8 +15,8 @@ import Edit from "./Edit"
 
 
 const Todo_items = () => {
-  
 
+  
   
   const [todoItems, setTodoItems] = useState(null);
 
@@ -112,34 +112,9 @@ const Todo_items = () => {
  
 
   
-  // const handleClickAdd = async (e) => {
 
-  //   if (!userInput.title) {
-  //     alert("Todo title must be filled.")
-  //     e.preventDefault();
-  //   } else {
-  //       try {
-  //         e.preventDefault();
-  //         await axios.post("http://localhost:8800/todo_items", userInput);
-  //         const res = await axios.get("http://localhost:8800/todo_items")
-  //         setTodoItems(res.data)
-  //         setUserInput(initialTodoInput)
-  //         setAddModal(false);
-  //         alert("Item added successfully")
-          
-  //       } catch (err) {
-  //         console.log(err);
-  //         alert("Failed to add item!")
-  //         setAddModal(false);
-  //         setUserInput(initialTodoInput)
-  //         e.preventDefault();
-  //       }
-        
-  //   }
-        
-  // }
   
-  //console.log(todoItems)
+  //console.count("all")
   
   const handleClickDelete = async (id) => {
    // console.log(index)
@@ -170,7 +145,7 @@ const Todo_items = () => {
 
 
   return (
-    <div className='content'>
+    <div className='content '>
       <div className='text-6xl bg-black leading-relaxed font-bold'>Todolist App</div>
       <div className='flex mt-1'>
         
@@ -208,7 +183,6 @@ const Todo_items = () => {
                 <BsThreeDots size={20} onClick={()=>[handleThreedots(index)]}/>
                 <div className ="threedotsmodal hidden absolute w-32 -left-28 bg-stone-900" style={(threeDotsModal) && (index === currentThreeDots.index) ?  {display:"block"}:{}} >
                   <ul className="ThreeDotsDropdown">
-                  <li className="">Rename</li>
                   <li className="" onClick={()=> [handleClickDelete(todo.id)]}>Delete</li>
                   </ul>
                 </div>
@@ -224,15 +198,16 @@ const Todo_items = () => {
           
         </div>
       </div>
-      <div className="todolist-content w-full">
+      <div className="todolist-content flex w-full">
         
         
-          {isEditing ? 
-          <div className="items">
+          {isEditing &&
+            (
             <Edit currentTodo={currentTodo}  todoItems={todoItems}  setTodoItems={setTodoItems} setEditing={setEditing} />
+            )
             
-          </div> 
-          : <div> {error} </div>}
+          
+          }
           
         
       </div>
@@ -241,7 +216,7 @@ const Todo_items = () => {
       
       
     </div> 
-    <div><button className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 w-26 font-medium rounded-lg text-l px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">click</button></div> 
+    
     </div>
   )
 }
