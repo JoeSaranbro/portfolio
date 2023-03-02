@@ -54,7 +54,6 @@ img {
 
 /* Start Modal Content Signup*/
 .modal-content-signup {  
-  height: 100vh;
   max-height: 32rem;
   max-width: 34rem;
   background-color: #0F0F0F;
@@ -239,6 +238,8 @@ img {
 }
 
 
+
+
 @layer components{
   .TitleofFunction{
     @apply text-2xl font-bold underline underline-offset-8
@@ -257,7 +258,7 @@ img {
   }
 
   .form-col{
-    @apply flex flex-col mt-3
+    @apply flex flex-col mt-1
   }
 
   .form-label{
@@ -275,6 +276,9 @@ img {
 
   .form-input {
     @apply bg-zinc-700 focus:bg-neutral-900 mt-2 rounded pl-2
+  }
+  .form-input-validation {
+    @apply text-base text-rose-500
   }
   
   

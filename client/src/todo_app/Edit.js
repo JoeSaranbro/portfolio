@@ -49,7 +49,7 @@ const Edit = ({ currentTodo , todoItems, setTodoItems , setEditing}) => {
     return(
       <div>
         <div><p className="text-xl font-bold">Todo Duration</p> { updateInfo.date_end ? date_time_project_duration_formatted: null }</div>
-        <div className="mt-4"> <p className="text-xl font-bold">Remaining Time From Now:  </p> {updateInfo.date_end ? date_time_remaining_formatted :null}  </div>
+        <div className="mt-4"> <p className="text-xl font-bold">Remaining Time From Now  </p> {updateInfo.date_end ? date_time_remaining_formatted :null}  </div>
 
         
       </div>
