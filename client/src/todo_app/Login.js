@@ -31,9 +31,9 @@ const Login = () => {
 
   
   //<-------------------------Regex Section ----------------------------------->
-    const username_pattern = new RegExp(".{8,}")
-    const email_pattern = new RegExp("[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" )
-    const password_pattern = new RegExp(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/)
+    const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$")
+    
+    const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
     
   //<-------------------------Regex Section ----------------------------------->  
 
@@ -116,6 +116,7 @@ const Login = () => {
 //<-------------------------Start Signup Section ----------------------------------->
 
   const handleSignupSubmit = async (e) => {
+    e.preventDefault()
 
 
     !username_pattern.test(inputSignup.username) ? setinputValidation((prev)=>({...prev,username: false})) : setinputValidation((prev)=>({...prev,username: true}))
@@ -124,15 +125,20 @@ const Login = () => {
     
     inputSignup.password !== inputSignup.confirm_password ? setinputValidation((prev)=>({...prev,confirm_password: false})) : setinputValidation((prev)=>({...prev,confirm_password: true}))
 
-    const isAllinputValidationTrue = Object.values(inputValidation).every(value => value === true);
-
-    if (isAllinputValidationTrue && isEmailAvailable === true && isLoading.isEmailAvailable === false) {
+    if ( (username_pattern.test(inputSignup.username)&& password_pattern.test(inputSignup.password)) && isEmailAvailable === true && isLoading.isEmailAvailable === false) {
+      
       try {
-        await axios.post('http://localhost:8800/todo_items/signup',
-          [inputSignup]
+        e.preventDefault()
+        const res = await axios.post('http://localhost:8800/todo_app/signup',
+          inputSignup
         );
-        
-        alert("Sign up Successfully.")
+
+        if (res.data.signupSuccessfully) {
+          alert("Signup Successfully.")
+        } else {
+          alert("Signup not Success!")
+        }
+        handleCloseSignUpForm()
       } catch (error) {
         alert("Something went wrong!")
         console.log(error)
@@ -140,14 +146,6 @@ const Login = () => {
     } else {
       e.preventDefault()
     }
-    
-   
-
-    
-    
-    
-
-    e.preventDefault();
     
   }
   
@@ -232,7 +230,7 @@ const Login = () => {
                 maxLength={30}
                 
               />
-              <p className='text-rose-500' style={inputValidation.username === false? {display: "block"}:{display: "none"}} >Username must contains 8 or more characters !</p>
+              <p className='text-rose-500' style={inputValidation.username === false? {display: "block"}:{display: "none"}} >Username must be between 8 and 20 characters long!</p>
             </div>
             <div className='form-col'>
               <label htmlFor='email' className='form-label'>

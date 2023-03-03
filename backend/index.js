@@ -63,6 +63,7 @@ app.post("/api/login",(req,res)=> {
     const user = users.find((u)=> {
         return u.username === username && u.password === password;
     });
+    console.log(user)
     if(user){
         //Generate an access token
         const accessToken = generateAccessToken(user)
@@ -222,7 +223,7 @@ app.delete("/todo_items/:id", (req,res)=>{
             app.post("/is-email-available", (req, res) => {
                 const q = "SELECT * FROM users WHERE user_email = ?";
                 const values = req.body[0];
-                const email_pattern = new RegExp("[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" )
+                const email_pattern = new RegExp("[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
                 const response = {emailValidation: null, isEmailAvailable: null}
             
                 db.execute(q, [values], (err, data) => {
@@ -252,25 +253,38 @@ app.delete("/todo_items/:id", (req,res)=>{
                 });
             });
 
-            app.post("/todo_items/signup", async (req,res)=> {
+            app.post("/todo_app/signup", async (req,res)=> {
+                const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$")
+                const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
+                const email_pattern = new RegExp("[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
+
+                const signupResponse = {signupSuccessfully:null,inputValidation:null }
                 
-                
+                if (username_pattern.test(req.body.username) && password_pattern.test(req.body.password) && email_pattern.test(req.body.email)) {
+                    signupResponse.inputValidation = true;
+                  } else {
+                    signupResponse.inputValidation = false;
+                  }
+
                 const q = "INSERT INTO users (`user_name`,`user_password`,`user_email`) VALUES (?,?,?)";
+
                 try {
-                    const hash = await argon2.hash(req.body[0].password);
-                    console.log(hash)
+                    const hash = await argon2.hash(req.body.password);
+                    
                     const values = [
-                        req.body[0].username,
+                        req.body.username,
                         hash,
-                        req.body[0].email,
-                ]
-                
+                        req.body.email,
+                ]       
+                    
                     db.execute(q, values, (err,data) => {
                         if (err) {
                             console.log(err)
-                            return res.json(err);
+                            signupResponse.signupSuccessfully = false;
+                            return res.json(signupResponse);
                         } else {
-                            return res.json(data);
+                            signupResponse.signupSuccessfully = true;
+                            return res.json(signupResponse);
                         }
                     });
                     db.unprepare(q);
@@ -311,7 +325,36 @@ app.delete("/todo_items/:id", (req,res)=>{
             })
 
     //------------------------------End Sign up page-----------------------------------------------------
+    
+    //------------------------------Start Login page-----------------------------------------------------
 
+    app.post("/todo_app/login",(req,res)=> {
+        const {username, password} = req.body;
+        const user = users.find((u)=> {
+            return u.username === username && u.password === password;
+        });
+        console.log(user)
+        if(user){
+            //Generate an access token
+            const accessToken = generateAccessToken(user)
+            const refreshToken = generateRefreshToken(user)
+            refreshTokens.push(refreshToken)
+            
+            
+            res.json({
+                username: user.username,
+                isAdmin: user.isAdmin,
+                id: user.id,
+                accessToken,
+                refreshToken
+            })
+        }else {
+            res.status(400).json("Username or password is incorrect!")
+        }
+    })
+
+
+    //------------------------------End Login page-----------------------------------------------------
 
 //----------------------Start Login/Sign up TodoApp -------------------------------------------------
 

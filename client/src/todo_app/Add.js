@@ -24,7 +24,7 @@ const Add = ({  setTodoItems, isAddModalOpen, setAddModal, addRef }) => {
     } else {
         try {
           e.preventDefault();
-          await axios.post("http://localhost:8800/todo_items", userInput);
+          await axios.post("http://localhost:8800/todo_items", [userInput]);
           const res = await axios.get("http://localhost:8800/todo_items")
           setTodoItems(res.data)
           
