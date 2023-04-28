@@ -5,7 +5,7 @@ import axios from 'axios'
 const Add = ({  setTodoItems, isAddModalOpen, setAddModal, addRef }) => {
   
   const [userInput , setUserInput] = useState({title: "", details: ""})
-
+  console.log(userInput)
   const handleInputOnchange = (e) => {
     setUserInput((prev)=> ({...prev , [e.target.name]: e.target.value}))
     

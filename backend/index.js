@@ -4,10 +4,12 @@ import jwt from "jsonwebtoken"
 import argon2 from "argon2"
 import mysql2 from "mysql2"
 import dotenv from "dotenv"
+import cookieParser from 'cookie-parser'
+import CryptoJS from "crypto-js" 
 
 dotenv.config()
 const app = express()
-
+app.use(cookieParser());
 
 
 
@@ -30,7 +32,19 @@ const db = mysql2.createConnection({
 //ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'P0rtf0li0';
 
 app.use(express.json());
-app.use(cors());
+
+//----------------------Start cors -------------------------------------------------
+const corsOptions = {
+    origin: true,
+    credentials: true
+
+}
+ app.use(cors(corsOptions));
+ 
+
+//  app.use(cors());
+
+//----------------------End cors -------------------------------------------------
 
 //----------------------Start JWT authen -------------------------------------------------
 
@@ -96,7 +110,7 @@ app.post("/api/refresh", (req,res) => {
         return res.status(403).json("Refresh token is invalid!")
     }
 
-    jwt.verify(refreshToken, "myRefreshSecretKey", (err, user) => {
+    jwt.verify("", "myRefreshSecretKey", (err, user) => {
         if (err) {
             console.log(err)
         }
@@ -115,6 +129,7 @@ app.post("/api/refresh", (req,res) => {
     //if everything is ok send new token to user.
     
 })
+
 
 const verify = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -141,11 +156,15 @@ app.delete("/api/users/:userId", verify, (req, res) => {
     }
 });
 
+
+
+
 app.post("/api/logout", verify, (req, res)=> {
     const refreshToken = req.body.token;
     refreshTokens = refreshTokens.filter((token) => token !== refreshToken)
     res.status(200).json("You logged out succesfully.")
 })
+
 //----------------------End JWT authen -------------------------------------------------
 app.get("/", (req,res)=>{
     res.json("hello this is the backend")
@@ -153,7 +172,90 @@ app.get("/", (req,res)=>{
 
 //----------------------Start Todo App -------------------------------------------------
 
+    //---------------------- Start Authentication -------------------------------------------------
+        app.get("/authentication", (req,res) => {
+            
+            //console.log(req.cookies["auth_token"])
+
+            const responseStatus = {status:null}
+            const auth_token = req.cookies["auth_token"]
+            const refresh_token = req.cookies["refresh_token"]
+
+            const verifyingRefreshToken = () =>{
+                //check if there is refresh token
+                if (refresh_token) {
+                    jwt.verify(refresh_token, "mySecretKey",(err, decoded) => {
+                        //check if refresh token is valid
+                        if (err) {
+                            if (err.name === "JsonWebTokenError") {
+                                responseStatus.status = "refresh Token is not valid, go login again"
+                            } else if(err.name === "TokenExpiredError"){
+                                
+                                const date = new Date(err.expiredAt)
+                                const convertDate = date.getTime()
+                                const timeRemaining = (convertDate + (2 * 24 * 60 * 60 * 1000));
+                                
+                                
+                                if (timeRemaining > Date.now()) {
+                                    
+                                    console.log("refresh Token is valid but it expired, we'll give you new refresh token")
+                                    responseStatus.status = "refresh Token is valid but it expired, we'll give you new refresh token"
+                                } else {
+                                    console.log("Go login Again! adasrkaeka")
+                                    responseStatus.status = "Go login Again! adasrkaeka"
+                                }
+                                
+                                
+                            }
+                        } 
+                         else {
+                            console.log("Token is valid and not expired, we'll give u new access token")
+                        }
+                    })
+                } else {
+                    return res.json("Go login Again!")
+                }
+                
+            }
+            
+            //if auth_token existed
+            if (auth_token) {
+                //verify access/auth token
+                 jwt.verify(auth_token, 'mySecretKey', (err, decoded) => {
+                 if (err) {
+                    if (err.name === "JsonWebTokenError") {
+                        
+                       console.log("token is not valid")
+                       responseStatus.status = "Token is not valid"
+                       return res.json(responseStatus)  
+                    } 
+                    else if (err.name === "TokenExpiredError") {
+                        console.log("access token is valid but expired")
+                        console.log("we'll give u a new Access Token")
+                        verifyingRefreshToken()
+                        
+                    }
+                } else {
+                    return res.json(responseStatus.status = "Yes, you're authenticated." )  
+                    }
+                })
+            }
+            // if auth_token is not existed
+             else {
+                return res.status(401).json("You are not authenticated!")
+            }
+            
+            
+            
+        });
+
+        
+    //---------------------- End Authentication -------------------------------------------------
+    
+
 app.get("/todo_items", (req,res) => {
+    console.log(req.cookies)
+
     const q = "SELECT * FROM todo_item"
     db.execute(q, (err,data)=> {
         if(err) {
@@ -166,8 +268,38 @@ app.get("/todo_items", (req,res) => {
     db.unprepare(q);
 });
 
+app.get('/protected-resource', (req, res) => {
+    // const accessToken = req.cookies.access_token;
+    // if (!accessToken) {
+    //   // Access token not found in cookie, prompt user to log in again
+    //   res.status(401).send('Access token not found');
+    // } else {
+    //   // Check if access token has expired
+    //   const tokenExpirationTime = ""
+    //   const currentTime = new Date().getTime();
+    //   if (currentTime >= tokenExpirationTime) {
+    //     // Access token has expired, perform silent authentication
+    //     const newAccessToken = /* perform silent authentication to obtain new access token */;
+    //     const cookieOptions = {
+    //       maxAge: 15 * 60 * 1000, // expires after 15 minutes
+    //       httpOnly: true, // prevent client-side scripts from accessing the cookie
+    //       secure: true, // only send cookie over HTTPS
+    //       sameSite: 'strict' // restrict cross-site usage of cookie
+    //     };
+    //     res.cookie('access_token', newAccessToken, cookieOptions);
+    //     res.send('New access token obtained successfully');
+    //   } else {
+    //     // Access token is still valid, allow access to protected resource
+    //     res.send('Access granted');
+    //   }
+    // }
+  });
+
+
 
 app.post("/todo_items", (req,res)=>{
+
+    
     const q = "INSERT INTO todo_item (`title`,`details`) VALUES (?,?)";
     const values = [req.body.title,
                     req.body.details];
@@ -225,32 +357,35 @@ app.delete("/todo_items/:id", (req,res)=>{
                 const values = req.body[0];
                 const email_pattern = new RegExp("[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
                 const response = {emailValidation: null, isEmailAvailable: null}
-            
-                db.execute(q, [values], (err, data) => {
-                if (err) {
-                    console.log(err);
-                    return res.status(500).json({ error: "Internal Server Error" });
-                }
-                
+
                 if (email_pattern.test(values)) {
-                    
                     response.emailValidation = true;
                 } else {
                     response.emailValidation = false
                     return res.json(response);
                 }
             
+                
+                db.execute(q, [values], (err, data) => {
+                
+                if (err) {
+                    console.log(err);
+                    return res.status(500).json({ error: "Internal Server Error" });
+                }
+                
                 if (data.length > 0) {
                     response.isEmailAvailable = false;
-                    console.log(data.length)
+                    
                     return res.json(response);
                 } else {
-                    console.log(data.length)
                     response.isEmailAvailable = true;
                     return res.json(response)
                 }
                 
                 });
+                db.unprepare(q);
+
+                console.log("check email available")
             });
 
             app.post("/todo_app/signup", async (req,res)=> {
@@ -258,15 +393,43 @@ app.delete("/todo_items/:id", (req,res)=>{
                 const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
                 const email_pattern = new RegExp("[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
 
-                const signupResponse = {signupSuccessfully:null,inputValidation:null }
-                
-                if (username_pattern.test(req.body.username) && password_pattern.test(req.body.password) && email_pattern.test(req.body.email)) {
-                    signupResponse.inputValidation = true;
-                  } else {
-                    signupResponse.inputValidation = false;
-                  }
+                const signupResponse = {signupSuccessfully:null, inputValidation:null, isEmailAvailable:null}
 
-                const q = "INSERT INTO users (`user_name`,`user_password`,`user_email`) VALUES (?,?,?)";
+                const check_email = "SELECT * FROM users WHERE user_email = ?";
+
+
+                const checkEmail = () => {
+                    return new Promise((resolve, reject) => {
+                      db.execute(check_email, [req.body.email], (err, data) => {
+                        if (err) {
+                          reject(err);
+                        } else {
+                          resolve(data);
+                        }
+                      });
+                    });
+                  };
+                
+                  try {
+                    const data = await checkEmail();
+                    
+                    if (data.length > 0 || !username_pattern.test(req.body.username) || !password_pattern.test(req.body.password) || !email_pattern.test(req.body.email) || req.body.password !== req.body.confirm_password) {
+                      signupResponse.isEmailAvailable = false;
+                      signupResponse.inputValidation = false;
+                      return res.json(signupResponse);
+                    } else {
+                      signupResponse.isEmailAvailable = true;
+                      signupResponse.inputValidation = true;
+                    }
+                  } catch (err) {
+                    console.log(err);
+                    return res.json({ error: "Internal Server Error" });
+                  }
+            
+                  db.unprepare(check_email);
+
+                 
+                    const addUser = "INSERT INTO users (`user_name`,`user_password`,`user_email`) VALUES (?,?,?)";
 
                 try {
                     const hash = await argon2.hash(req.body.password);
@@ -277,7 +440,7 @@ app.delete("/todo_items/:id", (req,res)=>{
                         req.body.email,
                 ]       
                     
-                    db.execute(q, values, (err,data) => {
+                    db.execute(addUser, values, (err,data) => {
                         if (err) {
                             console.log(err)
                             signupResponse.signupSuccessfully = false;
@@ -287,40 +450,10 @@ app.delete("/todo_items/:id", (req,res)=>{
                             return res.json(signupResponse);
                         }
                     });
-                    db.unprepare(q);
+                    db.unprepare(addUser);
                   } catch (err) {
                     console.log(err)
                   }
-
-                //   db.execute(q, values, (err,data) => {
-                //     if (err) {
-                //         return res.json(err);
-                //     } else {
-                //         return res.json(data);
-                //     }
-                // });
-                // db.unprepare(q);
-
-                // const user = users.find((u)=> {
-                //     return u.username === username && u.password === password;
-                // });
-                // if(user){
-                //     //Generate an access token
-                //     const accessToken = generateAccessToken(user)
-                //     const refreshToken = generateRefreshToken(user)
-                //     refreshTokens.push(refreshToken)
-                    
-                    
-                //     res.json({
-                //         username: user.username,
-                //         isAdmin: user.isAdmin,
-                //         id: user.id,
-                //         accessToken,
-                //         refreshToken
-                //     })
-                // }else {
-                //     res.status(400).json("Username or password is incorrect!")
-                // }
                 
             })
 
@@ -328,31 +461,115 @@ app.delete("/todo_items/:id", (req,res)=>{
     
     //------------------------------Start Login page-----------------------------------------------------
 
-    app.post("/todo_app/login",(req,res)=> {
-        const {username, password} = req.body;
-        const user = users.find((u)=> {
-            return u.username === username && u.password === password;
-        });
-        console.log(user)
-        if(user){
-            //Generate an access token
-            const accessToken = generateAccessToken(user)
-            const refreshToken = generateRefreshToken(user)
-            refreshTokens.push(refreshToken)
+    
+
+    app.post("/todo_app/login",async (req,res)=> {
+
+        
+
+        const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
+        const email_pattern = new RegExp("[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
+
+        const loginResponse = {loginSuccessfully:null,inputValidation:null, msg:null}
+
+        if (email_pattern.test(req.body.email) && password_pattern.test(req.body.password) ) {
+            loginResponse.inputValidation = true;
+          } else {
+            loginResponse.inputValidation = false;
+            loginResponse.loginSuccessfully = false;
+            loginResponse.msg = "Username or Password is incorrect!";
+            return res.json(loginResponse)
+          }
+
+          const values = [req.body.email]
+          const query_password = "SELECT * FROM users WHERE user_email = ? "
+
+        try {
+            const data = await new Promise((resolve, reject) => {
+              db.execute(query_password, values, (err, data) => {
+                if (err) {
+                  reject(err);
+                } else {
+                  resolve(data);
+                }
+              });
+            });
+          
+            db.unprepare(query_password);
             
-            
-            res.json({
-                username: user.username,
-                isAdmin: user.isAdmin,
-                id: user.id,
-                accessToken,
-                refreshToken
-            })
-        }else {
-            res.status(400).json("Username or password is incorrect!")
-        }
+            if (data.length > 1) {
+              //ถ้าบังเอิญมีEmail ซ้ำกันในระบบฐานข้อมูล
+              loginResponse.loginSuccessfully = false;
+              loginResponse.msg = "There is something wrong!";
+              return res.json(loginResponse);
+            } else if (data.length === 0) {
+              //ถ้าuser ใส่ email หรือ password ผิด
+              loginResponse.loginSuccessfully = false;
+              loginResponse.msg = "Username or Password is incorrect!";
+              return res.json(loginResponse);
+            } else {
+              try {
+                
+                if (await argon2.verify(data[0].user_password, req.body.password)) {
+                  //Password does match
+                  loginResponse.loginSuccessfully = true;
+                  loginResponse.msg = "Login Success.";
+                  console.log("login success");
+
+                  const access_token = jwt.sign({ id: data[0].user_id, name: data[0].user_name, role: data[0].user_role }, process.env.SecretKey_AccessToken,{expiresIn: "1m"})
+                  const refresh_token = jwt.sign({ id: data[0].user_id, role: data[0].user_role }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
+                  const access_token_cookieOptions = {
+                    maxAge:  365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
+                    httpOnly: true, // prevent client-side scripts from accessing the cookie
+                    secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
+                    sameSite: 'none' // restrict cross-site usage of cookie
+                  };
+
+                  const refresh_token_cookieOptions = {
+                    maxAge:  365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
+                    httpOnly: true, // prevent client-side scripts from accessing the cookie
+                    secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
+                    sameSite: 'none' // restrict cross-site usage of cookie
+                  };
+
+                    
+                  
+                 // res.cookie('auth_token', access_token, cookieOptions);
+                  res.cookie('auth_token', "48485", access_token_cookieOptions);
+                  res.cookie('refresh_token', "94448", refresh_token_cookieOptions);
+                  loginResponse.url = "/todo_items";
+                  return res.json(loginResponse);
+
+                } else {
+                  //Password does not match
+                  loginResponse.loginSuccessfully = false;
+                  loginResponse.msg = "Username or Password is incorrect!";
+                  console.log("login failed");
+
+                  return res.loginResponse
+                }
+              } catch (err) {
+                console.log(err)
+                return res.status(500).json("There is something wrong!");
+              }
+            }
+          } catch (err) {
+            console.log(err);
+             res.json("err");
+          }
+        console.log("555")
+        
     })
 
+    app.post("/redirect", async (req,res)=> {
+        
+        
+        res.json("kuy")
+    })
+
+    
+    
+      
 
     //------------------------------End Login page-----------------------------------------------------
 

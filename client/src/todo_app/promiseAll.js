@@ -1,4 +1,20 @@
+const a = () => {
+const b = 1
+const c = 3
 
+if (b<0) {
+    console.log("first true")
+} else if (b===10) {
+    console.log("secondtrue")
+} else if (b>c) {
+    console.log("third true")
+}
+else {
+    console.log("last else")
+}
+console.log("below last else")
+}
+a()
 
 
 // const task = function(taskNum, seconds, negativeScenario) {

@@ -29,51 +29,8 @@ const Todo_items = () => {
 
   const [isAddModalOpen, setAddModal] = useState(false);
   const addRef = useRef();
-  const [isLoading, setLoading] = useState(false)
-  const [error, setError] = useState(false)
   
-
-  useEffect(() => {
-           
-    const authentication = async() => {
-      try {
-        console.log("check")
-        const res = await axios.get('http://localhost:8800/authentication',{withCredentials: true})
-        console.log(res)
-      } catch (error) {
-        console.log(error)
-      }
-  }
-  authentication()
-  },[])
-
-  // useEffect(() => {
-  //   const fetchProtectedData = async () => {
-  //     const isAuthenticated = await checkAuthentication();
-  //     if (isAuthenticated) {
-  //       const response = await axios.get('http://localhost:8800/todo_items');
-  //       const data = await response.json();
-  //       setTodoItems(data);
-  //     } else {
-  //       window.location.href = '/login'; // Redirect to login page if not authenticated
-  //     }
-  //   };
-
-  //   fetchProtectedData();
-  // }, []);
-
-  // const checkAuthentication = async () => {
-  //   // Implement your authentication logic here, e.g. check if user has a valid token
-  //   const response = await axios.post('http://localhost:8800/todo_items', {
-  //     headers: {
-  //       'Authorization': `Bearer $}`,
-  //     },
-  //   });
-  //   const isAuthenticated = await response.json();
-  //   return isAuthenticated;
-  // };
-
-  //const { data, isLoading, error, setError} = useAxios("http://localhost:8800/todo_items")
+  const { data, isLoading, error, setError} = useAxios("http://localhost:8800/todo_items")
   
   // axios.get('https://example.com/', {
   //   withCredentials: true,
@@ -82,21 +39,21 @@ const Todo_items = () => {
   //   }
   // });
  
-  // useEffect(()=> {
+  useEffect(()=> {
 
   
 
-  // if (data !== null) {
-  //   if(data.length !== 0){
-  //     setTodoItems(data)
-  //   } else if (data.length === 0) {
-  //     setError("There has no todo item.")
-  //     //There has no todo item.
-  //   }
-  // }
+  if (data !== null) {
+    if(data.length !== 0){
+      setTodoItems(data)
+    } else if (data.length === 0) {
+      setError("There has no todo item.")
+      //There has no todo item.
+    }
+  }
 
   
-  // },[ data, error ])
+  },[ data, error ])
   
   //console.log(data)
   
