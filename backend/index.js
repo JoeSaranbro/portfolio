@@ -46,6 +46,22 @@ const corsOptions = {
 
 //----------------------End cors -------------------------------------------------
 
+// ------------------------------ Start cookies options -----------------------------------
+const access_token_cookieOptions = {
+    maxAge:  365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
+    httpOnly: true, // prevent client-side scripts from accessing the cookie
+    secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
+    sameSite: 'none' // restrict cross-site usage of cookie
+  };
+
+  const refresh_token_cookieOptions = {
+    maxAge:  365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
+    httpOnly: true, // prevent client-side scripts from accessing the cookie
+    secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
+    sameSite: 'none' // restrict cross-site usage of cookie
+  };
+// ------------------------------ End cookies options -----------------------------------
+
 //----------------------Start JWT authen -------------------------------------------------
 
 const users = [{
@@ -185,10 +201,15 @@ app.get("/", (req,res)=>{
                 //check if there is refresh token
                 if (refresh_token) {
                     jwt.verify(refresh_token, "mySecretKey",(err, decoded) => {
+
+                        
                         //check if refresh token is valid
                         if (err) {
                             if (err.name === "JsonWebTokenError") {
-                                responseStatus.status = "refresh Token is not valid, go login again"
+                                console.log("refresh Token is not valid, go login again")
+                                 responseStatus.status = "refresh Token is not valid, go login again"
+                                 responseStatus.url = "/login"
+                                return res.json(responseStatus)
                             } else if(err.name === "TokenExpiredError"){
                                 
                                 const date = new Date(err.expiredAt)
@@ -199,20 +220,45 @@ app.get("/", (req,res)=>{
                                 if (timeRemaining > Date.now()) {
                                     
                                     console.log("refresh Token is valid but it expired, we'll give you new refresh token")
-                                    responseStatus.status = "refresh Token is valid but it expired, we'll give you new refresh token"
+                                    
+
+                                    const decodeJWT = jwt.decode(refresh_token, 'mySecretKey')
+
+                                    const new_auth_token = jwt.sign({ id: decodeJWT.id, role: decodeJWT.isAdmin }, "mySecretKey",{expiresIn: "15m"})
+                                    const new_refresh_token = jwt.sign({ id: decodeJWT.id, role: decodeJWT.isAdmin }, "mySecretKey",{expiresIn: "30d"})
+
+                                    console.log("gen new auth and refresh successfully.")
+                                    
+                                    res.cookie('auth_token', new_auth_token, access_token_cookieOptions);
+                                    res.cookie('refresh_token', new_refresh_token, refresh_token_cookieOptions);
+                                    responseStatus.status = "Success";
+                                    responseStatus.url = "/todo_items"
+
+                                    return res.json(responseStatus);
+
                                 } else {
                                     console.log("Go login Again! adasrkaeka")
                                     responseStatus.status = "Go login Again! adasrkaeka"
+                                    responseStatus.url = "/login"
+                                    return res.json(responseStatus);
                                 }
                                 
                                 
                             }
                         } 
                          else {
-                            console.log("Token is valid and not expired, we'll give u new access token")
+                            console.log("Refresh Token is valid and not expired, we'll give u new access token")
+                            const new_auth_token = jwt.sign({ id: decoded.id, role: decoded.isAdmin }, "mySecretKey",{expiresIn: "15m"})
+                            res.cookie('auth_token', new_auth_token, access_token_cookieOptions);
+                            responseStatus.status = "Success";
+                            responseStatus.url = "/todo_items"
+                            console.log("Successfully gen new access token.")
+                            return res.json(responseStatus);
+
                         }
                     })
                 } else {
+                    console.log("You don't have refresh Token, go login again")
                     return res.json("Go login Again!")
                 }
                 
@@ -222,11 +268,13 @@ app.get("/", (req,res)=>{
             if (auth_token) {
                 //verify access/auth token
                  jwt.verify(auth_token, 'mySecretKey', (err, decoded) => {
+                    
                  if (err) {
                     if (err.name === "JsonWebTokenError") {
                         
-                       console.log("token is not valid")
-                       responseStatus.status = "Token is not valid"
+                       console.log("Auth token is not valid, go login again.")
+                       responseStatus.status = "Auth token is not valid, go login again."
+                       responseStatus.url = "/login"
                        return res.json(responseStatus)  
                     } 
                     else if (err.name === "TokenExpiredError") {
@@ -242,6 +290,7 @@ app.get("/", (req,res)=>{
             }
             // if auth_token is not existed
              else {
+                console.log("You don't have auth token, go login!")
                 return res.status(401).json("You are not authenticated!")
             }
             
@@ -518,19 +567,7 @@ app.delete("/todo_items/:id", (req,res)=>{
 
                   const access_token = jwt.sign({ id: data[0].user_id, name: data[0].user_name, role: data[0].user_role }, process.env.SecretKey_AccessToken,{expiresIn: "1m"})
                   const refresh_token = jwt.sign({ id: data[0].user_id, role: data[0].user_role }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
-                  const access_token_cookieOptions = {
-                    maxAge:  365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
-                    httpOnly: true, // prevent client-side scripts from accessing the cookie
-                    secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
-                    sameSite: 'none' // restrict cross-site usage of cookie
-                  };
-
-                  const refresh_token_cookieOptions = {
-                    maxAge:  365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
-                    httpOnly: true, // prevent client-side scripts from accessing the cookie
-                    secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
-                    sameSite: 'none' // restrict cross-site usage of cookie
-                  };
+                  
 
                     
                   
