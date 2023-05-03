@@ -6,8 +6,9 @@ import { IoMdAddCircleOutline } from "react-icons/io"
 import { GiNotebook } from "react-icons/gi"
 import { BsThreeDots } from "react-icons/bs"
 import useAxios from './useAxios';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime'
+
+
+import { useNavigate } from 'react-router-dom';
 import Add from "./Add"
 import Edit from "./Edit"
 
@@ -16,9 +17,9 @@ import Edit from "./Edit"
 
 const Todo_items = () => {
 
+  const navigate = useNavigate();
   
-  
-  const [todoItems, setTodoItems] = useState(null);
+  const [data, setData] = useState(null);
 
   const [isEditing, setEditing] = useState(false)
   const [currentTodo, setCurrentTodo] = useState(null)
@@ -40,8 +41,35 @@ const Todo_items = () => {
         console.log("check")
         const res = await axios.get('http://localhost:8800/authentication',{withCredentials: true})
         console.log(res)
+          if(res.data.length !== 0){
+            setData(res.data)
+          } else if (res.data.length === 0) {
+            setError("There is no todo item.")
+            //There has no todo item.
+          }
+          console.log("fetch success")
+        
       } catch (error) {
-        console.log(error)
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          if (error.response.status === 401) {
+            // handle unauthorized error
+            alert("You're not authenticated!")
+            navigate("/login")
+          } else {
+            console.log("bad request")
+            setError(error.code)
+          }
+        } else if (error.request) {
+          // The request was made but no response was received
+          // handle network error
+          console.log('Network Error', error.message);
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          setError(error.code)
+          console.log('Error', error.message);
+        }
       }
   }
   authentication()
@@ -53,7 +81,7 @@ const Todo_items = () => {
   //     if (isAuthenticated) {
   //       const response = await axios.get('http://localhost:8800/todo_items');
   //       const data = await response.json();
-  //       setTodoItems(data);
+  //       setData(data);
   //     } else {
   //       window.location.href = '/login'; // Redirect to login page if not authenticated
   //     }
@@ -88,7 +116,7 @@ const Todo_items = () => {
 
   // if (data !== null) {
   //   if(data.length !== 0){
-  //     setTodoItems(data)
+  //     setData(data)
   //   } else if (data.length === 0) {
   //     setError("There has no todo item.")
   //     //There has no todo item.
@@ -172,7 +200,7 @@ const Todo_items = () => {
     try {
       await axios.delete("http://localhost:8800/todo_items/" + id)
       const res = await axios.get("http://localhost:8800/todo_items")
-      setTodoItems(res.data)
+      setData(res.data)
       setThreeDotsModal(false)
       setEditing(false)
 
@@ -214,9 +242,9 @@ const Todo_items = () => {
               </div>
             </div>
           : null } 
-          {todoItems ? 
+          {data ? 
           <div className="items " >
-            {todoItems.map((todo , index)=> (
+            {data.map((todo , index)=> (
               
               <div  className="flex flex-row bg-neutral-700 bg-opacity-50 mt-4 group hover:bg-neutral-600"   style={{cursor: "pointer"}} key={todo.id}>
                 
@@ -254,7 +282,7 @@ const Todo_items = () => {
         
           {isEditing &&
             (
-            <Edit currentTodo={currentTodo}  todoItems={todoItems}  setTodoItems={setTodoItems} setEditing={setEditing} />
+            <Edit currentTodo={currentTodo}  data={data}  setData={setData} setEditing={setEditing} />
             )
             
           
@@ -263,7 +291,7 @@ const Todo_items = () => {
         
       </div>
       
-      {isAddModalOpen? <Add setTodoItems={setTodoItems} isAddModalOpen={isAddModalOpen} setAddModal={setAddModal} addRef={addRef}  /> : null}
+      {isAddModalOpen? <Add setData={setData} isAddModalOpen={isAddModalOpen} setAddModal={setAddModal} addRef={addRef}  /> : null}
       
       
     </div> 

@@ -2,7 +2,7 @@ import React from 'react'
 import { useState } from 'react'
 import axios from 'axios'
 
-const Add = ({  setTodoItems, isAddModalOpen, setAddModal, addRef }) => {
+const Add = ({  setData, isAddModalOpen, setAddModal, addRef }) => {
   
   const [userInput , setUserInput] = useState({title: "", details: ""})
   console.log(userInput)
@@ -26,7 +26,7 @@ const Add = ({  setTodoItems, isAddModalOpen, setAddModal, addRef }) => {
           e.preventDefault();
           await axios.post("http://localhost:8800/todo_items", [userInput]);
           const res = await axios.get("http://localhost:8800/todo_items")
-          setTodoItems(res.data)
+          setData(res.data)
           
           setAddModal(false);
           alert("Item added successfully")

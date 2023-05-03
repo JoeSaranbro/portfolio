@@ -7,7 +7,7 @@ import duration from 'dayjs/plugin/duration'
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
 
-const Edit = ({ currentTodo , todoItems, setTodoItems , setEditing}) => {
+const Edit = ({ currentTodo , data, setData , setEditing}) => {
 
 
 
@@ -82,7 +82,7 @@ const Edit = ({ currentTodo , todoItems, setTodoItems , setEditing}) => {
         date_end:  updateInfo.date_end ? dayjs(updateInfo.date_end).format('YYYY-MM-DDTHH:mm') : updateInfo.date_end });
         const res = await axios.get("http://localhost:8800/todo_items")
         
-        setTodoItems(res.data)
+        setData(res.data)
         alert("Updated Successfully!")
       } catch (error) {
         console.log(error)
