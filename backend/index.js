@@ -209,7 +209,9 @@ app.get("/", (req,res)=>{
 
         app.get("/authentication", (req,res) => {
             
-            
+            // if (1 != 0) {
+            //     return res.json("Testttt")
+            // }
             
             
             if (!req.cookies["auth_token"] || !req.cookies["refresh_token"]) {
@@ -270,10 +272,22 @@ app.get("/", (req,res)=>{
                                     
                                     res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                                     res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
-                                    responseStatus.status = "Success";
-                                    responseStatus.url = "/todo_items"
+                                    
 
-                                    return res.json(responseStatus);
+                                    //fetch todo items from user email
+                                    const q = "SELECT * FROM todo_item WHERE user_email = ?"
+                                    db.execute(q, [decoded.email], (err,data)=> {
+                                        if(err) {
+                                            console.log("fetch error 1")
+                                            return res.json(err)
+                                        }
+                                        else {
+                                            console.log("no error, here data")
+                                            return res.json(data)
+                                        }
+                                    });
+                                    
+                                    db.unprepare(q);
 
                                 } //token is valid but expired and user didn't use application within 2 days after expired, we won't give them new token.
                                 else {
@@ -282,6 +296,9 @@ app.get("/", (req,res)=>{
                                 }
                                 
                                 
+                            } //catch other error 
+                            else {
+                                return res.status(401).json("You're not authenticated!")
                             }
                         } 
                         //Refresh Token is valid and not expired, we'll give user new access token
@@ -373,8 +390,37 @@ app.get("/", (req,res)=>{
 
         
     //---------------------- End Authentication -------------------------------------------------
-    
+// Verify  token
 
+const verifyTokens =  (authToken, refreshToken) => {
+    if (!authToken || !refreshToken) {
+
+        return false
+    } else { 
+    const auth_token = deCrypt(authToken)
+    const refresh_token = deCrypt(refreshToken)
+    
+    try {
+        const decoded_auth_token = jwt.verify(auth_token, process.env.SecretKey_AccessToken);
+        const decoded_refresh_token = jwt.verify(refresh_token, process.env.SecretKey_RefreshToken);
+
+        if (decoded_auth_token && decoded_refresh_token) {
+            return decoded_auth_token
+        } else {
+            return false
+        }
+    } catch (error) {
+        return false
+    }
+
+    }
+    
+    
+      
+    
+}
+// 
+//Update,edit todo items
 app.get("/todo_items", (req,res) => {
     console.log(req.cookies)
 
@@ -437,25 +483,46 @@ app.post("/todo_items", (req,res)=>{
     db.unprepare(q);
 });
 
-app.put("/todo_items/:id", (req, res) => {
-    const todoId = req.params.id;
-    const q = "UPDATE todo_item SET `title`= ?, `details`= ?, `date_start` = ?, `date_end` = ? WHERE id = ?";
-  
-    const values = [
-        req.body.title,
-        req.body.details,
-        req.body.date_start,
-        req.body.date_end,
-    ];
-  
-    db.execute(q, [...values,todoId], (err, data) => {
-        if (err) {
-            return res.json(err);
-        } else {
-            return res.json(data);
-        }
-    });
+app.put("/todo_items/:id", async (req, res) => {
+    const verified = verifyTokens(req.cookies["auth_token"],req.cookies["refresh_token"])
+    if (!verified) {
+        return res.statusCode(401).json("You're not authenticated!")
+    } else {
+        
+    try {
+        const decoded = await verified();
+        const idInToken = decoded.id;    
+    if (req.params.id === idInToken) {
+        
+     
+
+        const todoId = req.params.id;
+        const q = "UPDATE todo_item SET `title`= ?, `details`= ?, `date_start` = ?, `date_end` = ? WHERE id = ?";
+    
+        const values = [
+            req.body.title,
+            req.body.details,
+            req.body.date_start,
+            req.body.date_end,
+        ];
+    
+        db.execute(q, [...values,todoId], (err, data) => {
+            if (err) {
+                return res.json(err);
+            } else {
+                return res.json(data);
+            }
+        });
     db.unprepare(q);
+     } else {
+        return res.status(400) 
+     }
+    } 
+    catch (error) {
+        return res.status(400)
+    }
+
+    }
   });
 
 app.delete("/todo_items/:id", (req,res)=>{
@@ -639,7 +706,7 @@ app.delete("/todo_items/:id", (req,res)=>{
                   console.log("login success");
 
                   const auth_token = jwt.sign({ id: data[0].user_id, email: data[0].user_email, role: data[0].user_role, }, process.env.SecretKey_AccessToken,{expiresIn: "1m"})
-                  const refresh_token = jwt.sign({ id: data[0].user_id, email: data[0].user_email, role: data[0].user_role }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
+                  const refresh_token = jwt.sign({ id: data[0].user_id, email: data[0].user_email, role: data[0].user_role }, process.env.SecretKey_RefreshToken,{expiresIn: "1m"})
                   
                   const encrypted_auth_token = enCrypt(auth_token)
                   const encrypted_refresh_token = enCrypt(refresh_token)

@@ -40,14 +40,18 @@ const Todo_items = () => {
       try {
         console.log("check")
         const res = await axios.get('http://localhost:8800/authentication',{withCredentials: true})
-        console.log(res)
-          if(res.data.length !== 0){
+        console.log(res.data)
+          //check if res.data is array and not null
+          if(Array.isArray(res.data) && res.data.length !== 0){
             setData(res.data)
-          } else if (res.data.length === 0) {
+          } //Catch there is no todo item.
+          else if (res.data.length === 0) {
             setError("There is no todo item.")
-            //There has no todo item.
+            
+          } //Catch if res.data === normal string, etc.
+          else{
+            setError("Error!")
           }
-          console.log("fetch success")
         
       } catch (error) {
         if (error.response) {

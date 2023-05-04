@@ -14,7 +14,7 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
 
   const [updateInfo, setUpdateInfo] = useState(currentTodo)
   
-  //console.log(updateInfo.date_start.substring(0,16))
+  console.log(currentTodo)
 
   const RemainingTime = () => {
     const [timeNow, setTimeNow] = useState(new Date())
@@ -35,7 +35,7 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
     const date_time_project_duration = dayjs.duration(end.diff(start));
     const date_time_remaining = dayjs.duration(end.diff(timeNow));
     
-    const date_time_project_duration_formatted = date_time_project_duration.format('D')+ " Days " +  date_time_project_duration.format('H') + " Hours "+ date_time_project_duration.format('m') +" Minutes left" ;
+    const date_time_project_duration_formatted = date_time_project_duration.format('D')+ " Days " +  date_time_project_duration.format('H') + " Hours "+ date_time_project_duration.format('m') +" Minutes" ;
     const date_time_remaining_formatted = date_time_remaining.format('D')+ " Days " +  date_time_remaining.format('H') + " Hours "+ date_time_remaining.format('m') +" Minutes left";
     
     
@@ -70,7 +70,8 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
   
   const handleUpdate = async (e) => {
     
-    
+    const data = {...updateInfo,date_start: updateInfo.date_start ? dayjs(updateInfo.date_start).format('YYYY-MM-DDTHH:mm') : updateInfo.date_start  , 
+        date_end:  updateInfo.date_end ? dayjs(updateInfo.date_end).format('YYYY-MM-DDTHH:mm') : updateInfo.date_end }
 
     
     e.preventDefault()
@@ -78,8 +79,7 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
       alert("Title can't be empty!")
     } else {
       try {
-        await axios.put(`http://localhost:8800/todo_items/` + currentTodo.id, {...updateInfo,date_start: updateInfo.date_start ? dayjs(updateInfo.date_start).format('YYYY-MM-DDTHH:mm') : updateInfo.date_start  , 
-        date_end:  updateInfo.date_end ? dayjs(updateInfo.date_end).format('YYYY-MM-DDTHH:mm') : updateInfo.date_end });
+        await axios.put(`http://localhost:8800/todo_items/` + currentTodo.id, data , {withCredentials:true });
         const res = await axios.get("http://localhost:8800/todo_items")
         
         setData(res.data)
