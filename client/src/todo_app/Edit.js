@@ -14,7 +14,7 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
 
   const [updateInfo, setUpdateInfo] = useState(currentTodo)
   
-  console.log(currentTodo)
+  console.log(updateInfo)
 
   const RemainingTime = () => {
     const [timeNow, setTimeNow] = useState(new Date())
@@ -79,14 +79,14 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
       alert("Title can't be empty!")
     } else {
       try {
-        await axios.put(`http://localhost:8800/todo_items/` + currentTodo.id, data , {withCredentials:true });
-        const res = await axios.get("http://localhost:8800/todo_items")
-        
-        setData(res.data)
+        const res = await axios.put(`http://localhost:8800/todo_items/` + currentTodo.id, data , {withCredentials:true });
+
+        console.log(res)
         alert("Updated Successfully!")
+        setData(res.data)
       } catch (error) {
         console.log(error)
-        alert("Error!")
+        alert("There is an error, please refresh the page!")
       }
       setEditing(false)
       

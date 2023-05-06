@@ -33,7 +33,7 @@ const Todo_items = () => {
   const [isLoading, setLoading] = useState(false)
   const [error, setError] = useState(false)
   
-
+console.log(data)
   useEffect(() => {
            
     const authentication = async() => {

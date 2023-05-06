@@ -185,7 +185,7 @@ app.get("/", (req,res)=>{
 
     // Decrypt
     const deCrypt = (ciphertext) => {
-        console.log(ciphertext)
+        
         const bytes  = CryptoJS.AES.decrypt(ciphertext,process.env.SecretKey_Cryptojs);
         const originalText = bytes.toString(CryptoJS.enc.Utf8);
     return originalText;
@@ -261,8 +261,8 @@ app.get("/", (req,res)=>{
 
                                     const decoded = jwt.decode(refresh_token, process.env.SecretKey_RefreshToken)
 
-                                    const new_auth_token = jwt.sign({ id: decoded.id, email: decoded.email, role: decoded.isAdmin }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
-                                    const new_refresh_token = jwt.sign({ id: decoded.id, email: decoded.email, role: decoded.isAdmin }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
+                                    const new_auth_token = jwt.sign({ user_id: decoded.id, email: decoded.email, role: decoded.isAdmin }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
+                                    const new_refresh_token = jwt.sign({ user_id: decoded.id, email: decoded.email, role: decoded.isAdmin }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
 
                                     const encrypted_auth_token = enCrypt(new_auth_token)
                                     const encrypted_refresh_token = enCrypt(new_refresh_token)
@@ -275,11 +275,11 @@ app.get("/", (req,res)=>{
                                     
 
                                     //fetch todo items from user email
-                                    const q = "SELECT * FROM todo_item WHERE user_email = ?"
-                                    db.execute(q, [decoded.email], (err,data)=> {
+                                    const q = "SELECT * FROM todo_item WHERE user_id = ?"
+                                    db.execute(q, [decoded.user_id], (err,data)=> {
                                         if(err) {
-                                            console.log("fetch error 1")
-                                            return res.json(err)
+                                            console.log("fetch error after veriying refresh token")
+                                            return res.status(500).json(err)
                                         }
                                         else {
                                             console.log("no error, here data")
@@ -304,13 +304,14 @@ app.get("/", (req,res)=>{
                         //Refresh Token is valid and not expired, we'll give user new access token
                          else {
                             console.log("Refresh Token is valid and not expired, we'll give u new access token")
-                            const new_auth_token = jwt.sign({ id: decoded.id, email: decoded.email, role: decoded.isAdmin }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
+                            
+                            const new_auth_token = jwt.sign({ user_id: decoded.user_id, email: decoded.email, role: decoded.isAdmin }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
                             const encrypted_auth_token = enCrypt(new_auth_token) 
                             res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                             
                             //fetch todo items from user email
-                            const q = "SELECT * FROM todo_item WHERE user_email = ?"
-                            db.execute(q, [decoded.email], (err,data)=> {
+                            const q = "SELECT * FROM todo_item WHERE user_id = ?"
+                            db.execute(q, [decoded.user_id], (err,data)=> {
                                 if(err) {
                                     console.log("fetch error 1")
                                     return res.json(err)
@@ -357,8 +358,8 @@ app.get("/", (req,res)=>{
                     
                 } else {
                     //fetch todo items from user email
-                    const q = "SELECT * FROM todo_item WHERE user_email = ?"
-                    db.execute(q, [decoded.email], (err,data)=> {
+                    const q = "SELECT * FROM todo_item WHERE user_id = ?"
+                    db.execute(q, [decoded.user_id], (err,data)=> {
                         if(err) {
                             console.log("fetch error 2")
                             return res.json(err)
@@ -399,7 +400,8 @@ const verifyTokens =  (authToken, refreshToken) => {
     } else { 
     const auth_token = deCrypt(authToken)
     const refresh_token = deCrypt(refreshToken)
-    
+    console.log(auth_token)
+    console.log(refresh_token)
     try {
         const decoded_auth_token = jwt.verify(auth_token, process.env.SecretKey_AccessToken);
         const decoded_refresh_token = jwt.verify(refresh_token, process.env.SecretKey_RefreshToken);
@@ -416,13 +418,11 @@ const verifyTokens =  (authToken, refreshToken) => {
     }
     
     
-      
-    
 }
 // 
 //Update,edit todo items
 app.get("/todo_items", (req,res) => {
-    console.log(req.cookies)
+    
 
     const q = "SELECT * FROM todo_item"
     db.execute(q, (err,data)=> {
@@ -484,36 +484,59 @@ app.post("/todo_items", (req,res)=>{
 });
 
 app.put("/todo_items/:id", async (req, res) => {
+    const q = 9
     const verified = verifyTokens(req.cookies["auth_token"],req.cookies["refresh_token"])
+    
     if (!verified) {
-        return res.statusCode(401).json("You're not authenticated!")
+        return res.status(401).json("You're not authenticated!")
     } else {
         
     try {
-        const decoded = await verified();
-        const idInToken = decoded.id;    
-    if (req.params.id === idInToken) {
+    console.log(verified.user_id)        
+    console.log(q)
+    if (req.body.user_id === verified.user_id) {
         
-     
 
         const todoId = req.params.id;
-        const q = "UPDATE todo_item SET `title`= ?, `details`= ?, `date_start` = ?, `date_end` = ? WHERE id = ?";
+        const updateTodo = "UPDATE todo_item SET `title`= ?, `details`= ?, `date_start` = ?, `date_end` = ?,`user_email` = ?, `user_id` = ? WHERE todo_id = ?";
     
         const values = [
             req.body.title,
             req.body.details,
             req.body.date_start,
             req.body.date_end,
+            req.body.user_email,
+            req.body.user_id,
         ];
     
-        db.execute(q, [...values,todoId], (err, data) => {
+        db.execute(updateTodo, [...values,todoId], (err, data) => {
             if (err) {
-                return res.json(err);
+                console.log("update todo error")
+                console.log(err)
+                return res.status(500).json("update todo error");
             } else {
-                return res.json(data);
+                console.log("update todo success")
+                const fetchTodo = "SELECT * FROM todo_item WHERE user_id = ?"
+                try {
+                db.execute(fetchTodo, [verified.user_id], (err,data)=> {
+                    if(err) {
+                        console.log("fetch error on update todo")
+                        return res.status(500).json("fetch error on update todo")
+                    }
+                    else {
+                        console.log("fetch success on update todo")
+                        console.log(data)
+                        return res.json(data)
+                    }
+                });
+                } catch (error) {
+                    return res.status(500)
+                }
+                
+                db.unprepare(fetchTodo);
             }
         });
-    db.unprepare(q);
+        db.unprepare(updateTodo);
      } else {
         return res.status(400) 
      }
@@ -527,7 +550,7 @@ app.put("/todo_items/:id", async (req, res) => {
 
 app.delete("/todo_items/:id", (req,res)=>{
     const todoId = req.params.id
-    const q = "DELETE FROM todo_item WHERE id = ?";
+    const q = "DELETE FROM todo_item WHERE todo_id = ?";
   
     db.execute(q, [todoId], (err,data) => {
         if (err) {
@@ -705,8 +728,8 @@ app.delete("/todo_items/:id", (req,res)=>{
                   loginResponse.msg = "Login Success.";
                   console.log("login success");
 
-                  const auth_token = jwt.sign({ id: data[0].user_id, email: data[0].user_email, role: data[0].user_role, }, process.env.SecretKey_AccessToken,{expiresIn: "1m"})
-                  const refresh_token = jwt.sign({ id: data[0].user_id, email: data[0].user_email, role: data[0].user_role }, process.env.SecretKey_RefreshToken,{expiresIn: "1m"})
+                  const auth_token = jwt.sign({ user_id: data[0].user_id, email: data[0].user_email, role: data[0].user_role, }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
+                  const refresh_token = jwt.sign({ user_id: data[0].user_id, email: data[0].user_email, role: data[0].user_role }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
                   
                   const encrypted_auth_token = enCrypt(auth_token)
                   const encrypted_refresh_token = enCrypt(refresh_token)
