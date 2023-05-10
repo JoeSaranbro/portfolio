@@ -7,14 +7,20 @@ import duration from 'dayjs/plugin/duration'
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
 
-const Edit = ({ currentTodo , data, setData , setEditing}) => {
+const Edit = ({ currentTodo , data, setData , setEditing, setTest, forTest}) => {
 
 
 
 
   const [updateInfo, setUpdateInfo] = useState(currentTodo)
   
-  console.log(updateInfo)
+  useEffect(()=> {
+    console.log(currentTodo)
+   
+    
+    setUpdateInfo(currentTodo)
+  },[currentTodo])
+
 
   const RemainingTime = () => {
     const [timeNow, setTimeNow] = useState(new Date())
@@ -56,13 +62,7 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
     )
   }
   
-  useEffect(()=> {
-    
-   
-    
-    setUpdateInfo(currentTodo)
-  },[currentTodo])
-
+  
   
  
 
@@ -79,11 +79,15 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
       alert("Title can't be empty!")
     } else {
       try {
-        const res = await axios.put(`http://localhost:8800/todo_items/` + currentTodo.id, data , {withCredentials:true });
-
-        console.log(res)
+        const res = await axios.put(`http://localhost:8800/todo_items/` + currentTodo.todo_id, data , {withCredentials:true });
+        
+        
+        if (res.data.length !== 0) {
+          setData(res.data)
+        } 
+        
         alert("Updated Successfully!")
-        setData(res.data)
+        
       } catch (error) {
         console.log(error)
         alert("There is an error, please refresh the page!")
@@ -98,7 +102,7 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
     
     if (currentTodo) {
         return(
-          <div className="item w-full flex gap-4 " key={currentTodo.id}>
+          <div className="item w-full flex gap-4 " key={currentTodo.todo_id}>
             
                 <form className="w-full">
                   <div className="edit-content flex w-full justify-center">
@@ -161,6 +165,14 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
                 
                     </div>
                   </div>
+                  <div> 
+              <input
+                          value={forTest[0].title} 
+                          onChange={(e)=> setTest({...forTest, })}
+                          className="form-input w-[340px]" 
+                           
+              />
+            </div>
                 </form>
               
             

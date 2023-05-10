@@ -32,8 +32,75 @@ const Todo_items = () => {
   const addRef = useRef();
   const [isLoading, setLoading] = useState(false)
   const [error, setError] = useState(false)
+
+  const [forTest, setTest] = useState([
+    {
+        "todo_id": 15,
+        "title": "sas",
+        "details": "qwaa",
+        "date_start": null,
+        "date_end": null,
+        "user_email": "z@z.com",
+        "user_id": 7
+    },
+    {
+        "todo_id": 29,
+        "title": "korna",
+        "details": "29",
+        "date_start": null,
+        "date_end": null,
+        "user_email": "z@z.com",
+        "user_id": 7
+    },
+    {
+        "todo_id": 44,
+        "title": "44",
+        "details": "44",
+        "date_start": null,
+        "date_end": null,
+        "user_email": "z@z.com",
+        "user_id": 7
+    },
+    {
+        "todo_id": 52,
+        "title": "52",
+        "details": "52",
+        "date_start": null,
+        "date_end": null,
+        "user_email": "z@z.com",
+        "user_id": 7
+    },
+    {
+        "todo_id": 55,
+        "title": "52",
+        "details": "52",
+        "date_start": null,
+        "date_end": null,
+        "user_email": "z@z.com",
+        "user_id": 7
+    },
+    {
+        "todo_id": 76,
+        "title": "rrrrrr",
+        "details": "testExecute",
+        "date_start": null,
+        "date_end": null,
+        "user_email": "z@z.com",
+        "user_id": 7
+    },
+    {
+        "todo_id": 79,
+        "title": "a",
+        "details": "a",
+        "date_start": null,
+        "date_end": null,
+        "user_email": "z@z.com",
+        "user_id": 7
+    }
+])
   
-console.log(data)
+  console.log("forTest [0]",forTest[0])
+  console.log("forTest all",forTest)
   useEffect(() => {
            
     const authentication = async() => {
@@ -69,6 +136,7 @@ console.log(data)
           // The request was made but no response was received
           // handle network error
           console.log('Network Error', error.message);
+          setError(error.message)
         } else {
           // Something happened in setting up the request that triggered an Error
           setError(error.code)
@@ -79,58 +147,9 @@ console.log(data)
   authentication()
   },[])
 
-  // useEffect(() => {
-  //   const fetchProtectedData = async () => {
-  //     const isAuthenticated = await checkAuthentication();
-  //     if (isAuthenticated) {
-  //       const response = await axios.get('http://localhost:8800/todo_items');
-  //       const data = await response.json();
-  //       setData(data);
-  //     } else {
-  //       window.location.href = '/login'; // Redirect to login page if not authenticated
-  //     }
-  //   };
-
-  //   fetchProtectedData();
-  // }, []);
-
-  // const checkAuthentication = async () => {
-  //   // Implement your authentication logic here, e.g. check if user has a valid token
-  //   const response = await axios.post('http://localhost:8800/todo_items', {
-  //     headers: {
-  //       'Authorization': `Bearer $}`,
-  //     },
-  //   });
-  //   const isAuthenticated = await response.json();
-  //   return isAuthenticated;
-  // };
-
-  //const { data, isLoading, error, setError} = useAxios("http://localhost:8800/todo_items")
   
-  // axios.get('https://example.com/', {
-  //   withCredentials: true,
-  //   headers: {
-  //     'X-CSRF-TOKEN': cookies['cookie-name']
-  //   }
-  // });
  
-  // useEffect(()=> {
-
   
-
-  // if (data !== null) {
-  //   if(data.length !== 0){
-  //     setData(data)
-  //   } else if (data.length === 0) {
-  //     setError("There has no todo item.")
-  //     //There has no todo item.
-  //   }
-  // }
-
-  
-  // },[ data, error ])
-  
-  //console.log(data)
   
   const handleThreedots = (index) => {
     
@@ -194,11 +213,17 @@ console.log(data)
   
  
 
+  // const handleUpdate = (newData) => {
+  //   const findWhereUpdatedId = data.findIndex(({ todo_id })=> todo_id === newData.todo_id)
+  //   if (findWhereUpdatedId !== -1) {
+  //     setData()
+  //   }
+    
+  // }
   
-
   
   console.count("all")
-  
+  // Delete function
   const handleClickDelete = async (id) => {
    // console.log(index)
     try {
@@ -250,7 +275,7 @@ console.log(data)
           <div className="items " >
             {data.map((todo , index)=> (
               
-              <div  className="flex flex-row bg-neutral-700 bg-opacity-50 mt-4 group hover:bg-neutral-600"   style={{cursor: "pointer"}} key={todo.id}>
+              <div  className="flex flex-row bg-neutral-700 bg-opacity-50 mt-4 group hover:bg-neutral-600"   style={{cursor: "pointer"}} key={todo.todo_id}>
                 
                 <div className='basis-1/12 pt-1' onClick={()=> [setCurrentTodo(todo),setEditing(true)]} ><GiNotebook size={30} /> </div>
                 <div className=" item-title-sidebar basis-10/12 " onClick={()=>  [setCurrentTodo(todo),setEditing(true)]} >
@@ -286,7 +311,7 @@ console.log(data)
         
           {isEditing &&
             (
-            <Edit currentTodo={currentTodo}  data={data}  setData={setData} setEditing={setEditing} />
+            <Edit currentTodo={currentTodo}  data={data}  setData={setData} setEditing={setEditing} setTest={setTest} forTest={forTest} />
             )
             
           

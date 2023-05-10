@@ -2,7 +2,7 @@ import express from "express"
 import cors from "cors"
 import jwt from "jsonwebtoken"
 import argon2 from "argon2"
-import mysql2 from "mysql2"
+import mysql2 from "mysql2/promise"
 import dotenv from "dotenv"
 import cookieParser from 'cookie-parser'
 import CryptoJS from "crypto-js" 
@@ -13,7 +13,7 @@ app.use(cookieParser());
 
 
 
-const db = mysql2.createConnection({
+const db = await mysql2.createConnection({
     host: process.env.MYSQL_HOST,
     user: process.env.MYSQL_USER,
     password:process.env.MYSQL_PASSWORD,
@@ -207,7 +207,7 @@ app.get("/", (req,res)=>{
     };
 // ------------------------------ End cookies options -----------------------------------
 
-        app.get("/authentication", (req,res) => {
+        app.get("/authentication", async (req,res) => {
             
             // if (1 != 0) {
             //     return res.json("Testttt")
@@ -334,10 +334,11 @@ app.get("/", (req,res)=>{
                 
             }
             
+            
             //if auth_token existed
             if (auth_token) {
                 //verify access/auth token
-                 jwt.verify(auth_token, process.env.SecretKey_AccessToken, (err, decoded) => {
+                 jwt.verify(auth_token, process.env.SecretKey_AccessToken, async (err, decoded) => {
                     
                  if (err) {
                     if (err.name === "JsonWebTokenError") {
@@ -357,23 +358,27 @@ app.get("/", (req,res)=>{
                     }
                     
                 } else {
-                    //fetch todo items from user email
+                    //fetch todo items from user id
+                    console.log("is here")
                     const q = "SELECT * FROM todo_item WHERE user_id = ?"
-                    db.execute(q, [decoded.user_id], (err,data)=> {
-                        if(err) {
-                            console.log("fetch error 2")
-                            return res.json(err)
-                        }
-                        else {
-                            console.log("no error, here data")
-                            return res.json(data)
-                        }
-                    });
+                    try {
+                    
+                    const [rows, fields] = await db.execute(q, [decoded.user_id]);
                     
                     db.unprepare(q);
-                    //return res.status(400).json("Bad request")
+                    
+                    
+                    return res.json(rows)
+                    } catch (error) {
+                    db.unprepare(q);
+                    console.log(error)
+                    return res.status(400).json("Bad request")
+                    }
+                    
+                    
                     
                     }
+                    
                 })
             }
             // if auth_token is not existed
@@ -464,7 +469,6 @@ app.get('/protected-resource', (req, res) => {
   });
 
 
-
 app.post("/todo_items", (req,res)=>{
 
     
@@ -484,19 +488,35 @@ app.post("/todo_items", (req,res)=>{
 });
 
 app.put("/todo_items/:id", async (req, res) => {
-    const q = 9
+    
     const verified = verifyTokens(req.cookies["auth_token"],req.cookies["refresh_token"])
     
     if (!verified) {
+        console.log("You're not authenticated!")
         return res.status(401).json("You're not authenticated!")
     } else {
         
     try {
-    console.log(verified.user_id)        
-    console.log(q)
-    if (req.body.user_id === verified.user_id) {
+    // get a todo data from database
+        console.log("Before db.execute");
+        const fetchSpecificTodo = "SELECT * FROM todo_item WHERE todo_id = ?"
+        const [rows] = await db.execute(fetchSpecificTodo, [req.params.id]);
+        //check if payload user_id and authToken user_id is match?
+        if (rows[0].user_id !== verified.user_id) {
+            console.log("You're not allowed!")
+            db.unprepare(fetchSpecificTodo);
+            return res.status(401).json("You're not allowed!")
+        }
+        
+        
+        
         
 
+    
+    
+    
+
+        
         const todoId = req.params.id;
         const updateTodo = "UPDATE todo_item SET `title`= ?, `details`= ?, `date_start` = ?, `date_end` = ?,`user_email` = ?, `user_id` = ? WHERE todo_id = ?";
     
@@ -507,44 +527,42 @@ app.put("/todo_items/:id", async (req, res) => {
             req.body.date_end,
             req.body.user_email,
             req.body.user_id,
+            
+            
         ];
-    
-        db.execute(updateTodo, [...values,todoId], (err, data) => {
-            if (err) {
-                console.log("update todo error")
-                console.log(err)
-                return res.status(500).json("update todo error");
-            } else {
-                console.log("update todo success")
-                const fetchTodo = "SELECT * FROM todo_item WHERE user_id = ?"
+        
+        //updating todo
+         const [row] =  await db.execute(updateTodo, [...values,todoId]);
+            
+         if (row.affectedRows  === 0 ) {
+            db.unprepare(updateTodo);
+            return res.status(400).json("Bad request, user not found.")
+
+         } else {
+            db.unprepare(updateTodo);
+
+            //fetch data to return updated data after updating
+            const fetchTodo = "SELECT * FROM todo_item WHERE user_id = ?"
                 try {
-                db.execute(fetchTodo, [verified.user_id], (err,data)=> {
-                    if(err) {
-                        console.log("fetch error on update todo")
-                        return res.status(500).json("fetch error on update todo")
-                    }
-                    else {
-                        console.log("fetch success on update todo")
-                        console.log(data)
-                        return res.json(data)
-                    }
-                });
-                } catch (error) {
-                    return res.status(500)
-                }
+               console.log("fetch data to return updated data after updating")
+               const [row] = await db.execute(fetchTodo, [verified.user_id]);
+               console.log("fetch updated data successfully")
+                    db.unprepare(fetchTodo);
+                    return res.json(row);
                 
-                db.unprepare(fetchTodo);
-            }
-        });
-        db.unprepare(updateTodo);
-     } else {
-        return res.status(400) 
-     }
+                } catch (error) {
+                    db.unprepare(fetchTodo);
+                    return res.status(500).json("Failed to fetch items!")
+                }
+         }
+      
     } 
     catch (error) {
-        return res.status(400)
+        console.log("try catch Error!")
+        console.log(error)
+       
+        return res.status(400).json("Bad Request")
     }
-
     }
   });
 
@@ -729,6 +747,7 @@ app.delete("/todo_items/:id", (req,res)=>{
                   console.log("login success");
 
                   const auth_token = jwt.sign({ user_id: data[0].user_id, email: data[0].user_email, role: data[0].user_role, }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
+                  console.log(auth_token)
                   const refresh_token = jwt.sign({ user_id: data[0].user_id, email: data[0].user_email, role: data[0].user_role }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
                   
                   const encrypted_auth_token = enCrypt(auth_token)
@@ -781,4 +800,5 @@ app.delete("/todo_items/:id", (req,res)=>{
 
 app.listen(8800, ()=> {
     console.log("Hello")
+    
 })
