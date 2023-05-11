@@ -178,17 +178,31 @@ app.get("/", (req,res)=>{
     // Encrypt by crypto.js
     
     const enCrypt = (message) => {
+
+        try {
         const ciphertext = CryptoJS.AES.encrypt(message,process.env.SecretKey_Cryptojs).toString();
+        return ciphertext;
+        } catch (error) {
+        console.log("try catch enCrypt error",error)
+        return false;
+        }
+        
     
-    return ciphertext;
+    
     }
 
     // Decrypt
     const deCrypt = (ciphertext) => {
-        
+        try {
         const bytes  = CryptoJS.AES.decrypt(ciphertext,process.env.SecretKey_Cryptojs);
         const originalText = bytes.toString(CryptoJS.enc.Utf8);
-    return originalText;
+        return originalText;
+        } catch (error) {
+            
+        console.log("try catch deCrypt error",error)
+        return false;
+        }
+        
     }
 
     // ------------------------------ Start cookies options -----------------------------------
@@ -209,25 +223,18 @@ app.get("/", (req,res)=>{
 
         app.get("/authentication", async (req,res) => {
             
-            // if (1 != 0) {
-            //     return res.json("Testttt")
-            // }
+           
             
             
             if (!req.cookies["auth_token"] || !req.cookies["refresh_token"]) {
+                console.log("No auth_token || refresh_token")
                 return res.status(401).json("You're not authenticated!")
             }
-            
-            
               
             const auth_token = deCrypt(req.cookies["auth_token"])
             const refresh_token = deCrypt(req.cookies["refresh_token"])
 
             
-            console.log("is it still do")
-            console.log(req.cookies["auth_token"])
-            console.log("Test Decrypt")
-            console.log(auth_token)
            // console.log(refresh_token)
             
            try {
@@ -359,7 +366,7 @@ app.get("/", (req,res)=>{
                     
                 } else {
                     //fetch todo items from user id
-                    console.log("is here")
+                    console.log("fetch todo items from user id")
                     const q = "SELECT * FROM todo_item WHERE user_id = ?"
                     try {
                     
@@ -371,7 +378,8 @@ app.get("/", (req,res)=>{
                     return res.json(rows)
                     } catch (error) {
                     db.unprepare(q);
-                    console.log(error)
+                    
+                    console.log("try catch fetch todo items from user id error",error)
                     return res.status(400).json("Bad request")
                     }
                     
@@ -388,8 +396,9 @@ app.get("/", (req,res)=>{
             }
         }
         catch (error) {
-            console.log("try catch error ")
-            console.log(error)
+            
+            console.log("try catch error authentication",error)
+            return res.status(500).json("Internal Error")
         }
             
         });
@@ -398,16 +407,24 @@ app.get("/", (req,res)=>{
     //---------------------- End Authentication -------------------------------------------------
 // Verify  token
 
-const verifyTokens =  (authToken, refreshToken) => {
-    if (!authToken || !refreshToken) {
+const verifyTokens =  (encryptedAuthToken, encryptedRefreshToken) => {
+    
 
+    if (!encryptedAuthToken || !encryptedRefreshToken) {
+        console.log("no !authToken || !refreshToken")
         return false
     } else { 
-    const auth_token = deCrypt(authToken)
-    const refresh_token = deCrypt(refreshToken)
-    console.log(auth_token)
-    console.log(refresh_token)
+    
+    const auth_token = deCrypt(encryptedAuthToken)
+    const refresh_token = deCrypt(encryptedRefreshToken)
+    console.log("auth_token",auth_token)
+    console.log("refresh_token",refresh_token)
+    if (!auth_token || !refresh_token) {
+        
+        return false
+    } else {
     try {
+        
         const decoded_auth_token = jwt.verify(auth_token, process.env.SecretKey_AccessToken);
         const decoded_refresh_token = jwt.verify(refresh_token, process.env.SecretKey_RefreshToken);
 
@@ -417,10 +434,12 @@ const verifyTokens =  (authToken, refreshToken) => {
             return false
         }
     } catch (error) {
+        console.log("verifyTokens try catch error", error)
         return false
     }
+   }
 
-    }
+ }
     
     
 }
@@ -487,37 +506,29 @@ app.post("/todo_items", (req,res)=>{
     db.unprepare(q);
 });
 
-app.put("/todo_items/:id", async (req, res) => {
+app.put("/todo_items/:todo_id", async (req, res) => {
     
     const verified = verifyTokens(req.cookies["auth_token"],req.cookies["refresh_token"])
     
     if (!verified) {
-        console.log("You're not authenticated!")
+        console.log(`You're not authenticated! (app.put("/todo_items/:todo_id") )`)
         return res.status(401).json("You're not authenticated!")
     } else {
         
     try {
     // get a todo data from database
-        console.log("Before db.execute");
+        
         const fetchSpecificTodo = "SELECT * FROM todo_item WHERE todo_id = ?"
-        const [rows] = await db.execute(fetchSpecificTodo, [req.params.id]);
+        const [rows] = await db.execute(fetchSpecificTodo, [req.params.todo_id]);
         //check if payload user_id and authToken user_id is match?
         if (rows[0].user_id !== verified.user_id) {
-            console.log("You're not allowed!")
+            console.log("You're not allowed to update!")
             db.unprepare(fetchSpecificTodo);
-            return res.status(401).json("You're not allowed!")
+            return res.status(401).json("You're not allowed to update!")
         }
         
         
-        
-        
-
-    
-    
-    
-
-        
-        const todoId = req.params.id;
+        const todoId = req.params.todo_id;
         const updateTodo = "UPDATE todo_item SET `title`= ?, `details`= ?, `date_start` = ?, `date_end` = ?,`user_email` = ?, `user_id` = ? WHERE todo_id = ?";
     
         const values = [
@@ -526,7 +537,7 @@ app.put("/todo_items/:id", async (req, res) => {
             req.body.date_start,
             req.body.date_end,
             req.body.user_email,
-            req.body.user_id,
+            verified.user_id,
             
             
         ];
@@ -552,32 +563,69 @@ app.put("/todo_items/:id", async (req, res) => {
                 
                 } catch (error) {
                     db.unprepare(fetchTodo);
+                    console.log("try catch fetch data to return updated data after updating error",error)
                     return res.status(500).json("Failed to fetch items!")
                 }
          }
-      
     } 
     catch (error) {
-        console.log("try catch Error!")
-        console.log(error)
-       
+        console.log("try catch Update Todo Error!",error)
         return res.status(400).json("Bad Request")
     }
     }
   });
 
-app.delete("/todo_items/:id", (req,res)=>{
-    const todoId = req.params.id
-    const q = "DELETE FROM todo_item WHERE todo_id = ?";
-  
-    db.execute(q, [todoId], (err,data) => {
-        if (err) {
-            return res.json(err);
-        } else {
-            return res.json(data);
+app.delete("/todo_items/:todo_id", async (req,res)=>{
+    const verified = verifyTokens(req.cookies["auth_token"],req.cookies["refresh_token"])
+
+    if (!verified) {
+        console.log("You're not authenticated!")
+        return res.status(401).json("You're not authenticated!")
+    } else { 
+
+    const todoId = req.params.todo_id
+
+    const deleteTodo = "DELETE FROM todo_item WHERE todo_id = ?"; 
+  try {
+
+    const fetchSpecificTodo = "SELECT * FROM todo_item WHERE todo_id = ?"
+        const [rows] = await db.execute(fetchSpecificTodo, [req.params.todo_id]);
+        //check if payload user_id and authToken user_id is match?
+        
+        if (rows[0].user_id !== verified.user_id) {
+            console.log("You're not allowed to delete!")
+            db.unprepare(fetchSpecificTodo);
+            return res.status(401).json("You're not allowed to delete!")
         }
-    });
-    db.unprepare(q);
+
+
+    const [row] = await db.execute(deleteTodo, [todoId]);
+    db.unprepare(deleteTodo);
+    console.log(row)
+    if (row.affectedRows === 1) {
+        //fetch data to return updated data after updating
+        const fetchTodo = "SELECT * FROM todo_item WHERE user_id = ?"
+        try {
+       console.log("fetch data to return updated data after updating")
+       const [row] = await db.execute(fetchTodo, [verified.user_id]);
+       console.log("fetch updated data successfully")
+            db.unprepare(fetchTodo);
+            return res.json(row);
+        
+        } catch (error) {
+            db.unprepare(fetchTodo);
+            console.log("try catch fetch data to return updated data after updating error",error)
+            return res.status(500).json("Failed to fetch items!")
+        }
+    } 
+    
+    return res.json("deleted success")
+  } catch (error) {
+    db.unprepare(deleteTodo);
+    console.log("try catch delete todo error", error)
+    return res.status(400).json("Bad Request")
+  }
+}
 });
 //----------------------Start Login/Sign up TodoApp -------------------------------------------------
 

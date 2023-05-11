@@ -7,7 +7,7 @@ import duration from 'dayjs/plugin/duration'
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
 
-const Edit = ({ currentTodo , data, setData , setEditing, setTest, forTest}) => {
+const Edit = ({ currentTodo , data, setData , setEditing}) => {
 
 
 
@@ -62,7 +62,8 @@ const Edit = ({ currentTodo , data, setData , setEditing, setTest, forTest}) => 
     )
   }
   
-  
+    
+ 
   
  
 
@@ -80,12 +81,9 @@ const Edit = ({ currentTodo , data, setData , setEditing, setTest, forTest}) => 
     } else {
       try {
         const res = await axios.put(`http://localhost:8800/todo_items/` + currentTodo.todo_id, data , {withCredentials:true });
-        
-        
         if (res.data.length !== 0) {
           setData(res.data)
         } 
-        
         alert("Updated Successfully!")
         
       } catch (error) {
@@ -165,14 +163,7 @@ const Edit = ({ currentTodo , data, setData , setEditing, setTest, forTest}) => 
                 
                     </div>
                   </div>
-                  <div> 
-              <input
-                          value={forTest[0].title} 
-                          onChange={(e)=> setTest({...forTest, })}
-                          className="form-input w-[340px]" 
-                           
-              />
-            </div>
+                  
                 </form>
               
             

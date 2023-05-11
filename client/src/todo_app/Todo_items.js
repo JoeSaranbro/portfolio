@@ -33,74 +33,11 @@ const Todo_items = () => {
   const [isLoading, setLoading] = useState(false)
   const [error, setError] = useState(false)
 
-  const [forTest, setTest] = useState([
-    {
-        "todo_id": 15,
-        "title": "sas",
-        "details": "qwaa",
-        "date_start": null,
-        "date_end": null,
-        "user_email": "z@z.com",
-        "user_id": 7
-    },
-    {
-        "todo_id": 29,
-        "title": "korna",
-        "details": "29",
-        "date_start": null,
-        "date_end": null,
-        "user_email": "z@z.com",
-        "user_id": 7
-    },
-    {
-        "todo_id": 44,
-        "title": "44",
-        "details": "44",
-        "date_start": null,
-        "date_end": null,
-        "user_email": "z@z.com",
-        "user_id": 7
-    },
-    {
-        "todo_id": 52,
-        "title": "52",
-        "details": "52",
-        "date_start": null,
-        "date_end": null,
-        "user_email": "z@z.com",
-        "user_id": 7
-    },
-    {
-        "todo_id": 55,
-        "title": "52",
-        "details": "52",
-        "date_start": null,
-        "date_end": null,
-        "user_email": "z@z.com",
-        "user_id": 7
-    },
-    {
-        "todo_id": 76,
-        "title": "rrrrrr",
-        "details": "testExecute",
-        "date_start": null,
-        "date_end": null,
-        "user_email": "z@z.com",
-        "user_id": 7
-    },
-    {
-        "todo_id": 79,
-        "title": "a",
-        "details": "a",
-        "date_start": null,
-        "date_end": null,
-        "user_email": "z@z.com",
-        "user_id": 7
-    }
-])
   
-  console.log("forTest [0]",forTest[0])
-  console.log("forTest all",forTest)
+
+
+  
+  
   useEffect(() => {
            
     const authentication = async() => {
@@ -213,7 +150,7 @@ const Todo_items = () => {
   
  
 
-  // const handleUpdate = (newData) => {
+  // const handleTestUpdate = (newData) => {
   //   const findWhereUpdatedId = data.findIndex(({ todo_id })=> todo_id === newData.todo_id)
   //   if (findWhereUpdatedId !== -1) {
   //     setData()
@@ -224,18 +161,31 @@ const Todo_items = () => {
   
   console.count("all")
   // Delete function
-  const handleClickDelete = async (id) => {
-   // console.log(index)
+  const handleClickDelete = async (todo_id) => {
+    console.log(todo_id)
+   
     try {
-      await axios.delete("http://localhost:8800/todo_items/" + id)
-      const res = await axios.get("http://localhost:8800/todo_items")
-      setData(res.data)
+      const res = await axios.delete("http://localhost:8800/todo_items/" + todo_id, {withCredentials:true })
+      
+      
       setThreeDotsModal(false)
       setEditing(false)
+      if(Array.isArray(res.data) && res.data.length !== 0){
+        setData(res.data)
+        alert("Deleted Successfully!")
+      } //Catch there is no todo item.
+      else if (res.data.length === 0) {
+        alert("There is no todo item.")
+        setError("There is no todo item.")
+        
+      } //Catch if res.data === normal string, etc.
+      else{
+        setError("Error!")
+      }
 
-      alert("Deleted Successfully!")
+      
     } catch (error) {
-      console.log(error)
+      console.log("try catch delete error",error)
       alert("Error!")
       setEditing(false)
     }
@@ -291,7 +241,7 @@ const Todo_items = () => {
                 <BsThreeDots size={20} onClick={()=>[handleThreedots(index)]}/>
                 <div className ="threedotsmodal hidden absolute w-32 -left-28 bg-stone-900" style={(threeDotsModal) && (index === currentThreeDots.index) ?  {display:"block"}:{}} >
                   <ul className="ThreeDotsDropdown">
-                  <li className="" onClick={()=> [handleClickDelete(todo.id)]}>Delete</li>
+                  <li className="" onClick={()=> [handleClickDelete(todo.todo_id)]}>Delete</li>
                   </ul>
                 </div>
                   
@@ -311,7 +261,7 @@ const Todo_items = () => {
         
           {isEditing &&
             (
-            <Edit currentTodo={currentTodo}  data={data}  setData={setData} setEditing={setEditing} setTest={setTest} forTest={forTest} />
+            <Edit currentTodo={currentTodo}  data={data}  setData={setData} setEditing={setEditing}  />
             )
             
           
