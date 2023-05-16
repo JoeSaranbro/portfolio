@@ -28,7 +28,7 @@ const SignUpForm = ( { refModal, isModalOpen,setModal ,setIsSignup, isSignup} ) 
             'http://localhost:8800/is-email-available',
             [inputSignup.email]
           );
-          console.log(response)
+          
           if (response.data.emailValidation) {
             setinputValidation((prev) => ({...prev, email: true}))
             setIsLoading((prev) => ({...prev, isEmailAvailable: false}))

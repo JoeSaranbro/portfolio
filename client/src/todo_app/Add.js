@@ -2,7 +2,7 @@ import React from 'react'
 import { useState } from 'react'
 import axios from 'axios'
 
-const Add = ({  setData, isAddModalOpen, setAddModal, addRef }) => {
+const Add = ({  setData, isAddModalOpen, setAddModal, addRef, setError}) => {
   
   const [userInput , setUserInput] = useState({title: "", details: ""})
   console.log(userInput)
@@ -24,13 +24,21 @@ const Add = ({  setData, isAddModalOpen, setAddModal, addRef }) => {
     } else {
         try {
           e.preventDefault();
-          await axios.post("http://localhost:8800/todo_items", [userInput]);
-          const res = await axios.get("http://localhost:8800/todo_items")
-          setData(res.data)
-          
+          const res = await axios.post("http://localhost:8800/todo_items", userInput, {withCredentials:true });
+
+          if(Array.isArray(res.data) && res.data.length !== 0){
+            setData(res.data)
+            alert("Added Successfully!")
+          } //Catch there is no todo item.
+          else if (res.data.length === 0) {
+            alert("There is no todo item.")
+            setError("There is no todo item.")
+            
+          } //Catch if res.data === normal string, etc.
+          else{
+            setError("Error!")
+          }
           setAddModal(false);
-          alert("Item added successfully")
-          
         } catch (err) {
           console.log(err);
           alert("Failed to add item!")

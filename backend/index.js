@@ -243,7 +243,7 @@ app.get("/", (req,res)=>{
             const verifyingRefreshToken = () =>{
                 //check if there is refresh token
                 if (refresh_token) {
-                    jwt.verify(refresh_token, process.env.SecretKey_RefreshToken,(err, decoded) => {
+                    jwt.verify(refresh_token, process.env.SecretKey_RefreshToken, async (err, decoded) => {
 
                         
                         //condition if there is an error in verifying refresh token
@@ -268,8 +268,8 @@ app.get("/", (req,res)=>{
 
                                     const decoded = jwt.decode(refresh_token, process.env.SecretKey_RefreshToken)
 
-                                    const new_auth_token = jwt.sign({ user_id: decoded.id, email: decoded.email, role: decoded.isAdmin }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
-                                    const new_refresh_token = jwt.sign({ user_id: decoded.id, email: decoded.email, role: decoded.isAdmin }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
+                                    const new_auth_token = jwt.sign({ user_id: decoded.id, user_email: decoded.email, role: decoded.isAdmin }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
+                                    const new_refresh_token = jwt.sign({ user_id: decoded.id, user_email: decoded.email, role: decoded.isAdmin }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
 
                                     const encrypted_auth_token = enCrypt(new_auth_token)
                                     const encrypted_refresh_token = enCrypt(new_refresh_token)
@@ -281,20 +281,17 @@ app.get("/", (req,res)=>{
                                     res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
                                     
 
-                                    //fetch todo items from user email
+                                    //fetch todo items from user_id
+                                    try {
                                     const q = "SELECT * FROM todo_item WHERE user_id = ?"
-                                    db.execute(q, [decoded.user_id], (err,data)=> {
-                                        if(err) {
-                                            console.log("fetch error after veriying refresh token")
-                                            return res.status(500).json(err)
-                                        }
-                                        else {
-                                            console.log("no error, here data")
-                                            return res.json(data)
-                                        }
-                                    });
-                                    
+                                    const [rows] = await db.execute(q, [decoded.user_id]);
                                     db.unprepare(q);
+                                    return res.json(rows)
+                                    } catch (error) {
+                                    console.log("try catch fetch todo items from user email error",error)
+                                    db.unprepare(q);
+                                    return res.status(500).json("Internal Error")
+                                    }
 
                                 } //token is valid but expired and user didn't use application within 2 days after expired, we won't give them new token.
                                 else {
@@ -305,32 +302,29 @@ app.get("/", (req,res)=>{
                                 
                             } //catch other error 
                             else {
-                                return res.status(401).json("You're not authenticated!")
+                                console.log("Exceptional error")
+                                return res.status(401).json("Exceptional error!")
                             }
                         } 
                         //Refresh Token is valid and not expired, we'll give user new access token
                          else {
                             console.log("Refresh Token is valid and not expired, we'll give u new access token")
                             
-                            const new_auth_token = jwt.sign({ user_id: decoded.user_id, email: decoded.email, role: decoded.isAdmin }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
+                            const new_auth_token = jwt.sign({ user_id: decoded.user_id, user_email: decoded.email, role: decoded.isAdmin }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
                             const encrypted_auth_token = enCrypt(new_auth_token) 
                             res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                             
-                            //fetch todo items from user email
-                            const q = "SELECT * FROM todo_item WHERE user_id = ?"
-                            db.execute(q, [decoded.user_id], (err,data)=> {
-                                if(err) {
-                                    console.log("fetch error 1")
-                                    return res.json(err)
+                            //fetch todo items from user_id
+                            try {
+                                const q = "SELECT * FROM todo_item WHERE user_id = ?"
+                                const [rows] = await db.execute(q, [decoded.user_id]);
+                                db.unprepare(q);
+                                return res.json(rows)
+                                } catch (error) {
+                                console.log("try catch fetch todo items from user email error",error)
+                                db.unprepare(q);
+                                return res.status(500).json("Internal Error")
                                 }
-                                else {
-                                    console.log("no error, here data")
-                                    return res.json(data)
-                                }
-                            });
-                            
-                            db.unprepare(q);
-
 
                         }
                     })
@@ -338,10 +332,7 @@ app.get("/", (req,res)=>{
                     console.log("You don't have refresh Token, go login again")
                     return res.status(401).json("You are not authenticated!")
                 }
-                
             }
-            
-            
             //if auth_token existed
             if (auth_token) {
                 //verify access/auth token
@@ -370,7 +361,7 @@ app.get("/", (req,res)=>{
                     const q = "SELECT * FROM todo_item WHERE user_id = ?"
                     try {
                     
-                    const [rows, fields] = await db.execute(q, [decoded.user_id]);
+                    const [rows] = await db.execute(q, [decoded.user_id]);
                     
                     db.unprepare(q);
                     
@@ -417,8 +408,7 @@ const verifyTokens =  (encryptedAuthToken, encryptedRefreshToken) => {
     
     const auth_token = deCrypt(encryptedAuthToken)
     const refresh_token = deCrypt(encryptedRefreshToken)
-    console.log("auth_token",auth_token)
-    console.log("refresh_token",refresh_token)
+    
     if (!auth_token || !refresh_token) {
         
         return false
@@ -443,22 +433,7 @@ const verifyTokens =  (encryptedAuthToken, encryptedRefreshToken) => {
     
     
 }
-// 
-//Update,edit todo items
-app.get("/todo_items", (req,res) => {
-    
 
-    const q = "SELECT * FROM todo_item"
-    db.execute(q, (err,data)=> {
-        if(err) {
-            return res.json(err)
-        }
-        else {
-            return res.json(data)
-        }
-    });
-    db.unprepare(q);
-});
 
 app.get('/protected-resource', (req, res) => {
     // const accessToken = req.cookies.access_token;
@@ -488,23 +463,82 @@ app.get('/protected-resource', (req, res) => {
   });
 
 
-app.post("/todo_items", (req,res)=>{
+app.post("/todo_items", async (req,res)=>{
+    let verified;
+    try {
+         verified = verifyTokens(req.cookies["auth_token"],req.cookies["refresh_token"])
+    } catch (error) {
+        console.log("try catch verified error",error)
+        return res.status(400).json("Error")
+    }
+    
+    //check if auth token and refresh token is valid
+    if (!verified) {
+        console.log(`You're not authenticated! (app.put("/todo_items/:todo_id") )`)
+        return res.status(401).json("You're not authenticated!")
+    } 
 
     
-    const q = "INSERT INTO todo_item (`title`,`details`) VALUES (?,?)";
-    const values = [req.body.title,
-                    req.body.details];
+    // check if there is an user_id and email in database
+    
+    try {
+        const fetchSpecificUser = "SELECT * FROM users WHERE user_id = ?" 
+        const [rows] = await db.execute(fetchSpecificUser, [verified.user_id]);
 
+        console.log(rows)
+        console.log("check rows",rows.length)
+        if (rows.length !== 1) {
+            console.log("user_id doesn't exist in database or there is multiple user_id")
+            return res.status(400).json("Bad request")
+        }  
+
+    } catch (error) {
+        console.log("check if there is an user_id and email in database error", error)
+        return res.status(500).json("Internal error")
+    }   
+    
+    
+    
+//add new todo item
 //Note insert into จะต่างจากคำสั่งอื่นในการใช้ execute, ตรง values ต้องเอา [] ออก
-    db.execute(q, values, (err,data) => {
-        if (err) {
-            return res.json(err);
-        } else {
-            return res.json(data);
-        }
+const addTodo = "INSERT INTO todo_item (`title`,`details`,`user_email`,`user_id`) VALUES (?,?,?,?)";
+    try {
+        const values = [req.body.title,
+            req.body.details,
+            verified.user_email,
+            verified.user_id
+            ];
+            
+        console.log(values)
+        const [rows] = await db.execute(addTodo, values)
+        db.unprepare(addTodo);  
+        console.log("added data successfully")
+        
+    } catch (error) {
+        console.log("failed to add todo",error)
+        db.unprepare(addTodo);
+        
+        return res.status(500).json("Internal error")  
+    }
+
+    //fetch data to return latest data after adding todo
+    const fetchTodo = "SELECT * FROM todo_item WHERE user_id = ?"
+                try {
+               console.log("fetch data to return updated data after adding")
+               const [rows] = await db.execute(fetchTodo, [verified.user_id]);
+               console.log("fetch latest data after adding successfully")
+                    db.unprepare(fetchTodo);
+                    return res.json(rows);
+                
+                } catch (error) {
+                    db.unprepare(fetchTodo);
+                    console.log("failed to fetch data after adding todo",error)
+                    return res.status(500).json("Failed to fetch items!")
+                }
+    
     });
-    db.unprepare(q);
-});
+    
+
 
 app.put("/todo_items/:todo_id", async (req, res) => {
     
@@ -521,13 +555,19 @@ app.put("/todo_items/:todo_id", async (req, res) => {
         const fetchSpecificTodo = "SELECT * FROM todo_item WHERE todo_id = ?"
         const [rows] = await db.execute(fetchSpecificTodo, [req.params.todo_id]);
         //check if payload user_id and authToken user_id is match?
+        
         if (rows[0].user_id !== verified.user_id) {
             console.log("You're not allowed to update!")
             db.unprepare(fetchSpecificTodo);
-            return res.status(401).json("You're not allowed to update!")
+            return res.status(400).json("Bad request")
+        } 
+
+        } catch (error) {
+            console.log("get todo data from database error",error)
+            return res.status(500).json("Internal Error")
         }
         
-        
+        try {
         const todoId = req.params.todo_id;
         const updateTodo = "UPDATE todo_item SET `title`= ?, `details`= ?, `date_start` = ?, `date_end` = ?,`user_email` = ?, `user_id` = ? WHERE todo_id = ?";
     
@@ -543,9 +583,9 @@ app.put("/todo_items/:todo_id", async (req, res) => {
         ];
         
         //updating todo
-         const [row] =  await db.execute(updateTodo, [...values,todoId]);
+         const [rows] =  await db.execute(updateTodo, [...values,todoId]);
             
-         if (row.affectedRows  === 0 ) {
+         if (rows.affectedRows  === 0 ) {
             db.unprepare(updateTodo);
             return res.status(400).json("Bad request, user not found.")
 
@@ -556,14 +596,14 @@ app.put("/todo_items/:todo_id", async (req, res) => {
             const fetchTodo = "SELECT * FROM todo_item WHERE user_id = ?"
                 try {
                console.log("fetch data to return updated data after updating")
-               const [row] = await db.execute(fetchTodo, [verified.user_id]);
+               const [rows] = await db.execute(fetchTodo, [verified.user_id]);
                console.log("fetch updated data successfully")
                     db.unprepare(fetchTodo);
-                    return res.json(row);
+                    return res.json(rows);
                 
                 } catch (error) {
                     db.unprepare(fetchTodo);
-                    console.log("try catch fetch data to return updated data after updating error",error)
+                    console.log("failed to fetch data after updating ",error)
                     return res.status(500).json("Failed to fetch items!")
                 }
          }
@@ -595,31 +635,42 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         if (rows[0].user_id !== verified.user_id) {
             console.log("You're not allowed to delete!")
             db.unprepare(fetchSpecificTodo);
-            return res.status(401).json("You're not allowed to delete!")
+            return res.status(400).json("Bad request")
         }
 
+    } catch (error) {
+        console.log("Failed to delete todo_item", error)
+        return res.status(500).json("Internal Error")
+    }
 
-    const [row] = await db.execute(deleteTodo, [todoId]);
+    try{
+
+    const [rows] = await db.execute(deleteTodo, [todoId]);
     db.unprepare(deleteTodo);
-    console.log(row)
-    if (row.affectedRows === 1) {
-        //fetch data to return updated data after updating
+    
+
+    if (rows.affectedRows === 1) {
+        //fetch data to return latest after delete
         const fetchTodo = "SELECT * FROM todo_item WHERE user_id = ?"
         try {
-       console.log("fetch data to return updated data after updating")
-       const [row] = await db.execute(fetchTodo, [verified.user_id]);
-       console.log("fetch updated data successfully")
+       console.log("fetch data to return latest after delete")
+       const [rows] = await db.execute(fetchTodo, [verified.user_id]);
+       console.log("fetch latest data after deleting successfully")
             db.unprepare(fetchTodo);
-            return res.json(row);
+            return res.json(rows);
         
         } catch (error) {
             db.unprepare(fetchTodo);
-            console.log("try catch fetch data to return updated data after updating error",error)
+            console.log("failed to fetch latest data after deleting",error)
             return res.status(500).json("Failed to fetch items!")
         }
+    } else {
+        //rows.affectedRows !== 1
+        console.log("rows.affectedRows !== 1")
+        return res.status(500).json("Internal Error")
     } 
     
-    return res.json("deleted success")
+    
   } catch (error) {
     db.unprepare(deleteTodo);
     console.log("try catch delete todo error", error)
@@ -630,8 +681,9 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 //----------------------Start Login/Sign up TodoApp -------------------------------------------------
 
    //------------------------------Start Sign up page-----------------------------------------------------
-            app.post("/is-email-available", (req, res) => {
+            app.post("/is-email-available", async (req, res) => {
                 const q = "SELECT * FROM users WHERE user_email = ?";
+                
                 const values = req.body[0];
                 const email_pattern = new RegExp("[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
                 const response = {emailValidation: null, isEmailAvailable: null}
@@ -643,27 +695,29 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                     return res.json(response);
                 }
             
-                
-                db.execute(q, [values], (err, data) => {
-                
-                if (err) {
-                    console.log(err);
-                    return res.status(500).json({ error: "Internal Server Error" });
-                }
-                
-                if (data.length > 0) {
+               //check email available
+               console.log("check email available")
+               const [rows] = await db.execute(q, [values])
+               try {
+                // check if there is email name in database
+                //didn't remove the cache with db.unprepare(q, [values])
+                if (rows.length > 0) {
+                    console.log("Email is not available")
                     response.isEmailAvailable = false;
-                    
                     return res.json(response);
+
                 } else {
+                    console.log("yes email is available")
                     response.isEmailAvailable = true;
+                    db.unprepare(q, [values])
                     return res.json(response)
                 }
-                
-                });
-                db.unprepare(q);
 
-                console.log("check email available")
+               } catch (error) {
+                    console.log("try catch check email available error", error)
+                    return res.status(500).json({ error: "Internal Server Error" });
+               }
+                
             });
 
             app.post("/todo_app/signup", async (req,res)=> {
@@ -675,38 +729,31 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
                 const check_email = "SELECT * FROM users WHERE user_email = ?";
 
-
-                const checkEmail = () => {
-                    return new Promise((resolve, reject) => {
-                      db.execute(check_email, [req.body.email], (err, data) => {
-                        if (err) {
-                          reject(err);
-                        } else {
-                          resolve(data);
-                        }
-                      });
-                    });
-                  };
-                
+                  
                   try {
-                    const data = await checkEmail();
-                    
-                    if (data.length > 0 || !username_pattern.test(req.body.username) || !password_pattern.test(req.body.password) || !email_pattern.test(req.body.email) || req.body.password !== req.body.confirm_password) {
+                    const [rows] = await db.execute(check_email,[req.body.email]);
+                    console.log("song rows", rows.length)
+
+                    if (rows.length > 0 || !username_pattern.test(req.body.username) || !password_pattern.test(req.body.password) || !email_pattern.test(req.body.email) || req.body.password !== req.body.confirm_password) {
+                      
                       signupResponse.isEmailAvailable = false;
                       signupResponse.inputValidation = false;
+                      db.unprepare(check_email);
+                      console.log("Signup failed, email is not available or input is invalid!")
                       return res.json(signupResponse);
                     } else {
+                      db.unprepare(check_email);
+                      console.log("Input validation: Pass")
                       signupResponse.isEmailAvailable = true;
                       signupResponse.inputValidation = true;
                     }
+                    
                   } catch (err) {
                     console.log(err);
+                    db.unprepare(check_email);
                     return res.json({ error: "Internal Server Error" });
                   }
-            
-                  db.unprepare(check_email);
-
-                 
+                  
                     const addUser = "INSERT INTO users (`user_name`,`user_password`,`user_email`) VALUES (?,?,?)";
 
                 try {
@@ -717,20 +764,15 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                         hash,
                         req.body.email,
                 ]       
-                    
-                    db.execute(addUser, values, (err,data) => {
-                        if (err) {
-                            console.log(err)
-                            signupResponse.signupSuccessfully = false;
-                            return res.json(signupResponse);
-                        } else {
-                            signupResponse.signupSuccessfully = true;
-                            return res.json(signupResponse);
-                        }
-                    });
+                    const [rows] = await db.execute(addUser,values);
+                    signupResponse.signupSuccessfully = true;
                     db.unprepare(addUser);
-                  } catch (err) {
-                    console.log(err)
+                    console.log("Successfully add user!")
+                    return res.json(signupResponse);
+                    
+                  } catch (error) {
+                    console.log("Failed to add user!",error)
+                    return res.status(500).json("Internal Error")
                   }
                 
             })
@@ -749,7 +791,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         const email_pattern = new RegExp("[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
 
         const loginResponse = {loginSuccessfully:null,inputValidation:null, msg:null}
-
+        //check if email and password pass a test
         if (email_pattern.test(req.body.email) && password_pattern.test(req.body.password) ) {
             loginResponse.inputValidation = true;
           } else {
@@ -759,81 +801,75 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
             return res.json(loginResponse)
           }
 
-          const values = [req.body.email]
-          const query_password = "SELECT * FROM users WHERE user_email = ? "
+          
+          const query_user_info = "SELECT * FROM users WHERE user_email = ? "
 
         try {
-            const data = await new Promise((resolve, reject) => {
-              db.execute(query_password, values, (err, data) => {
-                if (err) {
-                  reject(err);
-                } else {
-                  resolve(data);
-                }
-              });
-            });
-          
-            db.unprepare(query_password);
-            
-            if (data.length > 1) {
-              //ถ้าบังเอิญมีEmail ซ้ำกันในระบบฐานข้อมูล
-              loginResponse.loginSuccessfully = false;
-              loginResponse.msg = "There is something wrong!";
-              return res.json(loginResponse);
-            } else if (data.length === 0) {
-              //ถ้าuser ใส่ email หรือ password ผิด
+            const [rows] = await db.execute(query_user_info, [req.body.email]);
+
+            if (rows.length === 1 ) {
+                //if there is an email in database
+                try {
+                    if (await argon2.verify(rows[0].user_password, req.body.password)) {
+                      //Password does match
+                      loginResponse.loginSuccessfully = true;
+                      loginResponse.msg = "Login Success.";
+                      console.log("login success");
+    
+                      const auth_token = jwt.sign({ user_id: rows[0].user_id, user_email: rows[0].user_email, role: rows[0].user_role, }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
+                      console.log(auth_token)
+                      const refresh_token = jwt.sign({ user_id: rows[0].user_id, user_email: rows[0].user_email, role: rows[0].user_role }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
+                      
+                      const encrypted_auth_token = enCrypt(auth_token)
+                      const encrypted_refresh_token = enCrypt(refresh_token)
+                        
+                      
+                     // res.cookie('auth_token', access_token, cookieOptions);
+                      res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
+                      res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
+                      loginResponse.url = "/todo_items";
+                      db.unprepare(query_user_info);
+                      return res.json(loginResponse);
+    
+                    } else {
+                      //Password does not match
+                      loginResponse.loginSuccessfully = false;
+                      loginResponse.msg = "Username or Password is incorrect!";
+                      console.log("Login failed, Password does not match");
+                      db.unprepare(query_user_info);
+                      return res.json(loginResponse)
+                    }
+                  } catch (error) {
+                    console.log(first)
+                    console.log("try catch check if email and password match error",error)
+                    db.unprepare(query_user_info);
+                    return res.status(500).json("There is something wrong!");
+                  }
+
+            } else if (rows.length === 0) {
+                //ถ้าuser ใส่ email หรือ password ผิด
               loginResponse.loginSuccessfully = false;
               loginResponse.msg = "Username or Password is incorrect!";
+              db.unprepare(query_user_info);
               return res.json(loginResponse);
             } else {
-              try {
-                
-                if (await argon2.verify(data[0].user_password, req.body.password)) {
-                  //Password does match
-                  loginResponse.loginSuccessfully = true;
-                  loginResponse.msg = "Login Success.";
-                  console.log("login success");
-
-                  const auth_token = jwt.sign({ user_id: data[0].user_id, email: data[0].user_email, role: data[0].user_role, }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
-                  console.log(auth_token)
-                  const refresh_token = jwt.sign({ user_id: data[0].user_id, email: data[0].user_email, role: data[0].user_role }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
-                  
-                  const encrypted_auth_token = enCrypt(auth_token)
-                  const encrypted_refresh_token = enCrypt(refresh_token)
-                    
-                  
-                 // res.cookie('auth_token', access_token, cookieOptions);
-                  res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
-                  res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
-                  loginResponse.url = "/todo_items";
-                  return res.json(loginResponse);
-
-                } else {
-                  //Password does not match
-                  loginResponse.loginSuccessfully = false;
-                  loginResponse.msg = "Username or Password is incorrect!";
-                  console.log("login failed");
-
-                  return res.loginResponse
-                }
-              } catch (err) {
-                console.log(err)
-                return res.status(500).json("There is something wrong!");
-              }
+                //ถ้าบังเอิญมีEmail ซ้ำกันในระบบฐานข้อมูล หรือ rows ติดลบ
+              console.log("ถ้าบังเอิญมีEmail ซ้ำกันในระบบฐานข้อมูล หรือ rows ติดลบ")
+              loginResponse.loginSuccessfully = false;
+              loginResponse.msg = "There is something wrong!";
+              db.unprepare(query_user_info);
+              return res.json(loginResponse);
             }
-          } catch (err) {
-            console.log(err);
-             res.json("err");
+            
+          } catch (error) {
+             db.unprepare(query_user_info);
+             console.log("try catch query user_info error",error);
+             return res.status(500).json("Internal Error");
           }
-        console.log("555")
         
     })
 
-    app.post("/redirect", async (req,res)=> {
-        
-        
-        res.json("kuy")
-    })
+   
 
     
     

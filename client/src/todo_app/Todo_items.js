@@ -180,10 +180,10 @@ const Todo_items = () => {
         
       } //Catch if res.data === normal string, etc.
       else{
+        alert("Error!")
         setError("Error!")
       }
 
-      
     } catch (error) {
       console.log("try catch delete error",error)
       alert("Error!")
@@ -270,7 +270,7 @@ const Todo_items = () => {
         
       </div>
       
-      {isAddModalOpen? <Add setData={setData} isAddModalOpen={isAddModalOpen} setAddModal={setAddModal} addRef={addRef}  /> : null}
+      {isAddModalOpen? <Add setData={setData} isAddModalOpen={isAddModalOpen} setAddModal={setAddModal} addRef={addRef}  setError={setError} /> : null}
       
       
     </div> 
