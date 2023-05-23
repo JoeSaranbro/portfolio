@@ -17,7 +17,7 @@ const Add = ({  setData, isAddModalOpen, setAddModal, addRef, setError}) => {
 }
 
   const handleClickAdd = async (e) => {
-
+    console.log("userInput",userInput)
     if (!userInput.title) {
       alert("Todo title must be filled.")
       e.preventDefault();

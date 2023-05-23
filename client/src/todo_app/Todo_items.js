@@ -19,6 +19,7 @@ const Todo_items = () => {
 
   const navigate = useNavigate();
   
+  const [username, setUsername] = useState("")
   const [data, setData] = useState(null);
 
   const [isEditing, setEditing] = useState(false)
@@ -44,19 +45,18 @@ const Todo_items = () => {
       try {
         console.log("check")
         const res = await axios.get('http://localhost:8800/authentication',{withCredentials: true})
-        console.log(res.data)
-          //check if res.data is array and not null
-          if(Array.isArray(res.data) && res.data.length !== 0){
-            setData(res.data)
-          } //Catch there is no todo item.
-          else if (res.data.length === 0) {
+
+        if (res.data[0].user_name) {
+          setUsername(res.data[0].user_name)
+        }
+          //if there is no todo item.
+          if(res.data[1].length === 0){
             setError("There is no todo item.")
-            
-          } //Catch if res.data === normal string, etc.
-          else{
-            setError("Error!")
-          }
-        
+          } 
+          //if there are items
+          else  {
+            setData(res.data[1])
+          } 
       } catch (error) {
         if (error.response) {
           // The request was made and the server responded with a status code
@@ -77,7 +77,7 @@ const Todo_items = () => {
         } else {
           // Something happened in setting up the request that triggered an Error
           setError(error.code)
-          console.log('Error', error.message);
+          console.log('Error', error);
         }
       }
   }
@@ -204,7 +204,7 @@ const Todo_items = () => {
 
   return (
     <div className='content '>
-      <div className='text-6xl bg-black leading-relaxed font-bold'>Todolist App</div>
+      <div className='text-6xl bg-black leading-relaxed font-bold'>Welcome, {username} </div>
       <div className='flex mt-1'>
         
       <div className="todolist-sidebar w-full max-w-[18rem] bg-[#555353] bg-opacity-25 mr-2">
