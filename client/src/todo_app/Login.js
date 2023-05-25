@@ -387,7 +387,7 @@ const testRedirect = async() => {
   }
 
 try {
-  const res = await axios.post('http://localhost:8800/redirect',{},{headers: headers, withCredentials: true,},)
+  const res = await axios.get('http://localhost:8800/todo_app/email_verification')
   console.log(res)
 } catch (error) {
   console.log(error)
