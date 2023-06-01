@@ -7,6 +7,9 @@ import dotenv from "dotenv"
 import cookieParser from 'cookie-parser'
 import CryptoJS from "crypto-js" 
 import nodemailer from "nodemailer";
+import fs from "fs-extra";
+import { readFile } from 'fs/promises' 
+
 
 
 dotenv.config()
@@ -368,7 +371,6 @@ app.get("/", (req,res)=>{
                     const q = "SELECT * FROM todo_item WHERE user_id = ?"
                     try {
                     const [rows] = await db.execute(q, [decoded.user_id]);
-                    console.log(rows)
 
                     db.unprepare(q);
                     const result = [{user_name: decoded.user_name}, rows]
@@ -759,7 +761,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                     return res.json({ error: "Internal Server Error" });
                   }
                   
-                    const addUser = "INSERT INTO users (`user_name`,`user_password`,`user_email`) VALUES (?,?,?)";
+                    const addUser = "INSERT INTO users (`user_name`,`user_password`,`user_email`,`user_verification`) VALUES (?,?,?,?)";
 
                 try {
                     const hash = await argon2.hash(req.body.password);
@@ -768,6 +770,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                         req.body.username,
                         hash,
                         req.body.email,
+                        0
                 ]       
                     const [rows] = await db.execute(addUser,values);
                     signupResponse.signupSuccessfully = true;
@@ -812,11 +815,21 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         try {
             const [rows] = await db.execute(query_user_info, [req.body.email]);
 
+            console.log("rows",rows)
             if (rows.length === 1 ) {
                 //if there is an email in database
+
+                
+
+
                 try {
                     if (await argon2.verify(rows[0].user_password, req.body.password)) {
                       //Password does match
+                      //if user email has verified
+                      if (rows[0].user_verification === 1) {
+                        console.log("user email has verified")
+                      
+
                       loginResponse.loginSuccessfully = true;
                       loginResponse.msg = "Login Success.";
                       console.log("login success");
@@ -835,6 +848,93 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                       loginResponse.url = "/todo_items";
                       db.unprepare(query_user_info);
                       return res.json(loginResponse);
+
+                    //else if user email has not verified
+                    } else {
+
+                        const email_verification = jwt.sign({ user_id: rows[0].user_id,user_email: rows[0].user_email}, process.env.SecretKey_EmailVerification,{expiresIn: "1d"})
+
+                        const enCrypted = () => {
+                            try {
+                                const ciphertext = CryptoJS.AES.encrypt(email_verification,process.env.SecretKey_Cryptojs_EmailVerification).toString();
+                                return ciphertext;
+                                } catch (error) {
+                                console.log("try catch enCrypt error",error)
+                                return "false";
+                                }
+
+                          }
+
+                          
+                        console.log("user email has not verified")
+                        //send email verification to user's mail
+                        try {
+
+                            const transporter = nodemailer.createTransport({
+                              service: 'gmail',
+                              auth: {
+                                user: process.env.Gmail,
+                                pass: process.env.GmailP
+                              }
+                              
+                          
+                            });
+                          
+                          
+                          const readHTMLFile = async () => {
+                              try {
+                                  console.log("readHTMLFile success")
+                                  const data = await fs.readFile('email_verification_template.html', 'utf8');
+                                  return data;
+                              } catch (error) {
+                                  console.log("readHTMLFile error", error)
+                                  return false;
+                              }
+                          }
+                          
+                          const htmlContent = await readHTMLFile()
+
+                          
+                          // If on production, we will use dynamic email which is rows[0].user_email in "to:" below
+                            const mailOptions = {
+                              from: 'u6111011940013@gmail.com',
+                              to: 'sarankunsutha@gmail.com',
+                              subject: 'Email verification ToDoApp',
+                              text: 'Please confirm your email by clicking the link we give you.',
+                              html: htmlContent.replaceAll('{{dynamicLink}}',`http://localhost:8800/todo_app/email_verification?token=${enCrypted()}`) , // html body
+                            };
+                          
+                            transporter.sendMail(mailOptions, (error, info) => {
+                              if (error) {
+
+                                console.log("transporter.sendMail error", error);
+                                loginResponse.loginSuccessfully = false
+                                loginResponse.msg = "There is an error!"
+                                loginResponse.url = "/error_page"
+                                return res.json(loginResponse);
+
+                              } else {
+                                console.log('Email sent: ' + info.response);
+                                loginResponse.loginSuccessfully = false
+                                loginResponse.msg = "You've not verified your email!"
+                                loginResponse.url = "/email_verification_page"
+                                return res.json(loginResponse);
+                                
+                              }
+                            });
+                          
+                           }
+                            catch (error) {
+                                console.log("try catch send email verification error", error)
+                                loginResponse.loginSuccessfully = false
+                                loginResponse.msg = "There is an error!"
+                                loginResponse.url = "/error_page"
+                                return res.json(loginResponse);
+
+                            }
+
+
+                    }
     
                     } else {
                       //Password does not match
@@ -874,90 +974,135 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         
     })
 
-  // --------------- start email verification  -----------------------------
+  
 
     // async..await is not allowed in global scope, must use a wrapper
 
-    app.get("/todo_app/email_verification",async (req,res)=> {  
+    app.get("/todo_app/send_test_email",async (req,res)=> {  
 
-//     async function main() {
-//     // Generate test SMTP service account from ethereal.email
-//     // Only needed if you don't have a real mail account for testing
-//     let testAccount = await nodemailer.createTestAccount();
-  
-//     // create reusable transporter object using the default SMTP transport
-//     let transporter = nodemailer.createTransport({
-//       host: "smtp.mailtrap.io",
-//       port: 587,
-//       secure: false, // true for 465, false for other ports
-//       auth: {
-//         user: testAccount.user, // generated ethereal user
-//         pass: testAccount.pass, // generated ethereal password
-//       },
-//     });
-  
-//     // send mail with defined transport object
-//     let info = await transporter.sendMail({
-//       from: '"Fred Foo 👻" <foo@example.com>', // sender address
-//       to: "u6111011940013@gmail.com", // list of receivers
-//       subject: "Hello ✔", // Subject line
-//       text: "Hello world?", // plain text body
-//       html: "<b>Hello world?</b>", // html body
-//     });
-  
-//     console.log("Message sent: %s", info.messageId);
-//     // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
-  
-//     // Preview only available when sending through an Ethereal account
-//     console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-//     // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
-//   }
-  
-//   main().catch(console.error);
+    try {
+
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+        user: process.env.Gmail,
+        pass: process.env.GmailP
+        }
+        
+
+    });
 
 
-
-
-
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.Gmail,
-      pass: process.env.GmailP
+    const readHTMLFile = async () => {
+        try {
+            const data = await fs.readFile('email_verification_template.html', 'utf8');
+            return data;
+        } catch (err) {
+            const data = await fs.readFile('error_page.html', 'utf8');
+            return data;
+        }
     }
-    
 
-  });
+    const mailOptions = {
+        from: 'u6111011940013@gmail.com',
+        to: 'sarankunsutha@gmail.com',
+        subject: 'Sending Email using Node.js',
+        text: 'That was easy!',
+        html: await readHTMLFile(), // html body
+    };
 
-  const mailOptions = {
-    from: 'u6111011940013@gmail.com',
-    to: 'sarankunsutha@gmail.com',
-    subject: 'Sending Email using Node.js',
-    text: 'That was easy!',
-    html: "<b>Hello worldsssssss?s</b>", // html body
-  };
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+        console.log("transporter.sendMail error", error);
+        } else {
+        console.log('Email sent: ' + info.response);
+        return res.send('Email sent successfully');
+        }
+    });
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log(error);
-      return res.send(error);
-    } else {
-      console.log('Email sent: ' + info.response);
-      return res.send('Email sent successfully');
     }
-  });
-
-
-  
+    catch (error) {
+        console.log("send email error", error)
+        return res.status(500).json("Error")
+    }
 
 })
-   // --------------- end email verification  ----------------------------- 
+   
       
 
     //------------------------------End Login page-----------------------------------------------------
 
-//----------------------Start Login/Sign up TodoApp -------------------------------------------------
+//----------------------End Login/Sign up TodoApp -------------------------------------------------
 
+// --------------- start email verification  -----------------------------
+app.get("/todo_app/email_verification",async (req,res)=> {
+
+console.log("ruhh")
+
+
+
+    try {
+        console.log("token",req.query.token)
+
+        const queryString = req.originalUrl.split('token=')[1];
+        
+
+        
+        console.log("queryString",queryString)
+        
+        const bytes  = CryptoJS.AES.decrypt(queryString,process.env.SecretKey_Cryptojs_EmailVerification);
+        const originalText = bytes.toString(CryptoJS.enc.Utf8);
+
+        
+        
+        console.log("bytes",bytes)
+        console.log("originalText",originalText)
+        jwt.verify(originalText, process.env.SecretKey_EmailVerification, async (err, decoded) => {
+            if (err) {
+                console.log(err)
+                console.log("email verification token is not valid")
+                return res.redirect("http://localhost:3000/error_page")
+            } else {
+
+                const verification = "UPDATE users SET `user_verification` = ? WHERE user_id = ?";
+                try {
+                    const values = [1,
+                        decoded.user_id
+                        ];
+                        
+                    console.log("values",values)
+                    const [rows] = await db.execute(verification, values)
+                    db.unprepare(verification);  
+                    console.log("User verification status successfully.")
+                    return res.redirect("http://localhost:3000/email_verification_success")
+
+                    
+                } catch (error) {
+                    console.log("User verification status fail.",error)
+                    db.unprepare(verification);
+                    
+                    return res.redirect("http://localhost:3000/error_page")
+                }
+
+
+            }
+        })
+
+    } catch (error) {
+        
+    console.log("try catch deCrypt email_verification error",error)
+    return res.redirect("http://localhost:3000/error_page")
+    }
+    
+
+
+
+    
+    
+
+})
+
+// --------------- end email verification  ----------------------------- 
 
 //----------------------End Todo App -------------------------------------------------
 

@@ -231,9 +231,10 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
       const res = await axios.post('http://localhost:8800/todo_app/login',inputLogin, {withCredentials: true}
       );
 
-
-      console.log(res.data)
+      
+      console.log("res.data",res.data)
       alert(res.data.msg)
+
       if (res.data.url) {
         return navigate(res.data.url)
       }
@@ -394,6 +395,14 @@ try {
 }
 }
 
+const navigate = useNavigate();
+
+const email_verification = () => {
+  navigate("/Email_Verification_Page")
+}
+
+
+
   return (
     <div className='h-screen'>
       <div>
@@ -414,6 +423,14 @@ try {
         redirect
         </button>
       </div>
+
+      <div>
+      <button onClick={email_verification} className="btnGray">
+        email_verification
+        </button>
+      </div>
+
+      
       
       
       
