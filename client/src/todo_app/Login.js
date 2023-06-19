@@ -215,7 +215,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
     const navigate = useNavigate();
     const loginInitialValue = {email:"", password:""}
     const [inputLogin, setInputLogin] = useState(loginInitialValue)
-
+    const [isLoading, setLoading] = useState(false)
     
     
     //<-------------------------Start Login Section ----------------------------------->
@@ -227,11 +227,12 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
     e.preventDefault();
 
     try {
+      setLoading(true)
       e.preventDefault()
       const res = await axios.post('http://localhost:8800/todo_app/login',inputLogin, {withCredentials: true}
       );
 
-      
+      setLoading(false)
       console.log("res.data",res.data)
       alert(res.data.msg)
 
@@ -260,20 +261,20 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
     setModal(false);
     setIsSignup(false);
     
-    
-   
   }
 
-  
+  const test_id = () => {
+    setInputLogin({email:"a@b.com", password:"Testid1234"})
+  }
 
-  
+  console.log("inputlogin",inputLogin)
   
 //<-------------------------End Login Section ----------------------------------->
 
 
     return (
     <div id="loginModal" className="modal" style={isModalOpen === true ? {display: "block"}:{display: "none"}}>
-      <div ref={refModal} className="modal-content-login ">
+      <div ref={refModal} className={`modal-content-login ${isLoading?"opacity-50":""}`}>
         <div id="header" className='text-center'>
         <span className='text-2xl font-bold'>Login<span className="close rounded-lg" onClick={handleCloseLoginForm}>&times;</span></span>
         
@@ -291,7 +292,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
               id='email'
               className="form-input"
               
-              
+              value={inputLogin.email}
               onChange={(e) => setInputLogin((prev)=>({...prev,email:e.target.value}))}
               required
             />
@@ -304,25 +305,35 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
               type='password'
               className="form-input"
               id='password'
-              
+              value={inputLogin.password}
               onChange={(e) => setInputLogin((prev)=>({...prev,password:e.target.value}))}
               required
             />
             <div className="mt-2 text-base text-blue-600 hover:text-blue-800 hover:underline"><Link to="/portfolio">Forgot Password?</Link></div>
           </div>
-          <div className='mt-4'>
+          <div className='mt-4 flex relative'>
           <button type='submit' className='form-button-login'>
             <p>Login</p>
           </button>
           <button type="reset" onClick={()=> {setIsSignup(true)}} className='ml-4 form-button-signup'>
           <p>Sign up</p>
           </button>
+          <div className='absolute right-0'>
+            <button type="button" onClick={()=> test_id()} className='ml-4 form-button-signup'>
+              <p>Test ID</p>
+            </button>
           </div>
-          
+          </div>
       </form>
         </div>
+        {isLoading && (
+            <div className='loading-spinner flex justify-center'>
+              <div className="spinner-border animate-spin inline-block w-28 h-28 border-8 border-black border-t-blue-600 rounded-full" role="status">
+              </div>
+            </div>
+            )}
       </div>
-  </div>
+  </div> 
   )}
 
 

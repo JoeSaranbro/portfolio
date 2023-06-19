@@ -193,7 +193,18 @@ const Todo_items = () => {
   }
  
 
-  
+  const logout = async() => {
+    
+    try {
+      const res = await axios.get('http://localhost:8800/todo_app/logout',{withCredentials: true})
+      alert("Logout Successfully!")
+      navigate("/login")
+    } catch (error) {
+      
+      alert("Logout Error!")
+    }
+    
+  }
 
  
   
@@ -203,8 +214,14 @@ const Todo_items = () => {
 
 
   return (
-    <div className='content '>
-      <div className='text-6xl bg-black leading-relaxed font-bold'>Welcome, {username} </div>
+    <div className='content'>
+      <div className='flex text-4xl bg-black leading-relaxed font-bold relative'>Welcome, {username} 
+        <div className='absolute right-0 pr-2'> 
+          <button onClick={()=> logout()} className='bg-slate-700 hover:bg-slate-700 px-4 rounded py-1'>
+            <p className='text-3xl'>Logout</p>
+          </button>
+        </div>
+      </div>
       <div className='flex mt-1'>
         
       <div className="todolist-sidebar w-full max-w-[18rem] bg-[#555353] bg-opacity-25 mr-2">
@@ -228,7 +245,7 @@ const Todo_items = () => {
               <div  className="flex flex-row bg-neutral-700 bg-opacity-50 mt-4 group hover:bg-neutral-600"   style={{cursor: "pointer"}} key={todo.todo_id}>
                 
                 <div className='basis-1/12 pt-1' onClick={()=> [setCurrentTodo(todo),setEditing(true)]} ><GiNotebook size={30} /> </div>
-                <div className=" item-title-sidebar basis-10/12 " onClick={()=>  [setCurrentTodo(todo),setEditing(true)]} >
+                <div className="item-title-sidebar basis-10/12 " onClick={()=>  [setCurrentTodo(todo),setEditing(true)]} >
                 <p className='pl-2 break-all'>{todo.title}</p>
                 </div>
                 <div className="relative basis-1/12 my-2 pl-0.5 invisible group-hover:visible hover:hover:bg-neutral-400 rounded-md" 

@@ -246,6 +246,8 @@ app.get("/", (req,res)=>{
             
            
             const verifyingRefreshToken = () =>{
+                 
+           
                 //check if there is refresh token
                 if (refresh_token) {
                     jwt.verify(refresh_token, process.env.SecretKey_RefreshToken, async (err, decoded) => {
@@ -819,9 +821,6 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
             if (rows.length === 1 ) {
                 //if there is an email in database
 
-                
-
-
                 try {
                     if (await argon2.verify(rows[0].user_password, req.body.password)) {
                       //Password does match
@@ -1103,7 +1102,26 @@ console.log("ruhh")
 })
 
 // --------------- end email verification  ----------------------------- 
+//----------------------Start Logout  -------------------------------------------------
+app.get("/todo_app/logout",async (req,res)=> {
+    
+    try {
 
+        
+
+        res.cookie("auth_token", "");
+        res.cookie("refresh_token", "");
+        return res.json("Success")
+        
+    } catch (error) {
+        console.log("delete cookie error", error)
+        return res.status(400).json("Error")
+    }
+    
+
+})
+
+//----------------------End Logout  -------------------------------------------------
 //----------------------End Todo App -------------------------------------------------
 
 app.listen(8800, ()=> {
