@@ -1107,10 +1107,15 @@ app.get("/todo_app/logout",async (req,res)=> {
     
     try {
 
-        
+        // res.clearCookie('refresh_token', {
+        //     path: '/',
+        //     httpOnly: true,
+        //     secure: true,
+        //     sameSite: 'none'
+        //   });
 
-        res.cookie("auth_token", "");
-        res.cookie("refresh_token", "");
+        res.clearCookie("auth_token");
+        res.clearCookie("refresh_token");
         return res.json("Success")
         
     } catch (error) {
