@@ -1036,7 +1036,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 // --------------- start email verification  -----------------------------
 app.get("/todo_app/email_verification",async (req,res)=> {
 
-console.log("ruhh")
+
 
 
 

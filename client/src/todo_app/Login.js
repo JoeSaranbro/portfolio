@@ -4,6 +4,10 @@ import { Link } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
 
 
+
+
+
+
 //<-------------------------Start Signup Section ----------------------------------->
 const SignUpForm = ( { refModal, isModalOpen,setModal ,setIsSignup, isSignup} ) => {
   
@@ -311,6 +315,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
             />
             <div className="mt-2 text-base text-blue-600 hover:text-blue-800 hover:underline"><Link to="/portfolio">Forgot Password?</Link></div>
           </div>
+          <div class="g-signin2" data-onsuccess="onSignIn"></div>
           <div className='mt-4 flex relative'>
           <button type='submit' className='form-button-login'>
             <p>Login</p>
@@ -335,6 +340,9 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
       </div>
   </div> 
   )}
+  
+  
+  
 
 
 const Login = () => {
@@ -347,8 +355,32 @@ const Login = () => {
   const [isModalOpen, setModal] = useState(false);
   
   console.count("Login count")
+
   
-     
+  
+  const handleCallbackResponse = (response) => { 
+    console.log("encoded_jwt " + response.credential)
+  }
+  useEffect(() => {
+
+    /* global google */
+      
+      google.accounts.id.initialize({
+        client_id: process.env.REACT_APP_GoogleOauthClientID,
+        callback: handleCallbackResponse
+      })
+
+      google.accounts.id.renderButton(
+        document.getElementById("signInDiv"),
+        { theme: "outline", size: "large"}
+      );
+    
+  }, [])
+
+
+
+
+   
 //<------------------------- Start Handle Click Outside Section -----------------------------------> 
 
     const handleEsc = (event) => {
@@ -415,7 +447,7 @@ const email_verification = () => {
 
 
   return (
-    <div className='h-screen'>
+    <div className='h-screen '>
       <div>
       <button id="openmodal" onClick={()=> setModal(true)} className="btnGray">Login</button>
       
@@ -440,6 +472,11 @@ const email_verification = () => {
         email_verification
         </button>
       </div>
+      
+      
+      <div className='text-white'></div>
+      
+      <div id="signInDiv"></div>
 
       
       
