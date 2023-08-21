@@ -8,14 +8,15 @@ import cookieParser from 'cookie-parser'
 import CryptoJS from "crypto-js" 
 import nodemailer from "nodemailer";
 import fs from "fs-extra";
-import { readFile } from 'fs/promises' 
+
+import { OAuth2Client } from "google-auth-library"
 
 
 
 dotenv.config()
 const app = express()
 app.use(cookieParser());
-
+const client = new OAuth2Client(process.env.GoogleOauthClientID);
 
 
 const db = await mysql2.createConnection({
@@ -207,10 +208,16 @@ app.get("/", (req,res)=>{
         console.log("try catch deCrypt error",error)
         return false;
         }
-        
     }
 
     // ------------------------------ Start cookies options -----------------------------------
+    const SignInWithGoogle_cookieOptions = {
+        maxAge:  30 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
+        httpOnly: true, // prevent client-side scripts from accessing the cookie
+        secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
+        sameSite: 'none' // restrict cross-site usage of cookie
+    };
+
     const access_token_cookieOptions = {
         maxAge:  365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
         httpOnly: true, // prevent client-side scripts from accessing the cookie
@@ -446,32 +453,7 @@ const verifyTokens =  (encryptedAuthToken, encryptedRefreshToken) => {
 }
 
 
-app.get('/protected-resource', (req, res) => {
-    // const accessToken = req.cookies.access_token;
-    // if (!accessToken) {
-    //   // Access token not found in cookie, prompt user to log in again
-    //   res.status(401).send('Access token not found');
-    // } else {
-    //   // Check if access token has expired
-    //   const tokenExpirationTime = ""
-    //   const currentTime = new Date().getTime();
-    //   if (currentTime >= tokenExpirationTime) {
-    //     // Access token has expired, perform silent authentication
-    //     const newAccessToken = /* perform silent authentication to obtain new access token */;
-    //     const cookieOptions = {
-    //       maxAge: 15 * 60 * 1000, // expires after 15 minutes
-    //       httpOnly: true, // prevent client-side scripts from accessing the cookie
-    //       secure: true, // only send cookie over HTTPS
-    //       sameSite: 'strict' // restrict cross-site usage of cookie
-    //     };
-    //     res.cookie('access_token', newAccessToken, cookieOptions);
-    //     res.send('New access token obtained successfully');
-    //   } else {
-    //     // Access token is still valid, allow access to protected resource
-    //     res.send('Access granted');
-    //   }
-    // }
-  });
+
 
 
 app.post("/todo_items", async (req,res)=>{
@@ -787,6 +769,8 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                 
             })
 
+
+            
     //------------------------------End Sign up page-----------------------------------------------------
     
     //------------------------------Start Login page-----------------------------------------------------
@@ -844,8 +828,11 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                      // res.cookie('auth_token', access_token, cookieOptions);
                       res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                       res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
+                      
+
                       loginResponse.url = "/todo_items";
                       db.unprepare(query_user_info);
+                      
                       return res.json(loginResponse);
 
                     //else if user email has not verified
@@ -971,6 +958,105 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
              return res.status(500).json("Internal Error");
           }
         
+    })
+
+    
+
+
+    app.post("/todo_app/login_google", async (req,res)=> {
+        
+        const decoded = jwt.decode(req.body[0])
+        //console.log(decoded)
+        const loginResponse = {loginSuccessfully:null, msg:null}
+        if (decoded.email_verified === true) {
+            //check email available google
+        const q = "SELECT * FROM users WHERE user_email = ?";
+        console.log("check email available google")
+        const [rows] = await db.execute(q, [decoded.email] )
+
+        try {
+         // check if there is email name in database
+         //didn't remove the cache with db.unprepare(q, [values])
+         
+         
+            
+            
+         //1.if user has already signed up with our sign up system (not sign in with google), reject it
+         if (rows.length > 0 && rows[0].user_password !== null) {
+            
+            loginResponse.loginSuccessfully = false;
+            loginResponse.msg = "This email has already signed up, please use another email.";
+            console.log("This email has already signed up, please use another email.")
+            return res.json(loginResponse);
+
+            
+
+         } 
+         //2.if user has already signed up by sign in with google, navigate user to todo_items
+         else if (rows.length > 0 && rows[0].user_password === null) {
+            
+            loginResponse.loginSuccessfully = true;
+            loginResponse.msg = "Login successfully.";
+            loginResponse.url = "/todo_items";
+            
+            res.cookie('SignInWithGoogle', "1", SignInWithGoogle_cookieOptions);
+            console.log("logging in through Sign in with google.")
+            return res.json(loginResponse);
+            
+
+         } 
+         //3.If user has not signed up yet, add user information to database and navigate user to todo_items
+         else {
+            const addUser = "INSERT INTO users (`user_name`,`user_email`,`user_verification`) VALUES (?,?,?)";
+
+                try {
+                    
+                    
+                    const values = [
+                        decoded.name,
+                        decoded.email,
+                        1
+                ]       
+                    const [rows] = await db.execute(addUser,values);
+                    loginResponse.loginSuccessfully = true;
+                    loginResponse.msg = "Login successfully.";
+                    loginResponse.url = "/todo_items";
+                    db.unprepare(addUser);
+
+                    
+                    res.cookie('SignInWithGoogle', "1", SignInWithGoogle_cookieOptions);
+                    console.log("Successfully sign up user from sign in with google api!")
+                    return res.json(loginResponse);
+                    
+                  } catch (error) {
+                    console.log("Failed to add user from Sign in with google!",error)
+                    return res.status(500).json("Internal Error")
+                  }
+
+         }
+
+        } catch (error) {
+            loginResponse.loginSuccessfully = false;
+            loginResponse.msg = "Error while checking email available";
+             console.log("try catch check email available error", error)
+             return res.status(loginResponse);
+        }
+
+        } 
+        //if user's gmail has not verified yet.
+        else {
+            loginResponse.loginSuccessfully = false;
+            loginResponse.msg = "Gmail has not verified!";
+            console.log("Gmail has not verified!")
+            return res.json(loginResponse)
+
+        }
+        
+
+        
+        
+
+
     })
 
   

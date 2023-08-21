@@ -224,7 +224,50 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
     
     //<-------------------------Start Login Section ----------------------------------->
 
-  
+      // <-------------------------Start Sign in with google ----------------------------------->
+        const handleCallbackResponse = async (response) => { 
+        
+          try {
+            setLoading(true)
+            const res = await axios.post(
+              'http://localhost:8800/todo_app/login_google',
+              [response.credential], {withCredentials: true}
+            );
+            setLoading(false)
+            console.log("res.data",res.data)
+            alert(res.data.msg)
+
+            if (res.data.url) {
+              return navigate(res.data.url)
+            }
+            
+          } catch (error) {
+            alert("Sign in with google Error")
+            setLoading(false)
+            console.log("Sign in with google Error ",error)
+          } 
+      
+          
+          
+        }
+      
+        useEffect(() => {
+      
+          /* global google */
+            
+            google.accounts.id.initialize({
+              client_id: process.env.REACT_APP_GoogleOauthClientID,
+              callback: handleCallbackResponse
+            })
+      
+            google.accounts.id.renderButton(
+              document.getElementById("signInDiv"),
+              { theme: "outline", size: "large"}
+            );
+          
+        }, [])
+      // <-------------------------End Sign in with google ----------------------------------->  
+
 
   const handleLoginSubmit = async (e) => {
 
@@ -253,8 +296,9 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
       // }
       // handleCloseSignUpForm()
     } catch (error) {
-      alert("Try Catch Error")
-      console.log(error)
+      alert("Login Error")
+      setLoading(false)
+      console.log("handleLoginSubmit ",error)
     }
 
   }
@@ -315,7 +359,13 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
             />
             <div className="mt-2 text-base text-blue-600 hover:text-blue-800 hover:underline"><Link to="/portfolio">Forgot Password?</Link></div>
           </div>
+
+          {/* sign in with google button */}
+          <div id="signInDiv" className='mt-3' ></div>
+          
+
           <div class="g-signin2" data-onsuccess="onSignIn"></div>
+          
           <div className='mt-4 flex relative'>
           <button type='submit' className='form-button-login'>
             <p>Login</p>
@@ -323,6 +373,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
           <button type="reset" onClick={()=> {setIsSignup(true)}} className='ml-4 form-button-signup'>
           <p>Sign up</p>
           </button>
+          
           <div className='absolute right-0'>
             <button type="button" onClick={()=> test_id()} className='ml-4 form-button-signup'>
               <p>Test ID</p>
@@ -354,28 +405,12 @@ const Login = () => {
   const [isSignup, setIsSignup] = useState(false);
   const [isModalOpen, setModal] = useState(false);
   
+  
   console.count("Login count")
 
   
   
-  const handleCallbackResponse = (response) => { 
-    console.log("encoded_jwt " + response.credential)
-  }
-  useEffect(() => {
-
-    /* global google */
-      
-      google.accounts.id.initialize({
-        client_id: process.env.REACT_APP_GoogleOauthClientID,
-        callback: handleCallbackResponse
-      })
-
-      google.accounts.id.renderButton(
-        document.getElementById("signInDiv"),
-        { theme: "outline", size: "large"}
-      );
-    
-  }, [])
+  
 
 
 
@@ -474,9 +509,9 @@ const email_verification = () => {
       </div>
       
       
-      <div className='text-white'></div>
       
-      <div id="signInDiv"></div>
+      
+      
 
       
       
