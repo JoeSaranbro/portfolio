@@ -16,7 +16,8 @@ import { OAuth2Client } from "google-auth-library"
 dotenv.config()
 const app = express()
 app.use(cookieParser());
-const client = new OAuth2Client(process.env.GoogleOauthClientID);
+
+const client = new OAuth2Client();
 
 
 const db = await mysql2.createConnection({
@@ -326,7 +327,8 @@ app.get("/", (req,res)=>{
                          else {
                             console.log("Refresh Token is valid and not expired, we'll give u new access token")
                             
-                            const new_auth_token = jwt.sign({ user_id: decoded.user_id, user_name: decoded.user_name, user_email: decoded.user_email, role: decoded.isAdmin }, process.env.SecretKey_AccessToken,{expiresIn: "30d"})
+                            
+                            const new_auth_token = jwt.sign({ user_id: decoded.user_id, user_name: decoded.user_name, user_email: decoded.user_email, role: decoded.isAdmin }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
                             const encrypted_auth_token = enCrypt(new_auth_token) 
                             res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                             
@@ -363,12 +365,36 @@ app.get("/", (req,res)=>{
                        return res.status(401).json("You are not authenticated!")
                     } 
                     else if (err.name === "TokenExpiredError") {
-                        console.log("access token is valid but expired")
-                        console.log("we'll give u a new Access Token")
-                        verifyingRefreshToken()
+
+                        //check if this user exist in database in case auth_token is expired
+                        console.log("check if this user exist in database in case auth_token is expired")
+                        const query_user_info = "SELECT * FROM users WHERE user_email = ? "
+
+                        const decoded = jwt.decode(auth_token, process.env.SecretKey_AccessToken)
+                        
+
+                        try {
+                            const [rows] = await db.execute(query_user_info, [decoded.user_email]);
+                            console.log("rows",rows.length)
+
+                            if (rows.length === 1) {
+                                console.log("access token is valid but expired")
+                                console.log("we'll give u a new Access Token")
+                                verifyingRefreshToken()
+                            } else {
+                                //result after check user exist in database is not === 1
+                                console.log("this user is not exist in database or might have multiple user account in database")
+                                return res.status(401).json("You are not authenticated!")
+                            }
+
+                        } catch {
+                            console.log("this user is not exist in database or might have multiple user account in database")
+                            return res.status(500).json("Internal error")
+                        }
+                        
                         
                     } else {
-                        console.log(err.name)
+                        console.log("jwt verify auth token error",err.name)
                         
                         return res.status(401).json("Unknown error")
                     }
@@ -376,6 +402,33 @@ app.get("/", (req,res)=>{
                 } else {
                     //if there is no error in verify auth token
                     //fetch todo items from user id
+
+                    
+                        //check if this user exist in database in case auth_token is not expired
+                        console.log("check if this user exist in database in case auth_token is not expired")
+                        const query_user_info = "SELECT * FROM users WHERE user_email = ? "
+                        const decoded = jwt.decode(auth_token, process.env.SecretKey_AccessToken)
+                        
+                        try {
+                            const [rows] = await db.execute(query_user_info, [decoded.user_email]);
+                            
+
+                            if (rows.length === 1) {
+                                console.log("access token is valid but expired")
+                                console.log("we'll give u a new Access Token")
+                                
+                            } else {
+                                //result after check user exist in database is not === 1
+                                console.log("this user is not exist in database or might have multiple user account in database")
+                                return res.status(401).json("You are not authenticated!")
+                            }
+
+                        } catch {
+                            console.log("this user is not exist in database or might have multiple user account in database")
+                            return res.status(500).json("Internal error")
+                        }
+
+
                     console.log("auth token is valid,fetch todo items")
                     const q = "SELECT * FROM todo_item WHERE user_id = ?"
                     try {
@@ -383,6 +436,8 @@ app.get("/", (req,res)=>{
 
                     db.unprepare(q);
                     const result = [{user_name: decoded.user_name}, rows]
+
+                    
                     return res.json(result)
                     
                     } catch (error) {
@@ -391,8 +446,6 @@ app.get("/", (req,res)=>{
                     console.log("try catch fetch todo items from user id error",error)
                     return res.status(400).json("Bad request")
                     }
-                    
-                    
                     
                     }
                     
@@ -818,7 +871,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                       console.log("login success");
     
                       const auth_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role, }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
-                      console.log(auth_token)
+                      
                       const refresh_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
                       
                       const encrypted_auth_token = enCrypt(auth_token)
@@ -968,80 +1021,161 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         const decoded = jwt.decode(req.body[0])
         //console.log(decoded)
         const loginResponse = {loginSuccessfully:null, msg:null}
+
+        //check if gmail has verified from google
         if (decoded.email_verified === true) {
             //check email available google
         const q = "SELECT * FROM users WHERE user_email = ?";
         console.log("check email available google")
         const [rows] = await db.execute(q, [decoded.email] )
 
-        try {
-         // check if there is email name in database
-         //didn't remove the cache with db.unprepare(q, [values])
-         
-         
-            
-            
-         //1.if user has already signed up with our sign up system (not sign in with google), reject it
-         if (rows.length > 0 && rows[0].user_password !== null) {
-            
-            loginResponse.loginSuccessfully = false;
-            loginResponse.msg = "This email has already signed up, please use another email.";
-            console.log("This email has already signed up, please use another email.")
-            return res.json(loginResponse);
+        async function verify() {
+            try {
+                const ticket = await client.verifyIdToken({
+                    idToken: req.body[0],
+                    audience: process.env.GoogleOauthClientID,  // Specify the CLIENT_ID of the app that accesses the backend
+                    // Or, if multiple clients access the backend:
+                    //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
+                });
+                const payload = ticket.getPayload();
+                const userid = payload['sub'];
+                // If request specified a G Suite domain:
+                // const domain = payload['hd'];
+    
+                // all user's data that google give
+                // console.log("payload ",payload) 
+                
+                const response_verifyingEmailinDatabase = await verifyingEmailinDatabase(payload)
+                
+                
+                return response_verifyingEmailinDatabase;
 
-            
+            } catch (error) {
+                
+                console.error("verify google id token error",error)
+                loginResponse.loginSuccessfully = false;
+                loginResponse.msg = "Failed to verify google account!";
+                
+                return loginResponse;
+            }
+          }
+          
+          const responseVerify = await verify()
+          
 
-         } 
-         //2.if user has already signed up by sign in with google, navigate user to todo_items
-         else if (rows.length > 0 && rows[0].user_password === null) {
-            
-            loginResponse.loginSuccessfully = true;
-            loginResponse.msg = "Login successfully.";
-            loginResponse.url = "/todo_items";
-            
-            res.cookie('SignInWithGoogle', "1", SignInWithGoogle_cookieOptions);
-            console.log("logging in through Sign in with google.")
-            return res.json(loginResponse);
-            
+        //   if (responseVerify.loginSuccessfully === false) {
+        //     return res.json(loginResponse)
+        //   } 
 
-         } 
-         //3.If user has not signed up yet, add user information to database and navigate user to todo_items
-         else {
-            const addUser = "INSERT INTO users (`user_name`,`user_email`,`user_verification`) VALUES (?,?,?)";
-
+          return res.json(responseVerify)
+            
+            async function verifyingEmailinDatabase(payload){
+                
                 try {
-                    
-                    
-                    const values = [
-                        decoded.name,
-                        decoded.email,
-                        1
-                ]       
-                    const [rows] = await db.execute(addUser,values);
-                    loginResponse.loginSuccessfully = true;
-                    loginResponse.msg = "Login successfully.";
-                    loginResponse.url = "/todo_items";
-                    db.unprepare(addUser);
 
                     
-                    res.cookie('SignInWithGoogle', "1", SignInWithGoogle_cookieOptions);
-                    console.log("Successfully sign up user from sign in with google api!")
-                    return res.json(loginResponse);
+                    // check if there is email name in database
+                    //didn't remove the cache with db.unprepare(q, [values])
                     
-                  } catch (error) {
-                    console.log("Failed to add user from Sign in with google!",error)
-                    return res.status(500).json("Internal Error")
-                  }
+                    //Verify the Google ID token
+                    console.log("after verify gmail IdToken ")
+                       
+                    //1.if user has already signed up with our sign up system (not sign in with google), reject it
+                    if (rows.length === 1 && rows[0].user_password !== null) {
+                       
+                       loginResponse.loginSuccessfully = false;
+                       loginResponse.msg = "This email has already signed up, please use another email.";
+                       console.log("This email has already signed up, please use another email.")
+                       return loginResponse;
+                       
+           
+                    } 
+                    //2.if user has already signed up by sign in with google, navigate user to todo_items
+                    else if (rows.length === 1 && rows[0].user_password === null) {
+                         
+                       loginResponse.loginSuccessfully = true;
+                       loginResponse.msg = "Login successfully.";
+                       loginResponse.url = "/todo_items";
+                       
+                       
+                        
+                       const auth_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role, }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
+                       const refresh_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
+                        
+                       const encrypted_auth_token = enCrypt(auth_token)
+                       const encrypted_refresh_token = enCrypt(refresh_token)
+                            
+                        
+                        // res.cookie('auth_token', access_token, cookieOptions);
+                       res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
+                       res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
+                        
 
-         }
-
-        } catch (error) {
-            loginResponse.loginSuccessfully = false;
-            loginResponse.msg = "Error while checking email available";
-             console.log("try catch check email available error", error)
-             return res.status(loginResponse);
-        }
-
+                       loginResponse.url = "/todo_items";
+                       console.log("logging in through Sign in with google.")
+                       return loginResponse;
+                       
+           
+                    } 
+                    //3.If user has not signed up yet, add user information to database and navigate user to todo_items
+                    else if (rows.length === 0) {
+           
+                       const addUser = "INSERT INTO users (`user_name`,`user_email`,`user_verification`) VALUES (?,?,?)";
+           
+                           try {
+                               
+                               const values = [
+                                    payload.name,
+                                    payload.email,
+                                    1
+                           ]       
+                               const [rows] = await db.execute(addUser,values);
+                               loginResponse.loginSuccessfully = true;
+                               loginResponse.msg = "Login successfully.";
+                               loginResponse.url = "/todo_items";
+                               db.unprepare(addUser);
+           
+                               console.log("rows after add",rows.insertId)
+                               
+                                
+                                const auth_token = jwt.sign({ user_id: rows.insertId, user_name: payload.name, user_email: payload.email, role: null }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
+                                const refresh_token = jwt.sign({ user_id: rows.insertId, user_name: payload.name, user_email: payload.email, role: null }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
+                                    
+                                const encrypted_auth_token = enCrypt(auth_token)
+                                const encrypted_refresh_token = enCrypt(refresh_token)
+                                        
+                                    
+                                    // res.cookie('auth_token', access_token, cookieOptions);
+                                res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
+                                res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
+                                console.log("Successfully sign up user from sign in with google api!")
+                               return loginResponse;
+                               
+                             } catch (error) {
+                               console.log("Failed to add user from Sign in with google!",error)
+                               loginResponse.loginSuccessfully = false;
+                               loginResponse.msg = "Failed to signup from Sign in with google.";
+                               return loginResponse
+                             }
+           
+                    } else {
+                        loginResponse.loginSuccessfully = false;
+                        loginResponse.msg = "Failed to login.";
+                        console.log("failed to sign up from sign in with google on if else condition might be from rows.length !== 0 || rows.length !== 1 ")
+                        console.log("it might cause from this email might have more than 1 email in database, or it could be rows.length === undefined so its cause an error")
+                        return loginResponse;
+                    }
+           
+                   } catch (error) {
+                       loginResponse.loginSuccessfully = false;
+                       loginResponse.msg = "Error login google ";
+                        console.log("try catch verifyingEmailinDatabase error", error)
+                        return loginResponse;
+                   }
+            }
+            
+            
+        
         } 
         //if user's gmail has not verified yet.
         else {

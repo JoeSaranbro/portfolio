@@ -226,7 +226,10 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
 
       // <-------------------------Start Sign in with google ----------------------------------->
         const handleCallbackResponse = async (response) => { 
-        
+          console.log("qwqwqwq",response)
+
+          console.log(response.credential)
+
           try {
             setLoading(true)
             const res = await axios.post(
@@ -364,7 +367,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
           <div id="signInDiv" className='mt-3' ></div>
           
 
-          <div class="g-signin2" data-onsuccess="onSignIn"></div>
+          <div className="g-signin2" data-onsuccess="onSignIn"></div>
           
           <div className='mt-4 flex relative'>
           <button type='submit' className='form-button-login'>
