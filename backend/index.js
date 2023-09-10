@@ -842,6 +842,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         if (email_pattern.test(req.body.email) && password_pattern.test(req.body.password) ) {
             loginResponse.inputValidation = true;
           } else {
+            console.log("email or password is not pass the pattern test")
             loginResponse.inputValidation = false;
             loginResponse.loginSuccessfully = false;
             loginResponse.msg = "Username or Password is incorrect!";
@@ -1019,10 +1020,14 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
     app.post("/todo_app/login_google", async (req,res)=> {
         
         const decoded = jwt.decode(req.body[0])
-        //console.log(decoded)
+        // console.log("req.body[0]",req.body[0])
+        // console.log("decoded",decoded)
         const loginResponse = {loginSuccessfully:null, msg:null}
 
         //check if gmail has verified from google
+        try {
+            
+        
         if (decoded.email_verified === true) {
             //check email available google
         const q = "SELECT * FROM users WHERE user_email = ?";
@@ -1032,6 +1037,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         async function verify() {
             try {
                 const ticket = await client.verifyIdToken({
+                    
                     idToken: req.body[0],
                     audience: process.env.GoogleOauthClientID,  // Specify the CLIENT_ID of the app that accesses the backend
                     // Or, if multiple clients access the backend:
@@ -1186,7 +1192,12 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
         }
         
-
+        } catch (error) {
+            console.log("error try catch login_google",error) 
+            loginResponse.loginSuccessfully = false;
+            loginResponse.msg = "Failed to login";
+            return res.json(loginResponse)      
+        }
         
         
 
@@ -1246,7 +1257,6 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
     }
 
 })
-   
       
 
     //------------------------------End Login page-----------------------------------------------------
