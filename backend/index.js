@@ -55,126 +55,7 @@ const corsOptions = {
 
 
 
-//----------------------Start Practice JWT authen -------------------------------------------------
 
-const users = [{
-    id: "1",
-    username: "joe",
-    password: "Joesaran0000",
-    isAdmin: true,
-    },
-    {
-        id: "2",
-        username: "jay",
-        password: "Jay0000",
-        isAdmin: false,
-    }]
-
-let refreshTokens = []
-
-const generateAccessToken = (user) => {
-    return jwt.sign({ id: user.id, isAdmin: user.isAdmin }, "mySecretKey",{expiresIn: "15m"})
-}
-
-const generateRefreshToken = (user) => {
-    return jwt.sign({ id: user.id, isAdmin: user.isAdmin }, "myRefreshSecretKey")
-}
-
-    
-app.post("/api/login",(req,res)=> {
-    const {username, password} = req.body;
-    const user = users.find((u)=> {
-        return u.username === username && u.password === password;
-    });
-    console.log(user)
-    if(user){
-        //Generate an access token
-        const accessToken = generateAccessToken(user)
-        const refreshToken = generateRefreshToken(user)
-        refreshTokens.push(refreshToken)
-        
-        
-        res.json({
-            username: user.username,
-            isAdmin: user.isAdmin,
-            id: user.id,
-            accessToken,
-            refreshToken
-        })
-    }else {
-        res.status(400).json("Username or password is incorrect!")
-    }
-})
-
-
-app.post("/api/refresh", (req,res) => {
-    //take the refresh token from the user
-    const refreshToken = req.body.token
-    
-    //send error if there is no token or it's invalid
-    if (!refreshToken) {
-        return res.status(401).json("You are not authenticated!")
-    }
-    if (!refreshTokens.includes(refreshToken)) {
-        return res.status(403).json("Refresh token is invalid!")
-    }
-
-    jwt.verify("", "myRefreshSecretKey", (err, user) => {
-        if (err) {
-            console.log(err)
-        }
-        refreshTokens = refreshTokens.filter((token) => token !== refreshToken)
-        const newAccessToken = generateAccessToken(user)
-        const newRefreshToken = generateRefreshToken(user) 
-        
-        refreshTokens.push(newRefreshToken)
-
-        res.status(200).json({
-            accessToken: newAccessToken,
-            refreshToken: newRefreshToken,
-        })
-        
-    })
-    //if everything is ok send new token to user.
-    
-})
-
-
-const verify = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (authHeader) {
-        const token = authHeader.split(" ")[1];
-
-        jwt.verify(token, "mySecretKey", (err, user) => {
-            if (err) {
-                return res.status(403).json("Token is not valid!")
-            }
-            req.user = user;
-            next();
-        });
-    } else {
-        res.status(401).json("Yor are not authenticated!")
-    }
-};
-
-app.delete("/api/users/:userId", verify, (req, res) => {
-    if (req.user.id === req.params.userId || req.user.isAdmin) {
-        res.status(200).json("User has been deleted.")
-    } else {
-        res.status(403).json("You are not allowed to delete this user!")
-    }
-});
-
-
-
-
-app.post("/api/logout", verify, (req, res)=> {
-    const refreshToken = req.body.token;
-    refreshTokens = refreshTokens.filter((token) => token !== refreshToken)
-    res.status(200).json("You logged out succesfully.")
-})
-
-//----------------------End Practice JWT authen -------------------------------------------------
 app.get("/", (req,res)=>{
     res.json("hello this is the backend")
 })
@@ -212,12 +93,7 @@ app.get("/", (req,res)=>{
     }
 
     // ------------------------------ Start cookies options -----------------------------------
-    const SignInWithGoogle_cookieOptions = {
-        maxAge:  30 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
-        httpOnly: true, // prevent client-side scripts from accessing the cookie
-        secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
-        sameSite: 'none' // restrict cross-site usage of cookie
-    };
+    
 
     const access_token_cookieOptions = {
         maxAge:  365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
@@ -1044,13 +920,13 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                     //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
                 });
                 const payload = ticket.getPayload();
-                const userid = payload['sub'];
+                //const userid = payload['sub'];
                 // If request specified a G Suite domain:
                 // const domain = payload['hd'];
     
                 // all user's data that google give
                 // console.log("payload ",payload) 
-                
+                console.log("gmail is valid")
                 const response_verifyingEmailinDatabase = await verifyingEmailinDatabase(payload)
                 
                 
@@ -1084,7 +960,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                     //didn't remove the cache with db.unprepare(q, [values])
                     
                     //Verify the Google ID token
-                    console.log("after verify gmail IdToken ")
+                    console.log("after verify gmail is valid, check if there is gmail in database")
                        
                     //1.if user has already signed up with our sign up system (not sign in with google), reject it
                     if (rows.length === 1 && rows[0].user_password !== null) {
@@ -1141,7 +1017,8 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                                loginResponse.url = "/todo_items";
                                db.unprepare(addUser);
            
-                               console.log("rows after add",rows.insertId)
+                               //console.log("userid in database",rows.insertId)
+                               
                                
                                 
                                 const auth_token = jwt.sign({ user_id: rows.insertId, user_name: payload.name, user_email: payload.email, role: null }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
@@ -1208,55 +1085,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
     // async..await is not allowed in global scope, must use a wrapper
 
-    app.get("/todo_app/send_test_email",async (req,res)=> {  
-
-    try {
-
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-        user: process.env.Gmail,
-        pass: process.env.GmailP
-        }
-        
-
-    });
-
-
-    const readHTMLFile = async () => {
-        try {
-            const data = await fs.readFile('email_verification_template.html', 'utf8');
-            return data;
-        } catch (err) {
-            const data = await fs.readFile('error_page.html', 'utf8');
-            return data;
-        }
-    }
-
-    const mailOptions = {
-        from: 'u6111011940013@gmail.com',
-        to: 'sarankunsutha@gmail.com',
-        subject: 'Sending Email using Node.js',
-        text: 'That was easy!',
-        html: await readHTMLFile(), // html body
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-        console.log("transporter.sendMail error", error);
-        } else {
-        console.log('Email sent: ' + info.response);
-        return res.send('Email sent successfully');
-        }
-    });
-
-    }
-    catch (error) {
-        console.log("send email error", error)
-        return res.status(500).json("Error")
-    }
-
-})
+    
       
 
     //------------------------------End Login page-----------------------------------------------------

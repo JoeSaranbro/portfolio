@@ -151,7 +151,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
               className=
               {`form-input ${inputValidation.email === false || isEmailAvailable === false ? "border-2 border-rose-500 outline-none" : ""} ${isEmailAvailable === true ? "border-2 border-green-500 outline-none": ""} 
               `}
-              maxLength={20}
+              maxLength={50}
               value={inputSignup.email}
               onChange={(e) => setInputSignup({...inputSignup,email:e.target.value})}
               required
@@ -342,7 +342,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
               type='email'
               id='email'
               className="form-input"
-              
+              maxLength={50}
               value={inputLogin.email}
               onChange={(e) => setInputLogin((prev)=>({...prev,email:e.target.value}))}
               required
@@ -359,6 +359,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
               value={inputLogin.password}
               onChange={(e) => setInputLogin((prev)=>({...prev,password:e.target.value}))}
               required
+              maxLength={20}
             />
             <div className="mt-2 text-base text-blue-600 hover:text-blue-800 hover:underline"><Link to="/portfolio">Forgot Password?</Link></div>
           </div>
@@ -459,28 +460,11 @@ const Login = () => {
 //<------------------------- End Handle Click Outside Section  -----------------------------------> 
 
 
-const testRedirect = async() => {
 
-  const token = document.cookie.replace(/(?:(?:^|.*;\s*)auth_token\s*=\s*([^;]*).*$)|^.*$/, "$1");
-  const cookieValue = document.cookie.split('; ').find((row) => row.startsWith('11='))?.split('=')[1]
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': token
-  }
-
-try {
-  const res = await axios.get('http://localhost:8800/todo_app/email_verification')
-  console.log(res)
-} catch (error) {
-  console.log(error)
-}
-}
 
 const navigate = useNavigate();
 
-const email_verification = () => {
-  navigate("/Email_Verification_Page")
-}
+
 
 
 
@@ -499,17 +483,9 @@ const email_verification = () => {
      
         </div>
         
-      <div>
-        <button onClick={testRedirect} className="btnGray">
-        redirect
-        </button>
-      </div>
+      
 
-      <div>
-      <button onClick={email_verification} className="btnGray">
-        email_verification
-        </button>
-      </div>
+      
       
       
       
