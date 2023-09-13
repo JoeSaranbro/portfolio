@@ -21,10 +21,10 @@ const client = new OAuth2Client();
 
 
 const db = await mysql2.createConnection({
-    host: process.env.MYSQL_HOST,
-    user: process.env.MYSQL_USER,
-    password:process.env.MYSQL_PASSWORD,
-    database: process.env.MYSQL_DATABASE,
+    host: process.env.MYSQL_deploy_HOST,
+    user: process.env.MYSQL_deploy_USER,
+    password:process.env.MYSQL_deploy_PASSWORD,
+    database: process.env.MYSQL_deploy_DATABASE,
     waitForConnections: true,
     connectionLimit: 10,
     maxIdle: 10, // max idle connections, the default value is the same as `connectionLimit`
