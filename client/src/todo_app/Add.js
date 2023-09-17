@@ -24,7 +24,7 @@ const Add = ({  setData, isAddModalOpen, setAddModal, addRef, setError}) => {
     } else {
         try {
           e.preventDefault();
-          const res = await axios.post(`${REACT_APP_deploy_server_URL}/todo_items`, userInput, {withCredentials:true });
+          const res = await axios.post(`${REACT_APP_deploy_backend_URL}/todo_items`, userInput, {withCredentials:true });
 
           if(Array.isArray(res.data) && res.data.length !== 0){
             setData(res.data)

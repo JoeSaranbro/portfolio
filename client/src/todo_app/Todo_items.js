@@ -44,7 +44,7 @@ const Todo_items = () => {
     const authentication = async() => {
       try {
         console.log("check")
-        const res = await axios.get(`${REACT_APP_deploy_server_URL}/authentication`,{withCredentials: true})
+        const res = await axios.get(`${REACT_APP_deploy_backend_URL}/authentication`,{withCredentials: true})
 
         if (res.data[0].user_name) {
           setUsername(res.data[0].user_name)
@@ -165,7 +165,7 @@ const Todo_items = () => {
     console.log(todo_id)
    
     try {
-      const res = await axios.delete(`${REACT_APP_deploy_server_URL}/todo_items/` + todo_id, {withCredentials:true })
+      const res = await axios.delete(`${REACT_APP_deploy_backend_URL}/todo_items/` + todo_id, {withCredentials:true })
       
       
       setThreeDotsModal(false)
@@ -196,7 +196,7 @@ const Todo_items = () => {
   const logout = async() => {
     
     try {
-      const res = await axios.get(`${REACT_APP_deploy_server_URL}/todo_app/logout`,{withCredentials: true})
+      const res = await axios.get(`${REACT_APP_deploy_backend_URL}/todo_app/logout`,{withCredentials: true})
       alert("Logout Successfully!")
       navigate("/login")
     } catch (error) {
