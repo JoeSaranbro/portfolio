@@ -49,7 +49,7 @@ const corsOptions = {
  app.use(cors(corsOptions));
  
 const deploy_client_URL = "https://portfolio-swart-one-74.vercel.app"
-const deploy_server_URL = "https://portfolio-api-six-self.vercel.app"
+const deploy_backend_URL = "http://portfolio-env-3.eba-jw6avzkx.ap-southeast-1.elasticbeanstalk.com/"
 
 const localhost_client_URL = "http://localhost:3000"
 const localhost_server_URL = "http://localhost:8800"
@@ -821,7 +821,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                               to: 'sarankunsutha@gmail.com',
                               subject: 'Email verification ToDoApp',
                               text: 'Please confirm your email by clicking the link we give you.',
-                              html: htmlContent.replaceAll('{{dynamicLink}}',`${deploy_server_URL}/todo_app/email_verification?token=${enCrypted()}`) , // html body
+                              html: htmlContent.replaceAll('{{dynamicLink}}',`${deploy_backend_URL}/todo_app/email_verification?token=${enCrypted()}`) , // html body
                             };
                           
                             transporter.sendMail(mailOptions, (error, info) => {
