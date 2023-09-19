@@ -200,8 +200,7 @@ const Todo_items = () => {
       alert(res.data)
       navigate("/login")
     } catch (error) {
-      console.log("res.data",res.data)
-      alert(res.data)
+      alert("error")
       console.log("logout error",error)
     }
     

@@ -1163,27 +1163,19 @@ app.get("/todo_app/email_verification",async (req,res)=> {
     
 
 })
-
 // --------------- end email verification  ----------------------------- 
 //----------------------Start Logout  -------------------------------------------------
 app.get("/todo_app/logout",async (req,res)=> {
     
     try {
-
-        // res.clearCookie('refresh_token', {
-        //     path: '/',
-        //     httpOnly: true,
-        //     secure: true,
-        //     sameSite: 'none'
-        //   });
-
-        res.clearCookie("auth_token");
-        res.clearCookie("refresh_token");
-        return res.json("Success")
+        res.cookie("auth_token",{maxAge: 0});
+        res.cookie("refresh_token",{maxAge: 0});
+        console.log("logout success")
+        return res.json("Logout Success")
         
     } catch (error) {
         console.log("delete cookie error", error)
-        return res.status(400).json("Error")
+        return res.status(400).json("Logout Error")
     }
     
 
