@@ -44,7 +44,7 @@ const Todo_items = () => {
     const authentication = async() => {
       try {
         console.log("check")
-        const res = await axios.get(`${process.env.REACT_APP_deploy_backend_URL}authentication`,{withCredentials: true})
+        const res = await axios.get(`${process.env.REACT_APP_deploy_backend_URL}/authentication`,{withCredentials: true})
 
         if (res.data[0].user_name) {
           setUsername(res.data[0].user_name)
