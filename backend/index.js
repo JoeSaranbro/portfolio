@@ -49,10 +49,12 @@ const corsOptions = {
  app.use(cors(corsOptions));
  
 const deploy_client_URL = "https://portfolio-swart-one-74.vercel.app"
-const deploy_backend_URL = "http://portfolio-env-3.eba-jw6avzkx.ap-southeast-1.elasticbeanstalk.com/"
+const deploy_backend_URL = "http://portfolio-env-3.eba-jw6avzkx.ap-southeast-1.elasticbeanstalk.com"
 
 const localhost_client_URL = "http://localhost:3000"
 const localhost_server_URL = "http://localhost:8800"
+
+const port = process.env.PORT || 8800;
 //  app.use(cors());
 
 //----------------------End cors -------------------------------------------------
@@ -1184,7 +1186,7 @@ app.get("/todo_app/logout",async (req,res)=> {
 //----------------------End Logout  -------------------------------------------------
 //----------------------End Todo App -------------------------------------------------
 
-app.listen(8800, ()=> {
+app.listen(port, ()=> {
     console.log("Hello")
     
 })
