@@ -226,9 +226,9 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
 
       // <-------------------------Start Sign in with google ----------------------------------->
         const handleCallbackResponse = async (response) => { 
-          console.log("qwqwqwq",response)
+          //console.log("qwqwqwq",response)
 
-          console.log(response.credential)
+          //console.log(response.credential)
 
           try {
             setLoading(true)

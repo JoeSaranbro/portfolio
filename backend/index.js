@@ -246,7 +246,9 @@ app.get("/", (req,res)=>{
                        console.log("Auth token is not valid, go login again.")
                        return res.status(401).json("You are not authenticated!")
                     } 
-                    else if (err.name === "TokenExpiredError") {
+                    else if (err.name === "TokenExpiredError") 
+                    
+                    {
 
                         //check if this user exist in database in case auth_token is expired
                         console.log("check if this user exist in database in case auth_token is expired")
@@ -296,8 +298,7 @@ app.get("/", (req,res)=>{
                             
 
                             if (rows.length === 1) {
-                                console.log("access token is valid but expired")
-                                console.log("we'll give u a new Access Token")
+                                console.log("access token is valid")
                                 
                             } else {
                                 //result after check user exist in database is not === 1
@@ -888,7 +889,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
               return res.json(loginResponse);
             }
             
-          } catch (error) {
+        } catch (error) {
              db.unprepare(query_user_info);
              console.log("try catch query user_info error",error);
              return res.status(500).json("Internal Error");
@@ -1170,8 +1171,8 @@ app.get("/todo_app/email_verification",async (req,res)=> {
 app.get("/todo_app/logout",async (req,res)=> {
     
     try {
-        res.cookie("auth_token",{maxAge: 0});
-        res.cookie("refresh_token",{maxAge: 0});
+        res.clearCookie("auth_token");
+        res.cookie("refresh_token");
         console.log("logout success")
         return res.json("Logout Success")
         
