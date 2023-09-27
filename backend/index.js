@@ -49,7 +49,7 @@ const corsOptions = {
  app.use(cors(corsOptions));
  
 const deploy_client_URL = "https://portfolio-swart-one-74.vercel.app"
-const deploy_backend_URL = "http://portfolio-env-3.eba-jw6avzkx.ap-southeast-1.elasticbeanstalk.com"
+const deploy_backend_URL = "https://www.joesaranbro.online"
 
 const localhost_client_URL = "http://localhost:3000"
 const localhost_server_URL = "http://localhost:8800"
