@@ -165,7 +165,7 @@ const Todo_items = () => {
     console.log(todo_id)
    
     try {
-      const res = await axios.delete(`${process.env.REACT_APP_backend_URL}/todo_items/` + todo_id, {withCredentials:true })
+      const res = await axios.delete(`${process.env.REACT_APP_backend_URL}/todo_items/`+todo_id, {withCredentials:true })
       
       
       setThreeDotsModal(false)
