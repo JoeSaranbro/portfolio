@@ -5,14 +5,10 @@ import axios from 'axios'
 import { IoMdAddCircleOutline } from "react-icons/io"
 import { GiNotebook } from "react-icons/gi"
 import { BsThreeDots } from "react-icons/bs"
-import useAxios from './useAxios';
-
 
 import { useNavigate } from 'react-router-dom';
 import Add from "./Add"
 import Edit from "./Edit"
-
-//./components/edit.png
 
 
 const Todo_items = () => {
@@ -149,14 +145,6 @@ const Todo_items = () => {
   },[threeDotsModal,isAddModalOpen]);
   
  
-
-  // const handleTestUpdate = (newData) => {
-  //   const findWhereUpdatedId = data.findIndex(({ todo_id })=> todo_id === newData.todo_id)
-  //   if (findWhereUpdatedId !== -1) {
-  //     setData()
-  //   }
-    
-  // }
   
   
   console.count("all")
