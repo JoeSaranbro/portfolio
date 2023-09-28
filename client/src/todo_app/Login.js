@@ -29,7 +29,7 @@ const SignUpForm = ( { refModal, isModalOpen,setModal ,setIsSignup, isSignup} ) 
         
         try {
           const response = await axios.post(
-            `${process.env.REACT_APP_deploy_backend_URL}/is-email-available`,
+            `${process.env.REACT_APP_backend_URL}/is-email-available`,
             [inputSignup.email]
           );
           
@@ -75,7 +75,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
       
       try {
         e.preventDefault()
-        const res = await axios.post(`${process.env.REACT_APP_deploy_backend_URL}/todo_app/signup`,
+        const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_app/signup`,
           inputSignup
         );
 
@@ -233,7 +233,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
           try {
             setLoading(true)
             const res = await axios.post(
-              `${process.env.REACT_APP_deploy_backend_URL}/todo_app/login_google`,
+              `${process.env.REACT_APP_backend_URL}/todo_app/login_google`,
               [response.credential], {withCredentials: true}
             );
             setLoading(false)
@@ -279,7 +279,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
     try {
       setLoading(true)
       e.preventDefault()
-      const res = await axios.post(`${process.env.REACT_APP_deploy_backend_URL}/todo_app/login`,inputLogin, {withCredentials: true}
+      const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_app/login`,inputLogin, {withCredentials: true}
       );
 
       setLoading(false)

@@ -80,7 +80,7 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
       alert("Title can't be empty!")
     } else {
       try {
-        const res = await axios.put(`${process.env.REACT_APP_deploy_backend_URL}/todo_items/` + currentTodo.todo_id, data , {withCredentials:true });
+        const res = await axios.put(`${process.env.REACT_APP_backend_URL}/todo_items/` + currentTodo.todo_id, data , {withCredentials:true });
         if (res.data.length !== 0) {
           setData(res.data)
         } 

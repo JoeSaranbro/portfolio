@@ -1171,8 +1171,8 @@ app.get("/todo_app/email_verification",async (req,res)=> {
 app.get("/todo_app/logout",async (req,res)=> {
     
     try {
-        res.clearCookie("auth_token");
-        res.cookie("refresh_token");
+        res.clearCookie("auth_token", { domain: "www.joesaranbro.online", path: "/", sameSite: "none", httpOnly: true, secure: true });
+        res.clearCookie("refresh_token",{ domain: "www.joesaranbro.online", path: "/", sameSite: "none", httpOnly: true, secure: true });
         console.log("logout success")
         return res.json("Logout Success")
         
