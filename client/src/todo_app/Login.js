@@ -57,6 +57,7 @@ const SignUpForm = ( { refModal, isModalOpen,setModal ,setIsSignup, isSignup} ) 
 const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$")
     
 const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
+const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
 
 //<-------------------------Regex Section ----------------------------------->  
 
@@ -68,6 +69,8 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
     username_pattern.test(inputSignup.username) ? setinputValidation((prev)=>({...prev,username: true})) : setinputValidation((prev)=>({...prev,username: false}))
     
     password_pattern.test(inputSignup.password) ? setinputValidation((prev)=>({...prev,password: true})) : setinputValidation((prev)=>({...prev,password: false}))
+
+    email_pattern.test(inputSignup.email) ? setinputValidation((prev)=>({...prev,email: true})) : setinputValidation((prev)=>({...prev,email: false}))
     
     inputSignup.password !== inputSignup.confirm_password ? setinputValidation((prev)=>({...prev,confirm_password: false})) : setinputValidation((prev)=>({...prev,confirm_password: true}))
 
@@ -134,7 +137,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
               id='username'
               className={`form-input ${inputValidation.username === false ? "border-2 border-rose-500 outline-none" : ""}` }
               value={inputSignup.username}
-              onChange={(e) => setInputSignup({...inputSignup,username:e.target.value})}
+              onChange={(e) => setInputSignup({...inputSignup, username:e.target.value})}
               required
               maxLength={20}
               
@@ -153,7 +156,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
               `}
               maxLength={50}
               value={inputSignup.email}
-              onChange={(e) => setInputSignup({...inputSignup,email:e.target.value})}
+              onChange={(e) => setInputSignup({...inputSignup, email:e.target.value})}
               required
             />
             <p className='text-rose-500' style={!inputValidation.email && inputValidation.email !== null ? {display: "block"}:{display: "none"}} >Please match the requested format! Example: a@gmail.com </p>
@@ -170,7 +173,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
               className={`form-input ${inputValidation.password === false ? "border-2 border-rose-500 outline-none" : ""}` }
               id='password'
               value={inputSignup.password}
-              onChange={(e) => setInputSignup({...inputSignup,password:e.target.value})}
+              onChange={(e) => setInputSignup({...inputSignup, password:e.target.value})}
               required
               maxLength={20}
               
@@ -214,7 +217,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
 //<-------------------------End Signup Section ----------------------------------->
 
 //<-------------------------Start Login Section ----------------------------------->
-  const LoginForm = ({ refModal, isModalOpen, setModal, setIsSignup }) => {
+  const LoginForm = ({ refModal, isModalOpen, setModal, setIsSignup, setIsForgotPassword }) => {
 
     const navigate = useNavigate();
     const loginInitialValue = {email:"", password:""}
@@ -291,13 +294,6 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
       }
      
       
-
-      // if (res.data.signupSuccessfully) {
-      //   alert("Signup Successfully.")
-      // } else {
-      //   alert("Signup not Success!")
-      // }
-      // handleCloseSignUpForm()
     } catch (error) {
       alert("Login Error")
       setLoading(false)
@@ -361,14 +357,17 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
               required
               maxLength={20}
             />
-            <div className="mt-2 text-base text-blue-600 hover:text-blue-800 hover:underline"><Link to="/portfolio">Forgot Password?</Link></div>
+            
           </div>
-
-          {/* sign in with google button */}
+            <p onClick={()=> {setIsForgotPassword(true)}} className='mt-2 font-bold text-blue-500 underline underline-offset-4'>Forgot Password?</p>
+          
+          {/* start sign in with google button */}
           <div id="signInDiv" className='mt-3' ></div>
           
 
-          <div className="g-signin2" data-onsuccess="onSignIn"></div>
+          {/* <div className="g-signin2" data-onsuccess="onSignIn"></div> */}
+
+          {/* end sign in with google button */}
           
           <div className='mt-4 flex relative'>
           <button type='submit' className='form-button-login'>
@@ -377,6 +376,7 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
           <button type="reset" onClick={()=> {setIsSignup(true)}} className='ml-4 form-button-signup'>
           <p>Sign up</p>
           </button>
+          
           
           <div className='absolute right-0'>
             <button type="button" onClick={()=> test_id()} className='ml-4 form-button-signup'>
@@ -396,9 +396,254 @@ const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{
   </div> 
   )}
   
-  
+  // <-------------------------Start forgot password ----------------------------------->      
   
 
+  const ForgotPasswordForm = ({ refModal, isModalOpen, setModal, setIsSignup, setIsForgotPassword, isForgotPassword }) => {
+
+    const [inputForgotPassword, setInputForgotPassword] = useState({username: "", email:""})
+    const [step, setStep] = useState("1")
+    const [otp, setOTP] = useState(["","","","","",""])
+    const inputRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
+    
+    
+    //const [ForgotPasswordStep, setForgotPasswordStep] = useState("1")
+    const regexTest = async () => {
+      // Perform your regex test here
+      
+
+      const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$");
+      const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
+      
+      if ( username_pattern.test(inputForgotPassword.username) && email_pattern.test(inputForgotPassword.email) ) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+
+    const handleForgotPasswordSubmit_Step1 = async (e) => {
+      e.preventDefault()
+
+      const isRegexPass = await regexTest();
+      
+      if (isRegexPass) {
+            
+            try {
+              e.preventDefault()
+              const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_app/forgot_password`,
+              inputForgotPassword, {withCredentials: true}
+              );
+              console.log(res.data)
+
+              if (res.data.status == "success") {
+                alert(res.data.msg)
+                setStep("2")
+              } else {
+                alert(res.data.msg)
+              }
+            
+            } catch (error) {
+              console.log("ForgotPasswordSubmit",error)
+              alert("There is an error!")
+
+            }
+
+      } else {
+        alert("Please match the requested format, check your username and email again!")
+    }
+
+    }
+
+    const handleForgotPasswordSubmit_Step2 = async (e) => {
+      e.preventDefault()
+      const otp_pattern = new RegExp('^[0-9]+$')
+      const string_otp = otp.toString().replaceAll(",","")
+      const isRegexPass = await regexTest();
+
+      
+      console.log("string_otp",string_otp)
+      
+      if (isRegexPass && otp_pattern.test(string_otp)) {
+
+          
+        
+          
+            //username_pattern.test(inputForgotPassword.username) ? setinputValidation((prev)=>({...prev,username: true})) : setinputValidation((prev)=>({...prev,username: false}))
+            //email_pattern.test(inputForgotPassword.email) ? setinputValidation((prev)=>({...prev,email: true})) : setinputValidation((prev)=>({...prev,email: false}))
+            
+            try {
+                
+              e.preventDefault()
+              
+              const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_app/verify_otp`,
+              {otp: string_otp}, {withCredentials: true}
+              );
+              console.log(res.data)
+              alert(res.data.msg)
+
+              
+            
+            } catch (error) {
+              console.log("ForgotPasswordSubmit",error)
+              alert("There is an error!")
+
+            }
+
+        
+
+      } else {
+        alert("Please match the requested format, check your username and email again!")
+    }
+
+    }
+    
+
+
+    const handleInputChange = (e, index) => {
+      const value = e.target.value;
+      const newOtp = [...otp];
+      newOtp[index] = value;
+  
+      setOTP(newOtp);
+  
+      if (value && index < otp.length - 1) {
+        // If a value is entered (not Backspace) and not in the last input, move focus to the next input
+        inputRefs[index + 1].current.focus();
+      } else if (value === '' && index > 0) {
+        // If Backspace is pressed and not in the first input, move focus to the previous input
+        inputRefs[index - 1].current.focus();
+      }
+    };
+  
+
+    
+
+    const handleCloseForgotPasswordForm = () => {
+      setModal(false);
+      setIsForgotPassword(false);
+      
+      
+    }
+
+
+    return ( <>
+              {/* step 1 username and email form */}
+
+              
+
+            {step == 1 ?  <div id="signupModal" className="modal" style={isModalOpen && isForgotPassword ? {display: "block"}:{display: "none"}}>
+              <div ref={refModal} className="modal-content-signup ">
+                <div id="header" className='text-center'>
+                  <span className='text-2xl font-bold'>Forgot Password<span className="close rounded-lg" onClick={handleCloseForgotPasswordForm}>&times;</span></span>
+                
+                  <hr className='mt-4 border-2'/>
+                </div>
+                
+                <div className=''>
+                <form onSubmit={handleForgotPasswordSubmit_Step1} className='form w-full'>
+
+                  <div className='form-col'>
+                    <label htmlFor='email' className='form-label'>
+                      Username
+                    </label>
+                    <input
+                      type='name'
+                      id='name'
+                      className="form-input"
+                      maxLength={20}
+                      value={inputForgotPassword.username}
+                      onChange={(e) => setInputForgotPassword({...inputForgotPassword, username:e.target.value})}
+                      required
+                    />
+                  
+                    
+                  </div>
+                  
+                  <div className='form-col'>
+                    <label htmlFor='email' className='form-label'>
+                      Email
+                    </label>
+                    <input
+                      type='email'
+                      id='email'
+                      className="form-input"
+                      maxLength={50}
+                      value={inputForgotPassword.email}
+                      onChange={(e) => setInputForgotPassword({...inputForgotPassword, email:e.target.value})}
+                      required
+                    />
+                    
+                  </div>
+
+                  
+                  
+                  
+                  <div className='mt-6'>
+                  <button onClick={()=> {setIsForgotPassword(false)}} type="reset" className='form-button-login'>
+                    <p>Back to Login</p>
+                  </button>
+                  <button type='submit' className='ml-4 form-button-signup' >
+                  <p>Next</p>
+                  </button>
+                  </div>
+                  
+              </form>
+                </div>
+              </div>
+            </div> : 
+            
+            <div id="signupModal" className="modal" style={isModalOpen && isForgotPassword && step == 2 ? {display: "block"}:{display: "none"}}>
+              {/* step 2 otp form */}
+              
+              <div ref={refModal} className="modal-content-signup ">
+                <div id="header" className='text-center'>
+                  <span className='text-2xl font-bold'>Enter OTP<span className="close rounded-lg" onClick={handleCloseForgotPasswordForm}>&times;</span></span>
+                
+                  <hr className='mt-4 border-2'/>
+                </div>
+                
+                <div className='mt-3'>
+                <form onSubmit={handleForgotPasswordSubmit_Step2} className='form w-full'>
+                  <p htmlFor='email' className='form-label text-justify  text-xl '>
+                            To complete reset your password, please enter the OTP numbers that we've sent to your Email.
+                  </p>
+                  <div className='flex gap-6 justify-center mt-4'>
+                      
+                      {otp.map((currentValue, index) => (
+                      <input
+                        key={index}
+                        type="text"
+                        value={currentValue}
+                        maxLength="1"
+                        className="bg-zinc-700 focus:bg-neutral-900 mt-2 rounded h-14 w-12 text-center font-bold text-3xl"
+                        onChange={(e) => handleInputChange(e, index)}
+                        ref={inputRefs[index]}
+                      />
+                    ))}
+
+                      
+                  </div>
+                  
+                  <div className='mt-6 flex justify-center'>
+                  <button onClick={()=> {setIsForgotPassword(false)}} type="reset" className='form-button-login'>
+                    <p>Back to Login</p>
+                  </button>
+                  <button type='submit' className='ml-4 form-button-signup' >
+                  <p>Next</p>
+                  </button>
+                  </div>
+                  
+              </form>
+                </div>
+              </div>
+            </div>}
+    </>
+      
+    )
+  }
+
+// <-------------------------End forgot password ----------------------------------->  
 
 const Login = () => {
 
@@ -408,6 +653,8 @@ const Login = () => {
   
   const [isSignup, setIsSignup] = useState(false);
   const [isModalOpen, setModal] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  
   
   
   console.count("Login count")
@@ -436,6 +683,7 @@ const Login = () => {
       if (!refModal.current.contains(event.target)) {
         setModal(false);
         setIsSignup(false);
+        setIsForgotPassword(false);
       }
   };
 
@@ -473,11 +721,15 @@ const navigate = useNavigate();
       <div>
       <button id="openmodal" onClick={()=> setModal(true)} className="btnGray">Login</button>
       
-      {(isModalOpen && !isSignup)&& ( <LoginForm refModal={refModal} isModalOpen={isModalOpen} setModal={setModal}  
-      setIsSignup={setIsSignup} /> )}
+      {(isModalOpen && !isSignup && !isForgotPassword)&& ( <LoginForm refModal={refModal} isModalOpen={isModalOpen} setModal={setModal}  
+      setIsSignup={setIsSignup} setIsForgotPassword={setIsForgotPassword} /> )}
       
-      {isModalOpen && isSignup && ( <SignUpForm refModal={refModal} isModalOpen={isModalOpen} 
+      {(isModalOpen && isSignup) && ( <SignUpForm refModal={refModal} isModalOpen={isModalOpen} 
       setIsSignup={setIsSignup} setModal={setModal} isSignup={isSignup} /> )
+      }
+
+      {isModalOpen && isForgotPassword && ( <ForgotPasswordForm refModal={refModal} isModalOpen={isModalOpen} 
+      setIsForgotPassword={setIsForgotPassword} setModal={setModal} isForgotPassword={isForgotPassword} /> )
       }
       
      

@@ -48,11 +48,12 @@ const corsOptions = {
 }
  app.use(cors(corsOptions));
  
-const deploy_client_URL = "https://portfolio-swart-one-74.vercel.app"
-const deploy_backend_URL = "https://www.joesaranbro.online"
+const client_URL = process.env.Client_URL
+const backend_URL = process.env.Backend_URL
 
-const localhost_client_URL = "http://localhost:3000"
-const localhost_server_URL = "http://localhost:8800"
+
+
+
 
 const port = process.env.PORT || 8800;
 //  app.use(cors());
@@ -71,10 +72,10 @@ app.get("/", (req,res)=>{
     //---------------------- Start Authentication -------------------------------------------------
     // Encrypt by crypto.js
     
-    const enCrypt = (message) => {
+    const enCrypt = (message,secretkey) => {
 
         try {
-        const ciphertext = CryptoJS.AES.encrypt(message,process.env.SecretKey_Cryptojs).toString();
+        const ciphertext = CryptoJS.AES.encrypt(message,secretkey).toString();
         return ciphertext;
         } catch (error) {
         console.log("try catch enCrypt error",error)
@@ -86,9 +87,13 @@ app.get("/", (req,res)=>{
     }
 
     // Decrypt
-    const deCrypt = (ciphertext) => {
+    const deCrypt = (ciphertext,secretkey) => {
         try {
-        const bytes  = CryptoJS.AES.decrypt(ciphertext,process.env.SecretKey_Cryptojs);
+
+        //Note: encrypted data can't grab them directly from web developer tools because web browser convert "/" to "%2f" and "+" to "%2B" ,
+        //it will cause an error if grab the value directly and decrypt it.
+        //always get the value from res.cookie
+        const bytes  = CryptoJS.AES.decrypt(ciphertext,secretkey);
         const originalText = bytes.toString(CryptoJS.enc.Utf8);
         return originalText;
         } catch (error) {
@@ -105,14 +110,18 @@ app.get("/", (req,res)=>{
         maxAge:  365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
         httpOnly: true, // prevent client-side scripts from accessing the cookie
         secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
-        sameSite: 'none' // restrict cross-site usage of cookie
+        sameSite: 'none', // restrict cross-site usage of cookie
+        //domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
+        path: "/"
     };
 
     const refresh_token_cookieOptions = {
         maxAge:  365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
         httpOnly: true, // prevent client-side scripts from accessing the cookie
         secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
-        sameSite: 'none' // restrict cross-site usage of cookie
+        sameSite: 'none', // restrict cross-site usage of cookie
+        //domain: backend_URL,
+        path: "/",
     };
 // ------------------------------ End cookies options -----------------------------------
 
@@ -126,8 +135,8 @@ app.get("/", (req,res)=>{
                 return res.status(401).json("You're not authenticated!")
             }
               
-            const auth_token = deCrypt(req.cookies["auth_token"])
-            const refresh_token = deCrypt(req.cookies["refresh_token"])
+            const auth_token = deCrypt(req.cookies["auth_token"],process.env.SecretKey_Cryptojs_JWT)
+            const refresh_token = deCrypt(req.cookies["refresh_token"],process.env.SecretKey_Cryptojs_JWT)
 
             
            // console.log(refresh_token)
@@ -168,8 +177,8 @@ app.get("/", (req,res)=>{
                                     const new_auth_token = jwt.sign({ user_id: decoded.user_id, user_name: decoded.user_name, user_email: decoded.user_email, role: decoded.isAdmin }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
                                     const new_refresh_token = jwt.sign({ user_id: decoded.user_id, user_name: decoded.user_name, user_email: decoded.user_email, role: decoded.isAdmin }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
 
-                                    const encrypted_auth_token = enCrypt(new_auth_token)
-                                    const encrypted_refresh_token = enCrypt(new_refresh_token)
+                                    const encrypted_auth_token = enCrypt(new_auth_token,process.env.SecretKey_Cryptojs_JWT)
+                                    const encrypted_refresh_token = enCrypt(new_refresh_token,process.env.SecretKey_Cryptojs_JWT)
 
 
                                     console.log("gen new auth and refresh successfully.")
@@ -211,7 +220,7 @@ app.get("/", (req,res)=>{
                             
                             
                             const new_auth_token = jwt.sign({ user_id: decoded.user_id, user_name: decoded.user_name, user_email: decoded.user_email, role: decoded.isAdmin }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
-                            const encrypted_auth_token = enCrypt(new_auth_token) 
+                            const encrypted_auth_token = enCrypt(new_auth_token,process.env.SecretKey_Cryptojs_JWT) 
                             res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                             
                             //fetch todo items from user_id
@@ -250,13 +259,13 @@ app.get("/", (req,res)=>{
                     
                     {
 
-                        //check if this user exist in database in case auth_token is expired
+                        //check if this user exist in database in case auth_token is expired, search in database
                         console.log("check if this user exist in database in case auth_token is expired")
                         const query_user_info = "SELECT * FROM users WHERE user_email = ? "
 
                         const decoded = jwt.decode(auth_token, process.env.SecretKey_AccessToken)
                         
-
+                        
                         try {
                             const [rows] = await db.execute(query_user_info, [decoded.user_email]);
                             console.log("rows",rows.length)
@@ -360,8 +369,8 @@ const verifyTokens =  (encryptedAuthToken, encryptedRefreshToken) => {
         return false
     } else { 
     
-    const auth_token = deCrypt(encryptedAuthToken)
-    const refresh_token = deCrypt(encryptedRefreshToken)
+    const auth_token = deCrypt(encryptedAuthToken,process.env.SecretKey_Cryptojs_JWT)
+    const refresh_token = deCrypt(encryptedRefreshToken,process.env.SecretKey_Cryptojs_JWT)
     
     if (!auth_token || !refresh_token) {
         
@@ -612,7 +621,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                 const q = "SELECT * FROM users WHERE user_email = ?";
                 
                 const values = req.body[0];
-                const email_pattern = new RegExp("[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
+                const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
                 const response = {emailValidation: null, isEmailAvailable: null}
 
                 if (email_pattern.test(values)) {
@@ -650,7 +659,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
             app.post("/todo_app/signup", async (req,res)=> {
                 const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$")
                 const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
-                const email_pattern = new RegExp("[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
+                const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
 
                 const signupResponse = {signupSuccessfully:null, inputValidation:null, isEmailAvailable:null}
 
@@ -685,7 +694,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
                 try {
                     const hash = await argon2.hash(req.body.password);
-                    
+                   
                     const values = [
                         req.body.username,
                         hash,
@@ -718,18 +727,18 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         
 
         const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
-        const email_pattern = new RegExp("[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
+        const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
 
-        const loginResponse = {loginSuccessfully:null,inputValidation:null, msg:null}
+        const response = {status:null,inputValidation:null, msg:null}
         //check if email and password pass a test
         if (email_pattern.test(req.body.email) && password_pattern.test(req.body.password) ) {
-            loginResponse.inputValidation = true;
+            response.inputValidation = true;
           } else {
-            console.log("email or password is not pass the pattern test")
-            loginResponse.inputValidation = false;
-            loginResponse.loginSuccessfully = false;
-            loginResponse.msg = "Username or Password is incorrect!";
-            return res.json(loginResponse)
+            console.log("email or password is not pass the regex test")
+            response.inputValidation = false;
+            response.status = false;
+            response.msg = "Username or Password is incorrect!";
+            return res.json(response)
           }
 
           
@@ -750,27 +759,27 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                         console.log("user email has verified")
                       
 
-                      loginResponse.loginSuccessfully = true;
-                      loginResponse.msg = "Login Success.";
+                      response.status = true;
+                      response.msg = "Login Success.";
                       console.log("login success");
     
                       const auth_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role, }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
                       
                       const refresh_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
                       
-                      const encrypted_auth_token = enCrypt(auth_token)
-                      const encrypted_refresh_token = enCrypt(refresh_token)
+                      const encrypted_auth_token = enCrypt(auth_token,process.env.SecretKey_Cryptojs_JWT)
+                      const encrypted_refresh_token = enCrypt(refresh_token,process.env.SecretKey_Cryptojs_JWT)
                         
                       
-                     // res.cookie('auth_token', access_token, cookieOptions);
+                     
                       res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                       res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
                       
 
-                      loginResponse.url = "/todo_items";
+                      response.url = "/todo_items";
                       db.unprepare(query_user_info);
                       
-                      return res.json(loginResponse);
+                      return res.json(response);
 
                     //else if user email has not verified
                     } else {
@@ -779,7 +788,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
                         const enCrypted = () => {
                             try {
-                                const ciphertext = CryptoJS.AES.encrypt(email_verification,process.env.SecretKey_Cryptojs_EmailVerification).toString();
+                                const ciphertext = CryptoJS.AES.encrypt(email_verification,process.env.SecretKey_Cryptojs_JWT_EmailVerification).toString();
                                 return ciphertext;
                                 } catch (error) {
                                 console.log("try catch enCrypt error",error)
@@ -821,27 +830,27 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                           // If on production, we will use dynamic email which is rows[0].user_email in "to:" below
                             const mailOptions = {
                               from: 'u6111011940013@gmail.com',
-                              to: 'sarankunsutha@gmail.com',
+                              to: rows[0].user_email,
                               subject: 'Email verification ToDoApp',
                               text: 'Please confirm your email by clicking the link we give you.',
-                              html: htmlContent.replaceAll('{{dynamicLink}}',`${deploy_backend_URL}/todo_app/email_verification?token=${enCrypted()}`) , // html body
+                              html: htmlContent.replaceAll('{{dynamicLink}}',`${backend_URL}/todo_app/email_verification?token=${enCrypted()}`) , // html body
                             };
                           
                             transporter.sendMail(mailOptions, (error, info) => {
                               if (error) {
 
                                 console.log("transporter.sendMail error", error);
-                                loginResponse.loginSuccessfully = false
-                                loginResponse.msg = "There is an error!"
-                                loginResponse.url = "/error_page"
-                                return res.json(loginResponse);
+                                response.status = false
+                                response.msg = "There is an error!"
+                                response.url = "/error_page"
+                                return res.json(response);
 
                               } else {
                                 console.log('Email sent: ' + info.response);
-                                loginResponse.loginSuccessfully = false
-                                loginResponse.msg = "You've not verified your email!"
-                                loginResponse.url = "/email_verification_page"
-                                return res.json(loginResponse);
+                                response.status = false
+                                response.msg = "You've not verified your email!"
+                                response.url = "/email_verification_page"
+                                return res.json(response);
                                 
                               }
                             });
@@ -849,10 +858,10 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                            }
                             catch (error) {
                                 console.log("try catch send email verification error", error)
-                                loginResponse.loginSuccessfully = false
-                                loginResponse.msg = "There is an error!"
-                                loginResponse.url = "/error_page"
-                                return res.json(loginResponse);
+                                response.status = false
+                                response.msg = "There is an error!"
+                                response.url = "/error_page"
+                                return res.json(response);
 
                             }
 
@@ -861,11 +870,11 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
     
                     } else {
                       //Password does not match
-                      loginResponse.loginSuccessfully = false;
-                      loginResponse.msg = "Username or Password is incorrect!";
+                      response.status = false;
+                      response.msg = "Username or Password is incorrect!";
                       console.log("Login failed, Password does not match");
                       db.unprepare(query_user_info);
-                      return res.json(loginResponse)
+                      return res.json(response)
                     }
                   } catch (error) {
                     console.log(first)
@@ -876,17 +885,17 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
             } else if (rows.length === 0) {
                 //ถ้าuser ใส่ email หรือ password ผิด
-              loginResponse.loginSuccessfully = false;
-              loginResponse.msg = "Username or Password is incorrect!";
+              response.status = false;
+              response.msg = "Username or Password is incorrect!";
               db.unprepare(query_user_info);
-              return res.json(loginResponse);
+              return res.json(response);
             } else {
                 //ถ้าบังเอิญมีEmail ซ้ำกันในระบบฐานข้อมูล หรือ rows ติดลบ
               console.log("ถ้าบังเอิญมีEmail ซ้ำกันในระบบฐานข้อมูล หรือ rows ติดลบ")
-              loginResponse.loginSuccessfully = false;
-              loginResponse.msg = "There is something wrong!";
+              response.status = false;
+              response.msg = "There is something wrong!";
               db.unprepare(query_user_info);
-              return res.json(loginResponse);
+              return res.json(response);
             }
             
         } catch (error) {
@@ -897,7 +906,234 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         
     })
 
+        // Function to generate OTP with timestamp
+    async function generateOTP() {
+        try {
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        return otp;
+        } catch (error) {
+        
+        console.log("generateOTP error", error)
+        return "error"
+        }
+    }
     
+    // Function to check OTP and its expiration
+    async function checkOTP(enteredOTP, userId) {
+        try {
+        const connection = await pool.getConnection();
+        const [rows] = await connection.execute('SELECT otp, timestamp FROM otps WHERE user_id = ? ORDER BY timestamp DESC LIMIT 1', [userId]);
+        connection.release();
+    
+        if (rows.length === 1) {
+            const storedOTP = rows[0].otp;
+            const timestamp = rows[0].timestamp;
+            const currentTimestamp = Date.now();
+    
+            // Check if OTP matches and is within the 60-second window
+            if (enteredOTP === storedOTP && currentTimestamp - timestamp <= 60000) {
+            return true;
+            }
+        }
+    
+        return false;
+        } catch (error) {
+        throw error;
+        }
+    }
+
+    app.post("/todo_app/forgot_password", async (req,res) => {
+
+        //test email pattern
+        const user_email = req.body.email
+        const user_name = req.body.username
+
+        const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$");
+        const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
+        const response = {msg:"", status: "" }
+
+        console.log(req.body)
+
+        
+        
+                try {
+                    //regex test username and email
+                    if ( username_pattern.test(user_name) && email_pattern.test(user_email) ) {
+                        console.log("pass test")
+                        
+                        //search for email in database
+                        const query_user_info = "SELECT * FROM users WHERE user_name = ? AND user_email = ?"
+                        
+                        const [rows] = await db.execute(query_user_info, [user_name,user_email]);
+                        if (rows.length === 1) {
+                            
+                            console.log("there is user in database")
+
+                            
+                            response.msg = "we sent you a code to your email, please check it. "
+                            response.status = "success"
+
+                            const otp_identification = jwt.sign({ user_name: rows[0].user_name, user_email: rows[0].user_email }, process.env.SecretKey_OTP,{expiresIn: "1.3m"})
+
+                            //console.log(otp_identification)
+
+                            //encrypt jwt
+                            try {
+                                const ciphertext = CryptoJS.AES.encrypt(otp_identification,process.env.SecretKey_Cryptojs_OTP).toString();
+
+                                //console.log(ciphertext)
+                                //Note when set cookie, don't forget to add {withCredentials: true} in request header
+                                res.cookie('otp_fgtp', ciphertext, {maxAge:  3 * 60 * 1000, httpOnly: true, secure: true, sameSite: "none", path: "/"}); // add domain: backend_URL if on production
+                                
+                                } catch (error) {
+                                console.log("try catch enCrypt otp_identification error",error)
+                                
+                                response.msg = "There is an error."
+                                response.status = "fail"
+                                }
+
+                            //generate otp and add it into database    
+                            try {
+                                
+
+                                const otp_numbers = await generateOTP()
+
+                                if (otp_numbers == "error") {
+                                    response.msg = "There is something wrong."
+                                    response.status = "fail"
+                                    return res.json(response)
+                                } else {
+                                    const timestamp = Date.now(); // Get current timestamp
+
+                                    
+
+                                    console.log("timestamp",timestamp)
+                                    console.log("otp_numbers",otp_numbers)
+
+                                    const add_otp = "INSERT INTO otp (`user_email`,`user_name`,`otp`,`time_start`) VALUES (?,?,?,?)";
+                                    const values = [
+                                        rows[0].user_email,
+                                        rows[0].user_name,
+                                        otp_numbers,
+                                        (FROM_UNIXTIME(timestamp / 1000))
+                                        ]
+                                         
+                                    const [rows_addOTP] = await db.execute(add_otp,values);
+
+                                    console.log("rows_addOTP",rows_addOTP)
+                                    
+                                    
+                                }
+                            } catch (error) {
+                                console.log("try catch generate otp and add it into database error")
+                                console.log(error)
+                            }
+
+
+                            
+                            
+                        } else {
+                            console.log("there is no user in database")
+
+                            response.msg = "Please check your username and email again."
+                            response.status = "fail"
+                        }
+
+
+                    } else {
+                        console.log("user input doesn't pass the regex test")
+                        response.msg = "username or email is invalid"
+                        response.status = "fail"
+                    }
+                } catch (error) {
+                    response.msg = "There is something wrong."
+                    response.status = "fail"
+                    console.log("forgotpassword error",error)
+                }
+        
+        
+        console.log("4")
+        return res.json(response)
+    })
+
+    app.post("/todo_app/verify_otp", async (req,res) => {
+
+        const response = {msg:"", status: "" }
+
+        
+        const user_otp  = req.body.otp
+        
+        const otp_pattern = new RegExp('^[0-9]{1,6}$')
+        
+        
+        
+
+        //regex test user_otp
+        if ( otp_pattern.test(user_otp)) {
+            
+            console.log("user_otp pass a regex test")
+            
+
+        } else {
+            console.log("user_otp doesn't pass a regex test")
+            response.status = "fail"
+            response.msg = "Invalid otp"
+            return res.json(response)
+        }
+
+        
+        console.log("cookie", req.cookies["otp_fgtp"])
+        const decrypted_jwt = deCrypt(req.cookies["otp_fgtp"],process.env.SecretKey_Cryptojs_OTP)
+
+
+        jwt.verify(decrypted_jwt, process.env.SecretKey_OTP, async (err, decoded) => {
+            if (err) {
+                console.log("jwt verify_otp is invalid",err)
+                response.status = "fail"
+                response.msg = "Invalid otp"
+                return res.json(response)
+                 
+            } else {
+
+                try {
+                    //search for email in database
+
+                    const query_user_info = "SELECT * FROM users WHERE user_name = ? AND user_email = ?"
+                    
+                    const [rows] = await db.execute(query_user_info, [decoded.user_name,decoded.user_email]);
+                    if (rows.length === 1) {
+                        
+                        console.log("there is user in database")
+                        response.msg = "we sent you a code to your email, please check it. "
+                        response.status = "success"
+                        
+                    }else {
+                        console.log("there is no user in database")
+
+                        response.msg = "OTP is invalid, please click resend to try again."
+                        response.status = "fail"
+                    }
+
+
+                
+            } catch (error) {
+                response.msg = "There is something wrong."
+                response.status = "fail"
+                console.log("forgotpassword error",error)
+            }
+
+            }
+
+
+
+            }
+            
+        )
+
+        
+
+        return res.json(response)
+    })
 
 
     app.post("/todo_app/login_google", async (req,res)=> {
@@ -905,7 +1141,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         const decoded = jwt.decode(req.body[0])
         // console.log("req.body[0]",req.body[0])
         // console.log("decoded",decoded)
-        const loginResponse = {loginSuccessfully:null, msg:null}
+        const response = {status:null, msg:null}
 
         //check if gmail has verified from google
         try {
@@ -942,18 +1178,18 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
             } catch (error) {
                 
                 console.error("verify google id token error",error)
-                loginResponse.loginSuccessfully = false;
-                loginResponse.msg = "Failed to verify google account!";
+                response.status = false;
+                response.msg = "Failed to verify google account!";
                 
-                return loginResponse;
+                return response;
             }
           }
           
           const responseVerify = await verify()
           
 
-        //   if (responseVerify.loginSuccessfully === false) {
-        //     return res.json(loginResponse)
+        //   if (responseVerify.status === false) {
+        //     return res.json(response)
         //   } 
 
           return res.json(responseVerify)
@@ -972,27 +1208,27 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                     //1.if user has already signed up with our sign up system (not sign in with google), reject it
                     if (rows.length === 1 && rows[0].user_password !== null) {
                        
-                       loginResponse.loginSuccessfully = false;
-                       loginResponse.msg = "This email has already signed up, please use another email.";
+                       response.status = false;
+                       response.msg = "This email has already signed up, please use another email.";
                        console.log("This email has already signed up, please use another email.")
-                       return loginResponse;
+                       return response;
                        
            
                     } 
                     //2.if user has already signed up by sign in with google, navigate user to todo_items
                     else if (rows.length === 1 && rows[0].user_password === null) {
                          
-                       loginResponse.loginSuccessfully = true;
-                       loginResponse.msg = "Login successfully.";
-                       loginResponse.url = "/todo_items";
+                       response.status = true;
+                       response.msg = "Login successfully.";
+                       response.url = "/todo_items";
                        
                        
                         
                        const auth_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role, }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
                        const refresh_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
                         
-                       const encrypted_auth_token = enCrypt(auth_token)
-                       const encrypted_refresh_token = enCrypt(refresh_token)
+                       const encrypted_auth_token = enCrypt(auth_token,process.env.SecretKey_Cryptojs_JWT)
+                       const encrypted_refresh_token = enCrypt(refresh_token,process.env.SecretKey_Cryptojs_JWT)
                             
                         
                         // res.cookie('auth_token', access_token, cookieOptions);
@@ -1000,9 +1236,9 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                        res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
                         
 
-                       loginResponse.url = "/todo_items";
+                       response.url = "/todo_items";
                        console.log("logging in through Sign in with google.")
-                       return loginResponse;
+                       return response;
                        
            
                     } 
@@ -1019,9 +1255,9 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                                     1
                            ]       
                                const [rows] = await db.execute(addUser,values);
-                               loginResponse.loginSuccessfully = true;
-                               loginResponse.msg = "Login successfully.";
-                               loginResponse.url = "/todo_items";
+                               response.status = true;
+                               response.msg = "Login successfully.";
+                               response.url = "/todo_items";
                                db.unprepare(addUser);
            
                                //console.log("userid in database",rows.insertId)
@@ -1031,36 +1267,36 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                                 const auth_token = jwt.sign({ user_id: rows.insertId, user_name: payload.name, user_email: payload.email, role: null }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
                                 const refresh_token = jwt.sign({ user_id: rows.insertId, user_name: payload.name, user_email: payload.email, role: null }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
                                     
-                                const encrypted_auth_token = enCrypt(auth_token)
-                                const encrypted_refresh_token = enCrypt(refresh_token)
+                                const encrypted_auth_token = enCrypt(auth_token,process.env.SecretKey_Cryptojs_JWT)
+                                const encrypted_refresh_token = enCrypt(refresh_token,process.env.SecretKey_Cryptojs_JWT)
                                         
                                     
                                     // res.cookie('auth_token', access_token, cookieOptions);
                                 res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                                 res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
                                 console.log("Successfully sign up user from sign in with google api!")
-                               return loginResponse;
+                               return response;
                                
                              } catch (error) {
                                console.log("Failed to add user from Sign in with google!",error)
-                               loginResponse.loginSuccessfully = false;
-                               loginResponse.msg = "Failed to signup from Sign in with google.";
-                               return loginResponse
+                               response.status = false;
+                               response.msg = "Failed to signup from Sign in with google.";
+                               return response
                              }
            
                     } else {
-                        loginResponse.loginSuccessfully = false;
-                        loginResponse.msg = "Failed to login.";
+                        response.status = false;
+                        response.msg = "Failed to login.";
                         console.log("failed to sign up from sign in with google on if else condition might be from rows.length !== 0 || rows.length !== 1 ")
                         console.log("it might cause from this email might have more than 1 email in database, or it could be rows.length === undefined so its cause an error")
-                        return loginResponse;
+                        return response;
                     }
            
                    } catch (error) {
-                       loginResponse.loginSuccessfully = false;
-                       loginResponse.msg = "Error login google ";
+                       response.status = false;
+                       response.msg = "Error login google ";
                         console.log("try catch verifyingEmailinDatabase error", error)
-                        return loginResponse;
+                        return response;
                    }
             }
             
@@ -1069,18 +1305,18 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         } 
         //if user's gmail has not verified yet.
         else {
-            loginResponse.loginSuccessfully = false;
-            loginResponse.msg = "Gmail has not verified!";
+            response.status = false;
+            response.msg = "Gmail has not verified!";
             console.log("Gmail has not verified!")
-            return res.json(loginResponse)
+            return res.json(response)
 
         }
         
         } catch (error) {
             console.log("error try catch login_google",error) 
-            loginResponse.loginSuccessfully = false;
-            loginResponse.msg = "Failed to login";
-            return res.json(loginResponse)      
+            response.status = false;
+            response.msg = "Failed to login";
+            return res.json(response)      
         }
         
         
@@ -1101,8 +1337,8 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
 // --------------- start email verification  -----------------------------
 app.get("/todo_app/email_verification",async (req,res)=> {
-
-
+    
+    //confirm email process, user need to click the link that being sent to user's email to confirm signing up.
 
 
 
@@ -1113,20 +1349,20 @@ app.get("/todo_app/email_verification",async (req,res)=> {
         
 
         
-        console.log("queryString",queryString)
-        
-        const bytes  = CryptoJS.AES.decrypt(queryString,process.env.SecretKey_Cryptojs_EmailVerification);
-        const originalText = bytes.toString(CryptoJS.enc.Utf8);
+        //console.log("queryString",queryString)
+        const originalText = deCrypt(queryString,process.env.SecretKey_Cryptojs_JWT_EmailVerification)
+
 
         
         
         console.log("bytes",bytes)
         console.log("originalText",originalText)
         jwt.verify(originalText, process.env.SecretKey_EmailVerification, async (err, decoded) => {
+            
             if (err) {
                 console.log(err)
                 console.log("email verification token is not valid")
-                return res.redirect(`${deploy_client_URL}/error_page`)
+                return res.redirect(`${client_URL}/error_page`)
             } else {
 
                 const verification = "UPDATE users SET `user_verification` = ? WHERE user_id = ?";
@@ -1139,14 +1375,14 @@ app.get("/todo_app/email_verification",async (req,res)=> {
                     const [rows] = await db.execute(verification, values)
                     db.unprepare(verification);  
                     console.log("User verification status successfully.")
-                    return res.redirect(`${deploy_client_URL}/email_verification_success`)
+                    return res.redirect(`${client_URL}/email_verification_success`)
 
                     
                 } catch (error) {
                     console.log("User verification status fail.",error)
                     db.unprepare(verification);
                     
-                    return res.redirect(`${deploy_client_URL}/error_page`)
+                    return res.redirect(`${client_URL}/error_page`)
                 }
 
 
@@ -1156,7 +1392,7 @@ app.get("/todo_app/email_verification",async (req,res)=> {
     } catch (error) {
         
     console.log("try catch deCrypt email_verification error",error)
-    return res.redirect(`${deploy_client_URL}/error_page`)
+    return res.redirect(`${client_URL}/error_page`)
     }
     
 
@@ -1169,10 +1405,12 @@ app.get("/todo_app/email_verification",async (req,res)=> {
 // --------------- end email verification  ----------------------------- 
 //----------------------Start Logout  -------------------------------------------------
 app.get("/todo_app/logout",async (req,res)=> {
-    
+    //sameSite: "none", httpOnly: true, secure: true
+
     try {
-        res.clearCookie("auth_token", { domain: "www.joesaranbro.online", path: "/", sameSite: "none", httpOnly: true, secure: true });
-        res.clearCookie("refresh_token",{ domain: "www.joesaranbro.online", path: "/", sameSite: "none", httpOnly: true, secure: true });
+        res.cookie("auth_token", "", { sameSite: "none", httpOnly: true, secure: true, domain: backend_URL, path: "/", expires: new Date(0)  });
+        res.cookie("refresh_token", "", { sameSite: "none", httpOnly: true, secure: true, domain: backend_URL, path: "/", expires: new Date(0) });
+        res.cookie("fortest","555", {sameSite: "none", httpOnly: true, secure: true, domain: backend_URL, path: "/"} )
         console.log("logout success")
         return res.json("Logout Success")
         
