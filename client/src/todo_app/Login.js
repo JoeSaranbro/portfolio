@@ -397,7 +397,6 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
   )}
   
   // <-------------------------Start forgot password ----------------------------------->      
-  
 
   const ForgotPasswordForm = ({ refModal, isModalOpen, setModal, setIsSignup, setIsForgotPassword, isForgotPassword }) => {
 
@@ -405,6 +404,7 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
     const [step, setStep] = useState("1")
     const [otp, setOTP] = useState(["","","","","",""])
     const inputRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
+    const [isLoading, setLoading] = useState(false)
     
     
     //const [ForgotPasswordStep, setForgotPasswordStep] = useState("1")
@@ -425,6 +425,8 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
     const handleForgotPasswordSubmit_Step1 = async (e) => {
       e.preventDefault()
 
+      setLoading(true);
+
       const isRegexPass = await regexTest();
       
       if (isRegexPass) {
@@ -435,6 +437,8 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
               inputForgotPassword, {withCredentials: true}
               );
               console.log(res.data)
+
+              setLoading(false);
 
               if (res.data.status == "success") {
                 alert(res.data.msg)
@@ -590,7 +594,15 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
                   
               </form>
                 </div>
+                    
+
               </div>
+              {isLoading && (
+                  <div className='loading-spinner flex justify-center z-10'>
+                    <div className="spinner-border animate-spin inline-block w-28 h-28 border-8 border-black border-t-blue-600 rounded-full" role="status">
+                    </div>
+                  </div>
+                    )}
             </div> : 
             
             <div id="signupModal" className="modal" style={isModalOpen && isForgotPassword && step == 2 ? {display: "block"}:{display: "none"}}>
@@ -624,14 +636,17 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
 
                       
                   </div>
-                  
-                  <div className='mt-6 flex justify-center'>
-                  <button onClick={()=> {setIsForgotPassword(false)}} type="reset" className='form-button-login'>
-                    <p>Back to Login</p>
-                  </button>
-                  <button type='submit' className='ml-4 form-button-signup' >
-                  <p>Next</p>
-                  </button>
+                  <div className='flex justify-center mt-6 '>
+                      
+                      
+                      <div className=''>
+                        <button onClick={()=> {setIsForgotPassword(false)}} type="reset" className='form-button-login'>
+                          <p>Back to Login</p>
+                        </button>
+                        <button type='submit' className='ml-4 form-button-signup' >
+                        <p>Next</p>
+                        </button>
+                      </div>
                   </div>
                   
               </form>
@@ -643,8 +658,10 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
     )
   }
 
-// <-------------------------End forgot password ----------------------------------->  
 
+// <-------------------------End forgot password -----------------------------------> 
+ 
+// <-------------------------Start Login Main -----------------------------------> 
 const Login = () => {
 
       
@@ -751,4 +768,6 @@ const navigate = useNavigate();
     </div>
   );
 };
+
+// <-------------------------End Login Main -----------------------------------> 
 export default Login;

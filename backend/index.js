@@ -508,6 +508,7 @@ app.put("/todo_items/:todo_id", async (req, res) => {
         const todoId = req.params.todo_id;
         const updateTodo = "UPDATE todo_item SET `title`= ?, `details`= ?, `date_start` = ?, `date_end` = ?, `user_id` = ? WHERE todo_id = ?";
     
+        //แก้
         const values = [
             req.body.title,
             req.body.details,
@@ -736,7 +737,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
           } else {
             console.log("email or password is not pass the regex test")
             response.inputValidation = false;
-            response.status = false;
+            response.status = "fail";
             response.msg = "Username or Password is incorrect!";
             return res.json(response)
           }
@@ -827,7 +828,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                           const htmlContent = await readHTMLFile()
 
                           
-                          // If on production, we will use dynamic email which is rows[0].user_email in "to:" below
+                          //Note If on production, we will use dynamic email which is rows[0].user_email in "to:" below
                             const mailOptions = {
                               from: 'u6111011940013@gmail.com',
                               to: rows[0].user_email,
@@ -839,15 +840,15 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                             transporter.sendMail(mailOptions, (error, info) => {
                               if (error) {
 
-                                console.log("transporter.sendMail error", error);
-                                response.status = false
+                                console.log("send mail email_verification error", error);
+                                response.status = "fail"
                                 response.msg = "There is an error!"
                                 response.url = "/error_page"
                                 return res.json(response);
 
                               } else {
                                 console.log('Email sent: ' + info.response);
-                                response.status = false
+                                response.status = "fail"
                                 response.msg = "You've not verified your email!"
                                 response.url = "/email_verification_page"
                                 return res.json(response);
@@ -858,7 +859,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                            }
                             catch (error) {
                                 console.log("try catch send email verification error", error)
-                                response.status = false
+                                response.status = "fail"
                                 response.msg = "There is an error!"
                                 response.url = "/error_page"
                                 return res.json(response);
@@ -870,7 +871,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
     
                     } else {
                       //Password does not match
-                      response.status = false;
+                      response.status = "fail";
                       response.msg = "Username or Password is incorrect!";
                       console.log("Login failed, Password does not match");
                       db.unprepare(query_user_info);
@@ -885,14 +886,14 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
             } else if (rows.length === 0) {
                 //ถ้าuser ใส่ email หรือ password ผิด
-              response.status = false;
+              response.status = "fail";
               response.msg = "Username or Password is incorrect!";
               db.unprepare(query_user_info);
               return res.json(response);
             } else {
                 //ถ้าบังเอิญมีEmail ซ้ำกันในระบบฐานข้อมูล หรือ rows ติดลบ
               console.log("ถ้าบังเอิญมีEmail ซ้ำกันในระบบฐานข้อมูล หรือ rows ติดลบ")
-              response.status = false;
+              response.status = "fail";
               response.msg = "There is something wrong!";
               db.unprepare(query_user_info);
               return res.json(response);
@@ -919,26 +920,34 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
     }
     
     // Function to check OTP and its expiration
-    async function checkOTP(enteredOTP, userId) {
+    async function checkOTP(enteredOTP, user_email, user_name) {
         try {
-        const connection = await pool.getConnection();
-        const [rows] = await connection.execute('SELECT otp, timestamp FROM otps WHERE user_id = ? ORDER BY timestamp DESC LIMIT 1', [userId]);
-        connection.release();
+        const q = "SELECT otp, time_start FROM otp WHERE user_email = ? AND user_name = ? ORDER BY time_start DESC LIMIT 1"
+
+        const [rows] = await db.execute(q, [user_email, user_name]);
+        
     
         if (rows.length === 1) {
+            console.log("checkOTP, check if user_email exist in database")
             const storedOTP = rows[0].otp;
-            const timestamp = rows[0].timestamp;
-            const currentTimestamp = Date.now();
+            const time_start = rows[0].time_start;
+            const currentTime_start = Date.now();
+            
     
             // Check if OTP matches and is within the 60-second window
-            if (enteredOTP === storedOTP && currentTimestamp - timestamp <= 60000) {
+            if (enteredOTP == storedOTP && currentTime_start - time_start <= 60000) {
+                console.log("checkOTP, check if otp receive from user and in database is not difference more than 1 minute")
+                db.unprepare(q);
             return true;
             }
         }
-    
+        console.log("checkOTP, otp or time_start is invalid")
+        db.unprepare(q);
         return false;
         } catch (error) {
-        throw error;
+        console.log("checkOTP function error", error)
+        db.unprepare(q);
+        return false;
         }
     }
 
@@ -970,21 +979,23 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                             console.log("there is user in database")
 
                             
-                            response.msg = "we sent you a code to your email, please check it. "
-                            response.status = "success"
+                            
 
-                            const otp_identification = jwt.sign({ user_name: rows[0].user_name, user_email: rows[0].user_email }, process.env.SecretKey_OTP,{expiresIn: "1.3m"})
+                            const otp_identification = jwt.sign({ user_name: rows[0].user_name, user_email: rows[0].user_email }, process.env.SecretKey_OTP,{expiresIn: "2m"})
 
-                            //console.log(otp_identification)
+                            console.log("forgot_password sign jwt")
 
                             //encrypt jwt
                             try {
+                                
+                                //console.log("otp_identification", otp_identification)
                                 const ciphertext = CryptoJS.AES.encrypt(otp_identification,process.env.SecretKey_Cryptojs_OTP).toString();
-
-                                //console.log(ciphertext)
+                                console.log("forgot_password encrypt jwt ")
+                                
                                 //Note when set cookie, don't forget to add {withCredentials: true} in request header
                                 res.cookie('otp_fgtp', ciphertext, {maxAge:  3 * 60 * 1000, httpOnly: true, secure: true, sameSite: "none", path: "/"}); // add domain: backend_URL if on production
-                                
+                                console.log("forgot_password set otp cookie ")
+
                                 } catch (error) {
                                 console.log("try catch enCrypt otp_identification error",error)
                                 
@@ -1003,30 +1014,116 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                                     response.status = "fail"
                                     return res.json(response)
                                 } else {
-                                    const timestamp = Date.now(); // Get current timestamp
+                                    const timestamp = new Date();  // Get current timestamp
 
                                     
-
-                                    console.log("timestamp",timestamp)
-                                    console.log("otp_numbers",otp_numbers)
 
                                     const add_otp = "INSERT INTO otp (`user_email`,`user_name`,`otp`,`time_start`) VALUES (?,?,?,?)";
                                     const values = [
                                         rows[0].user_email,
                                         rows[0].user_name,
                                         otp_numbers,
-                                        (FROM_UNIXTIME(timestamp / 1000))
+                                        timestamp
                                         ]
-                                         
+                                    
+                                    //add otp to database    
                                     const [rows_addOTP] = await db.execute(add_otp,values);
+                                    console.log("add otp code to database affectedRows", rows_addOTP.affectedRows)
 
-                                    console.log("rows_addOTP",rows_addOTP)
+                                    //send otp code to user email section
+                                    try {
+
+                                        const transporter = nodemailer.createTransport({
+                                          service: 'gmail',
+                                          auth: {
+                                            user: process.env.Gmail,
+                                            pass: process.env.GmailP
+                                          }
+                                          
+                                      
+                                        });
+                                      
+                                      //readHTMLFile Template
+                                      const readHTMLFile = async () => {
+                                          try {
+                                              console.log("readHTMLFile success")
+                                              const data = await fs.readFile('email_OTP.html', 'utf8');
+                                              return data;
+                                          } catch (error) {
+                                              console.log("readHTMLFile error", error)
+                                              return false;
+                                          }
+                                      }
+                                      
+                                      const htmlContent = await readHTMLFile()
+
+                                      
+            
+                                      
+                                      //Note If on production, we will use dynamic email which is rows[0].user_email in "to:" below
+                                        const mailOptions = {
+                                          from: 'u6111011940013@gmail.com',
+                                          to: "sarankunsutha@gmail.com",//rows[0].user_email,
+                                          subject: 'Forgot Password ToDoApp',
+                                          text: 'Forgor Password Confirmation',
+                                          html: htmlContent.replaceAll('{{dynamicOTP}}',otp_numbers) , // html body
+                                        };
+
+                                        
+
+                                        
+
+                                        async function sendMail() {
+                                            try {
+                                                const info = await transporter.sendMail(mailOptions);
+                                                console.log('send mail OTP Success ' + info.response);
+                                                response.msg = "We've sent OTP code to your mail, please check it out."
+                                                response.status = "success"
+                                                
+                                                
+                                            } catch (error) {
+                                                console.log("send mail OTP Error", error);
+                                                response.msg = "There is an error!"
+                                                response.status = "fail"
+                                                
+                                            }
+                                        }
+
+                                    
+
+                                        await sendMail();
+                                        
+
+
+                                        console.log("after check_sendMail",response)
+                                         
+                                      
+                                        
+                                      
+                                       }
+                                        catch (error) {
+                                            console.log("try catch send email verification error", error)
+                                            response.status = "fail"
+                                            response.msg = "There is an error!"
+                                            response.url = "/error_page"
+                                            return res.json(response);
+            
+                                        }
+
+                                    
+
+                                    
+
+                                    
                                     
                                     
                                 }
                             } catch (error) {
                                 console.log("try catch generate otp and add it into database error")
                                 console.log(error)
+                                response.msg = "There is an error."
+                                response.status = "fail"
+
                             }
 
 
@@ -1041,7 +1138,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
 
                     } else {
-                        console.log("user input doesn't pass the regex test")
+                        console.log("forgot_password user input doesn't pass the regex test")
                         response.msg = "username or email is invalid"
                         response.status = "fail"
                     }
@@ -1052,24 +1149,21 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                 }
         
         
-        console.log("4")
+        
         return res.json(response)
     })
 
     app.post("/todo_app/verify_otp", async (req,res) => {
 
-        const response = {msg:"", status: "" }
+        const response = {msg:"", status: "", url: "" }
 
         
         const user_otp  = req.body.otp
         
         const otp_pattern = new RegExp('^[0-9]{1,6}$')
-        
-        
-        
 
         //regex test user_otp
-        if ( otp_pattern.test(user_otp)) {
+        if (otp_pattern.test(user_otp)) {
             
             console.log("user_otp pass a regex test")
             
@@ -1082,57 +1176,146 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         }
 
         
-        console.log("cookie", req.cookies["otp_fgtp"])
-        const decrypted_jwt = deCrypt(req.cookies["otp_fgtp"],process.env.SecretKey_Cryptojs_OTP)
+        
+        
 
 
-        jwt.verify(decrypted_jwt, process.env.SecretKey_OTP, async (err, decoded) => {
-            if (err) {
-                console.log("jwt verify_otp is invalid",err)
-                response.status = "fail"
-                response.msg = "Invalid otp"
-                return res.json(response)
-                 
-            } else {
+
+        try {
+            console.log("verify_otp decrypt jwt ")
+            console.log(req.cookies["otp_fgtp"]);
+            const decrypted_jwt = deCrypt(req.cookies["otp_fgtp"],process.env.SecretKey_Cryptojs_OTP)
+            console.log(decrypted_jwt);
+
+            console.log("verify_otp verify jwt ")
+            const decoded = jwt.verify(decrypted_jwt, process.env.SecretKey_OTP);
+
+            //search for email in database
+            console.log("before response_checkOTP")
+
+            const response_checkOTP = await checkOTP(user_otp, decoded.user_email, decoded.user_name)
+            console.log("after response_checkOTP")
+            if (response_checkOTP === true) {
+                console.log("verify_otp, otp is valid.")
 
                 try {
-                    //search for email in database
-
-                    const query_user_info = "SELECT * FROM users WHERE user_name = ? AND user_email = ?"
-                    
-                    const [rows] = await db.execute(query_user_info, [decoded.user_name,decoded.user_email]);
-                    if (rows.length === 1) {
-                        
-                        console.log("there is user in database")
-                        response.msg = "we sent you a code to your email, please check it. "
-                        response.status = "success"
-                        
-                    }else {
-                        console.log("there is no user in database")
-
-                        response.msg = "OTP is invalid, please click resend to try again."
-                        response.status = "fail"
-                    }
-
-
+                    const reset_password_identification = jwt.sign({ user_name: decoded.user_name, user_email: decoded.user_email }, process.env.SecretKey_Reset_Password,{expiresIn: "5m"})
                 
-            } catch (error) {
-                response.msg = "There is something wrong."
+                    const ciphertext = CryptoJS.AES.encrypt(reset_password_identification,process.env.SecretKey_Cryptojs_Reset_Password).toString();
+                    
+                    //console.log(ciphertext)
+                    //Note when set cookie, don't forget to add {withCredentials: true} in request header
+                    res.cookie('rst_pwd', ciphertext, {maxAge:  5 * 60 * 1000, httpOnly: true, secure: true, sameSite: "none", path: "/"}); // add domain: backend_URL if on production
+                    console.log("sign jwt for reset password")
+                    response.status = "success"
+                    response.msg = "OTP is valid, we will navigate you to set your new password."
+                    response.url = "/resetpassword"
+                    
+                } catch (error) {
+                    console.log("try catch sign jwt reset_password and encrypt jwt error", error)
+                    response.status = "fail"
+                    response.msg = "there is something wrong."
+                }
+                
+
+
+            } else {
+                console.log("verify_otp, otp is invalid.")
+                response.msg = "OTP is invalid, please try again."
                 response.status = "fail"
-                console.log("forgotpassword error",error)
             }
 
-            }
+        } catch (error) {
+            console.log("jwt verify_otp is invalid",error)
+            response.status = "fail"
+            response.msg = "Invalid otp"
+        }
+       
+        console.log("last response verify_otp")
+        return res.json(response)
+    })
+
+    app.post("/todo_app/reset_password", async (req,res) => {
+        const response = {msg:"", status: "", url: "/login" }
+        const user_password  = req.body.password;
+        const user_confirm_password  = req.body.confirm_password;
 
 
-
-            }
+        const regexTest = async () => {
+            // Perform your regex test here
             
-        )
+      
+            const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
+            
+            
+            if ( password_pattern.test(user_password) &&  user_password === user_confirm_password) {
+              return true;
+            } else {
+              return false;
+            }
+        };
+
+        try {
+            const isRegexPass = await regexTest();
+
+            if (isRegexPass) {
+                console.log("reset_password user input pass a test")
+                
+                
+
+                console.log("reset_password decrypt and verify jwt")
+                const decrypted_jwt = deCrypt(req.cookies["rst_pwd"],process.env.SecretKey_Cryptojs_Reset_Password)
+                const decoded = jwt.verify(decrypted_jwt, process.env.SecretKey_Reset_Password);
+
+                const q = "UPDATE users SET `user_password`= ? WHERE user_name = ? AND user_email = ? ";
+    
+                const values = [
+                    user_password,
+                    decoded.user_name,
+                    decoded.user_email
+
+                ];
+                
+                //updating todo
+                const [rows] =  await db.execute(q, [values]);
+                    
+                if (rows.affectedRows  === 1 ) {
+                    db.unprepare(q);
+                    response.status = "success"
+                    response.msg = "Password updated successfully, please try login."
+                    
+
+                } else {
+
+                    db.unprepare(q);
+                    response.status = "fail"
+                    response.msg = "Password failed to update, please try again later."
+
+                }
+
+
+
+
+
+            } else {
+                console.log("reset_password user input doesn't pass the regex test")
+                response.msg = "Invalid password."
+                response.status = "fail"
+            }
+              
+
+        } catch (error) {
+            console.log("try catch reset_password error ",error)
+        }
+
+        return res.json(response)
 
         
 
-        return res.json(response)
+
+
+
+
     })
 
 
@@ -1178,7 +1361,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
             } catch (error) {
                 
                 console.error("verify google id token error",error)
-                response.status = false;
+                response.status = "fail";
                 response.msg = "Failed to verify google account!";
                 
                 return response;
@@ -1208,7 +1391,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                     //1.if user has already signed up with our sign up system (not sign in with google), reject it
                     if (rows.length === 1 && rows[0].user_password !== null) {
                        
-                       response.status = false;
+                       response.status = "fail";
                        response.msg = "This email has already signed up, please use another email.";
                        console.log("This email has already signed up, please use another email.")
                        return response;
@@ -1279,13 +1462,13 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                                
                              } catch (error) {
                                console.log("Failed to add user from Sign in with google!",error)
-                               response.status = false;
+                               response.status = "fail";
                                response.msg = "Failed to signup from Sign in with google.";
                                return response
                              }
            
                     } else {
-                        response.status = false;
+                        response.status = "fail";
                         response.msg = "Failed to login.";
                         console.log("failed to sign up from sign in with google on if else condition might be from rows.length !== 0 || rows.length !== 1 ")
                         console.log("it might cause from this email might have more than 1 email in database, or it could be rows.length === undefined so its cause an error")
@@ -1293,7 +1476,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                     }
            
                    } catch (error) {
-                       response.status = false;
+                       response.status = "fail";
                        response.msg = "Error login google ";
                         console.log("try catch verifyingEmailinDatabase error", error)
                         return response;
@@ -1305,7 +1488,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         } 
         //if user's gmail has not verified yet.
         else {
-            response.status = false;
+            response.status = "fail";
             response.msg = "Gmail has not verified!";
             console.log("Gmail has not verified!")
             return res.json(response)
@@ -1314,7 +1497,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         
         } catch (error) {
             console.log("error try catch login_google",error) 
-            response.status = false;
+            response.status = "fail";
             response.msg = "Failed to login";
             return res.json(response)      
         }
