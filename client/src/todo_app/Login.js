@@ -405,6 +405,8 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
     const [otp, setOTP] = useState(["","","","","",""])
     const inputRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
     const [isLoading, setLoading] = useState(false)
+
+    const navigate = useNavigate();
     
     
     //const [ForgotPasswordStep, setForgotPasswordStep] = useState("1")
@@ -485,6 +487,10 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
               );
               console.log(res.data)
               alert(res.data.msg)
+
+              if (res.data.url) {
+                return navigate(res.data.url)
+              }
 
               
             

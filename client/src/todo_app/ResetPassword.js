@@ -41,11 +41,11 @@ const ResetPassword = () => {
             );
             
             alert(res.data.msg)
-            
             if (res.data.url) {
-
-                return navigate(res.data.url)
+              return navigate(res.data.url)
             }
+
+            
     
             
             

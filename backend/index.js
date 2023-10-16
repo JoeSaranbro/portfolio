@@ -78,6 +78,7 @@ app.get("/", (req,res)=>{
         const ciphertext = CryptoJS.AES.encrypt(message,secretkey).toString();
         return ciphertext;
         } catch (error) {
+        
         console.log("try catch enCrypt error",error)
         return false;
         }
@@ -784,24 +785,24 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
                     //else if user email has not verified
                     } else {
-
-                        const email_verification = jwt.sign({ user_id: rows[0].user_id,user_email: rows[0].user_email}, process.env.SecretKey_EmailVerification,{expiresIn: "1d"})
-
-                        const enCrypted = () => {
-                            try {
-                                const ciphertext = CryptoJS.AES.encrypt(email_verification,process.env.SecretKey_Cryptojs_JWT_EmailVerification).toString();
-                                return ciphertext;
-                                } catch (error) {
-                                console.log("try catch enCrypt error",error)
-                                return "false";
-                                }
-
-                          }
-
-                          
                         console.log("user email has not verified")
                         //send email verification to user's mail
                         try {
+                            
+                        
+                        const email_verification = jwt.sign({ user_id: rows[0].user_id, user_email: rows[0].user_email}, process.env.SecretKey_JWT_EmailVerification,{expiresIn: "1d"})
+                        console.log("sign jwt")
+                        
+                        const encryptedJWT = enCrypt(email_verification, process.env.SecretKey_Cryptojs_EmailVerification);
+                        console.log("encrypt Data")
+                        
+                        
+                        if (encryptedJWT === false) {
+                            response.status = "fail"
+                            response.msg = "There is an error!"
+                            response.url = "/error_page"
+                            return res.json(response);
+                        } 
 
                             const transporter = nodemailer.createTransport({
                               service: 'gmail',
@@ -834,7 +835,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                               to: rows[0].user_email,
                               subject: 'Email verification ToDoApp',
                               text: 'Please confirm your email by clicking the link we give you.',
-                              html: htmlContent.replaceAll('{{dynamicLink}}',`${backend_URL}/todo_app/email_verification?token=${enCrypted()}`) , // html body
+                              html: htmlContent.replaceAll('{{dynamicLink}}',`${backend_URL}/todo_app/email_verification?token=${encryptedJWT}`) , // html body
                             };
                           
                             transporter.sendMail(mailOptions, (error, info) => {
@@ -878,7 +879,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                       return res.json(response)
                     }
                   } catch (error) {
-                    console.log(first)
+                    
                     console.log("try catch check if email and password match error",error)
                     db.unprepare(query_user_info);
                     return res.status(500).json("There is something wrong!");
@@ -981,7 +982,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                             
                             
 
-                            const otp_identification = jwt.sign({ user_name: rows[0].user_name, user_email: rows[0].user_email }, process.env.SecretKey_OTP,{expiresIn: "2m"})
+                            const otp_identification = jwt.sign({ user_name: rows[0].user_name, user_email: rows[0].user_email }, process.env.SecretKey_JWT_OTP,{expiresIn: "2m"})
 
                             console.log("forgot_password sign jwt")
 
@@ -1188,7 +1189,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
             console.log(decrypted_jwt);
 
             console.log("verify_otp verify jwt ")
-            const decoded = jwt.verify(decrypted_jwt, process.env.SecretKey_OTP);
+            const decoded = jwt.verify(decrypted_jwt, process.env.SecretKey_JWT_OTP);
 
             //search for email in database
             console.log("before response_checkOTP")
@@ -1199,7 +1200,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                 console.log("verify_otp, otp is valid.")
 
                 try {
-                    const reset_password_identification = jwt.sign({ user_name: decoded.user_name, user_email: decoded.user_email }, process.env.SecretKey_Reset_Password,{expiresIn: "5m"})
+                    const reset_password_identification = jwt.sign({ user_name: decoded.user_name, user_email: decoded.user_email }, process.env.SecretKey_JWT_Reset_Password,{expiresIn: "5m"})
                 
                     const ciphertext = CryptoJS.AES.encrypt(reset_password_identification,process.env.SecretKey_Cryptojs_Reset_Password).toString();
                     
@@ -1236,7 +1237,8 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
     })
 
     app.post("/todo_app/reset_password", async (req,res) => {
-        const response = {msg:"", status: "", url: "/login" }
+        
+        const response = {msg:"", status: "",  }
         const user_password  = req.body.password;
         const user_confirm_password  = req.body.confirm_password;
 
@@ -1263,26 +1265,45 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                 
                 
 
-                console.log("reset_password decrypt and verify jwt")
-                const decrypted_jwt = deCrypt(req.cookies["rst_pwd"],process.env.SecretKey_Cryptojs_Reset_Password)
-                const decoded = jwt.verify(decrypted_jwt, process.env.SecretKey_Reset_Password);
+                console.log("reset_password decrypt value from cookie")
+                const decrypted_jwt = deCrypt(req.cookies["rst_pwd"], process.env.SecretKey_Cryptojs_Reset_Password)
+
+                if (decrypted_jwt === false) {
+                    console.log("decrypt fail")
+                    response.status = "fail"
+                    response.msg = "Invalid token."
+                    return res.json(response);
+                }
+
+                
+                console.log("reset_password verify jwt")
+                const decoded = jwt.verify(decrypted_jwt, process.env.SecretKey_JWT_Reset_Password);
+
+                console.log("reset_password hashing the password")
+                const hashed_password = await argon2.hash(user_password);
+                
+                
 
                 const q = "UPDATE users SET `user_password`= ? WHERE user_name = ? AND user_email = ? ";
     
                 const values = [
-                    user_password,
+                    hashed_password,
                     decoded.user_name,
                     decoded.user_email
 
                 ];
                 
-                //updating todo
-                const [rows] =  await db.execute(q, [values]);
+                //Note Error: Malformed communication packet. because of [values], it will error if using [values] on db.execute
+                //updating new password
+                console.log("updating new password")
+                const [rows] =  await db.execute(q, values);
                     
                 if (rows.affectedRows  === 1 ) {
                     db.unprepare(q);
+                    console.log("Password updated successfully")
                     response.status = "success"
                     response.msg = "Password updated successfully, please try login."
+                    response.url = "/login"
                     
 
                 } else {
@@ -1306,15 +1327,12 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
         } catch (error) {
             console.log("try catch reset_password error ",error)
+            response.msg = "Invalid."
+            response.status = "fail"
+
         }
 
         return res.json(response)
-
-        
-
-
-
-
 
     })
 
@@ -1533,14 +1551,14 @@ app.get("/todo_app/email_verification",async (req,res)=> {
 
         
         //console.log("queryString",queryString)
-        const originalText = deCrypt(queryString,process.env.SecretKey_Cryptojs_JWT_EmailVerification)
+        const originalText = deCrypt(queryString,process.env.SecretKey_Cryptojs_EmailVerification)
 
 
         
         
         console.log("bytes",bytes)
         console.log("originalText",originalText)
-        jwt.verify(originalText, process.env.SecretKey_EmailVerification, async (err, decoded) => {
+        jwt.verify(originalText, process.env.SecretKey_JWT_EmailVerification, async (err, decoded) => {
             
             if (err) {
                 console.log(err)
