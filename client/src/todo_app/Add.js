@@ -16,6 +16,20 @@ const Add = ({  setData, isAddModalOpen, setAddModal, addRef, setError}) => {
     setAddModal(false);
 }
 
+const cookieValue = ('; '+document.cookie).split(`; csrfToken=`).pop().split(';')[0];
+
+
+const customHeaders = {
+  'x-csrf-token': cookieValue,
+  
+};
+
+
+const config = {
+  headers: customHeaders,
+  withCredentials: true, // Set withCredentials to true
+};
+
   const handleClickAdd = async (e) => {
     console.log("userInput",userInput)
     if (!userInput.title) {
@@ -24,7 +38,7 @@ const Add = ({  setData, isAddModalOpen, setAddModal, addRef, setError}) => {
     } else {
         try {
           e.preventDefault();
-          const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_items`, userInput, {withCredentials:true });
+          const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_items`, userInput, config);
 
           if(Array.isArray(res.data) && res.data.length !== 0){
             setData(res.data)

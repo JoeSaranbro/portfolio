@@ -21,7 +21,7 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
     setUpdateInfo(currentTodo)
   },[currentTodo])
 
-
+  
   const RemainingTime = () => {
     const [timeNow, setTimeNow] = useState(new Date())
 
@@ -44,13 +44,6 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
     const date_time_project_duration_formatted = date_time_project_duration.format('D')+ " Days " +  date_time_project_duration.format('H') + " Hours "+ date_time_project_duration.format('m') +" Minutes" ;
     const date_time_remaining_formatted = date_time_remaining.format('D')+ " Days " +  date_time_remaining.format('H') + " Hours "+ date_time_remaining.format('m') +" Minutes left";
     
-    
-    
-    
-    
-    
-    
-    
 
     return(
       <div>
@@ -64,7 +57,20 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
   
     
  
-  
+
+  const cookieValue = ('; '+document.cookie).split(`; csrfToken=`).pop().split(';')[0];
+
+
+  const customHeaders = {
+    'x-csrf-token': cookieValue,
+    
+  };
+
+
+  const config = {
+    headers: customHeaders,
+    withCredentials: true, // Set withCredentials to true
+  };
  
 
   
@@ -80,7 +86,7 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
       alert("Title can't be empty!")
     } else {
       try {
-        const res = await axios.put(`${process.env.REACT_APP_backend_URL}/todo_items/` + currentTodo.todo_id, data , {withCredentials:true });
+        const res = await axios.put(`${process.env.REACT_APP_backend_URL}/todo_items/` + currentTodo.todo_id, data , config);
         if (res.data.length !== 0) {
           setData(res.data)
         } 

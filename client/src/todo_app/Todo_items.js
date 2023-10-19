@@ -30,7 +30,19 @@ const Todo_items = () => {
   const [isLoading, setLoading] = useState(false)
   const [error, setError] = useState(false)
 
-  
+  const cookieValue = ('; '+document.cookie).split(`; csrfToken=`).pop().split(';')[0];
+
+
+  const customHeaders = {
+    'x-csrf-token': cookieValue,
+    
+  };
+
+
+  const config = {
+    headers: customHeaders,
+    withCredentials: true, // Set withCredentials to true
+  };
 
 
   
@@ -40,8 +52,9 @@ const Todo_items = () => {
     const authentication = async() => {
       try {
         console.log("check")
-        const res = await axios.get(`${process.env.REACT_APP_backend_URL}/authentication`,{withCredentials: true})
+        const res = await axios.get(`${process.env.REACT_APP_backend_URL}/authentication`, config)
 
+        console.log(res.data)
         if (res.data[0].user_name) {
           setUsername(res.data[0].user_name)
         }
@@ -53,27 +66,27 @@ const Todo_items = () => {
           else  {
             setData(res.data[1])
           } 
-      } catch (error) {
-        if (error.response) {
+      } catch (err) {
+        if (err.response) {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
-          if (error.response.status === 401) {
+          if (err.response.status === 401) {
             // handle unauthorized error
             alert("You're not authenticated!")
             navigate("/login")
           } else {
             console.log("bad request")
-            setError(error.code)
+            setError(err.code)
           }
-        } else if (error.request) {
+        } else if (err.request) {
           // The request was made but no response was received
           // handle network error
-          console.log('Network Error', error.message);
-          setError(error.message)
+          console.log('Network Error', err.message);
+          setError(err.message)
         } else {
           // Something happened in setting up the request that triggered an Error
-          setError(error.code)
-          console.log('Error', error);
+          setError(err.code)
+          console.log('Error', err);
         }
       }
   }
@@ -163,8 +176,10 @@ const Todo_items = () => {
         alert("Deleted Successfully!")
       } //Catch there is no todo item.
       else if (res.data.length === 0) {
-        alert("There is no todo item.")
+        setData(null)
+        alert("Deleted Successfully!")
         setError("There is no todo item.")
+        console.log("data",data)
         
       } //Catch if res.data === normal string, etc.
       else{
@@ -172,8 +187,8 @@ const Todo_items = () => {
         setError("Error!")
       }
 
-    } catch (error) {
-      console.log("try catch delete error",error)
+    } catch (err) {
+      console.log("try catch delete error",err)
       alert("Error!")
       setEditing(false)
     }
@@ -184,7 +199,7 @@ const Todo_items = () => {
   const logout = async() => {
     
     try {
-      const res = await axios.get(`${process.env.REACT_APP_backend_URL}/todo_app/logout`,{withCredentials: true})
+      const res = await axios.get(`${process.env.REACT_APP_backend_URL}/todo_app/logout`, config)
       alert(res.data)
       navigate("/login")
     } catch (error) {
@@ -208,6 +223,9 @@ const Todo_items = () => {
           <button onClick={()=> logout()} className='bg-slate-700 hover:bg-slate-700 px-4 rounded py-1'>
             <p className='text-3xl'>Logout</p>
           </button>
+        </div>
+        <div className='absolute right-0'>
+          Icon
         </div>
       </div>
       <div className='flex mt-1'>

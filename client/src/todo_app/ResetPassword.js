@@ -23,6 +23,20 @@ const ResetPassword = () => {
         }
       };
 
+      const cookieValue = ('; '+document.cookie).split(`; csrfToken=`).pop().split(';')[0];
+
+
+      const customHeaders = {
+        'x-csrf-token': cookieValue,
+        
+      };
+
+
+      const config = {
+        headers: customHeaders,
+        withCredentials: true, // Set withCredentials to true
+      };
+
 
     const handleResetPasswordSubmit = async (e) => {
         e.preventDefault()
@@ -37,7 +51,7 @@ const ResetPassword = () => {
           try {
             e.preventDefault()
             const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_app/reset_password`,
-            inputResetPassword,{withCredentials: true}
+            inputResetPassword, config
             );
             
             alert(res.data.msg)

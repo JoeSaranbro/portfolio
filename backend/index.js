@@ -104,6 +104,20 @@ app.get("/", (req,res)=>{
         }
     }
 
+
+    //generate random string
+    function generateRandomString() {
+        let result = '';
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const charactersLength = characters.length;
+        let counter = 0;
+        while (counter < 160) {
+          result += characters.charAt(Math.floor(Math.random() * charactersLength));
+          counter += 1;
+        }
+        return result;
+     }
+
     // ------------------------------ Start cookies options -----------------------------------
     
 
@@ -124,12 +138,20 @@ app.get("/", (req,res)=>{
         //domain: backend_URL,
         path: "/",
     };
+
+    const csrfToken_cookieOptions = {
+        maxAge:  365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
+        secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
+        sameSite: 'lax', // restrict cross-site usage of cookie
+        //domain: backend_URL,
+        path: "/",
+    }
 // ------------------------------ End cookies options -----------------------------------
 
         app.get("/authentication", async (req,res) => {
             
-           
-            
+           //ทำต่อ add csrf condition เหลือ authentication and reset password
+             
             
             if (!req.cookies["auth_token"] || !req.cookies["refresh_token"]) {
                 console.log("No auth_token || refresh_token")
@@ -175,8 +197,9 @@ app.get("/", (req,res)=>{
 
                                     const decoded = jwt.decode(refresh_token, process.env.SecretKey_RefreshToken)
 
-                                    const new_auth_token = jwt.sign({ user_id: decoded.user_id, user_name: decoded.user_name, user_email: decoded.user_email, role: decoded.isAdmin }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
-                                    const new_refresh_token = jwt.sign({ user_id: decoded.user_id, user_name: decoded.user_name, user_email: decoded.user_email, role: decoded.isAdmin }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
+                                    const csrfToken = generateRandomString()
+                                    const new_auth_token = jwt.sign({ user_id: decoded.user_id, user_name: decoded.user_name, user_email: decoded.user_email, role: decoded.isAdmin, csrfToken: csrfToken }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
+                                    const new_refresh_token = jwt.sign({ user_id: decoded.user_id, user_name: decoded.user_name, user_email: decoded.user_email, role: decoded.isAdmin  }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
 
                                     const encrypted_auth_token = enCrypt(new_auth_token,process.env.SecretKey_Cryptojs_JWT)
                                     const encrypted_refresh_token = enCrypt(new_refresh_token,process.env.SecretKey_Cryptojs_JWT)
@@ -186,6 +209,7 @@ app.get("/", (req,res)=>{
                                     
                                     res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                                     res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
+                                    res.cookie('csrfToken', csrfToken, csrfToken_cookieOptions)
                                     
 
                                     //fetch todo items from user_id
@@ -220,9 +244,11 @@ app.get("/", (req,res)=>{
                             console.log("Refresh Token is valid and not expired, we'll give u new access token")
                             
                             
-                            const new_auth_token = jwt.sign({ user_id: decoded.user_id, user_name: decoded.user_name, user_email: decoded.user_email, role: decoded.isAdmin }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
+                            const csrfToken = generateRandomString()
+                            const new_auth_token = jwt.sign({ user_id: decoded.user_id, user_name: decoded.user_name, user_email: decoded.user_email, role: decoded.isAdmin, csrfToken: csrfToken }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
                             const encrypted_auth_token = enCrypt(new_auth_token,process.env.SecretKey_Cryptojs_JWT) 
                             res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
+                            
                             
                             //fetch todo items from user_id
                             try {
@@ -262,7 +288,7 @@ app.get("/", (req,res)=>{
 
                         //check if this user exist in database in case auth_token is expired, search in database
                         console.log("check if this user exist in database in case auth_token is expired")
-                        const query_user_info = "SELECT * FROM users WHERE user_email = ? "
+                        const query_user_info = "SELECT user_email FROM users WHERE user_email = ? "
 
                         const decoded = jwt.decode(auth_token, process.env.SecretKey_AccessToken)
                         
@@ -300,7 +326,7 @@ app.get("/", (req,res)=>{
                     
                         //check if this user exist in database in case auth_token is not expired
                         console.log("check if this user exist in database in case auth_token is not expired")
-                        const query_user_info = "SELECT * FROM users WHERE user_email = ? "
+                        const query_user_info = "SELECT user_email FROM users WHERE user_email = ? "
                         const decoded = jwt.decode(auth_token, process.env.SecretKey_AccessToken)
                         
                         try {
@@ -404,6 +430,9 @@ const verifyTokens =  (encryptedAuthToken, encryptedRefreshToken) => {
 
 app.post("/todo_items", async (req,res)=>{
     let verified;
+    const csrfToken = req.headers['x-csrf-token'];
+    
+
     try {
          verified = verifyTokens(req.cookies["auth_token"],req.cookies["refresh_token"])
     } catch (error) {
@@ -412,8 +441,8 @@ app.post("/todo_items", async (req,res)=>{
     }
     
     //check if auth token and refresh token is valid
-    if (!verified) {
-        console.log(`You're not authenticated! (app.put("/todo_items/:todo_id") )`)
+    if (!verified || verified.csrfToken !==  csrfToken) {
+        console.log("Add todo, User is not authenticated. ")
         return res.status(401).json("You're not authenticated!")
     } 
 
@@ -421,10 +450,10 @@ app.post("/todo_items", async (req,res)=>{
     // check if there is an user_id and email in database
     
     try {
-        const fetchSpecificUser = "SELECT * FROM users WHERE user_id = ?" 
+        const fetchSpecificUser = "SELECT user_email FROM users WHERE user_id = ?" 
         const [rows] = await db.execute(fetchSpecificUser, [verified.user_id]);
 
-        console.log(rows)
+        console.log("rows", rows)
         console.log("check rows",rows.length)
         if (rows.length !== 1) {
             console.log("user_id doesn't exist in database or there is multiple user_id")
@@ -447,7 +476,7 @@ const addTodo = "INSERT INTO todo_item (`title`,`details`,`user_id`) VALUES (?,?
             verified.user_id
             ];
             
-        console.log(values)
+        //console.log(values)
         const [rows] = await db.execute(addTodo, values)
         db.unprepare(addTodo);  
         console.log("added data successfully")
@@ -481,9 +510,10 @@ const addTodo = "INSERT INTO todo_item (`title`,`details`,`user_id`) VALUES (?,?
 app.put("/todo_items/:todo_id", async (req, res) => {
     
     const verified = verifyTokens(req.cookies["auth_token"],req.cookies["refresh_token"])
+    const csrfToken = req.headers['x-csrf-token'];
     
-    if (!verified) {
-        console.log(`You're not authenticated! (app.put("/todo_items/:todo_id") )`)
+    if (!verified || verified.csrfToken !== csrfToken) {
+        console.log("You're not authenticated! ")
         return res.status(401).json("You're not authenticated!")
     } else {
         
@@ -555,8 +585,9 @@ app.put("/todo_items/:todo_id", async (req, res) => {
 
 app.delete("/todo_items/:todo_id", async (req,res)=>{
     const verified = verifyTokens(req.cookies["auth_token"],req.cookies["refresh_token"])
+    const csrfToken = req.headers['x-csrf-token'];
 
-    if (!verified) {
+    if (!verified || verified.csrfToken !== csrfToken) {
         console.log("You're not authenticated!")
         return res.status(401).json("You're not authenticated!")
     } else { 
@@ -620,7 +651,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
    //------------------------------Start Sign up page-----------------------------------------------------
             app.post("/is-email-available", async (req, res) => {
-                const q = "SELECT * FROM users WHERE user_email = ?";
+                const q = "SELECT user_email FROM users WHERE user_email = ?";
                 
                 const values = req.body[0];
                 const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
@@ -665,7 +696,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
                 const signupResponse = {signupSuccessfully:null, inputValidation:null, isEmailAvailable:null}
 
-                const check_email = "SELECT * FROM users WHERE user_email = ?";
+                const check_email = "SELECT user_email FROM users WHERE user_email = ?";
 
                   
                   try {
@@ -764,8 +795,10 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                       response.status = true;
                       response.msg = "Login Success.";
                       console.log("login success");
-    
-                      const auth_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role, }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
+                    
+                      const csrfToken = generateRandomString()
+
+                      const auth_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role, csrfToken: csrfToken }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
                       
                       const refresh_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
                       
@@ -776,8 +809,9 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                      
                       res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                       res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
+                      res.cookie('csrfToken', csrfToken, csrfToken_cookieOptions)
                       
-
+                        
                       response.url = "/todo_items";
                       db.unprepare(query_user_info);
                       
@@ -790,7 +824,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                         try {
                             
                         
-                        const email_verification = jwt.sign({ user_id: rows[0].user_id, user_email: rows[0].user_email}, process.env.SecretKey_JWT_EmailVerification,{expiresIn: "1d"})
+                        const email_verification = jwt.sign({ user_id: rows[0].user_id, user_email: rows[0].user_email }, process.env.SecretKey_JWT_EmailVerification,{expiresIn: "1d"})
                         console.log("sign jwt")
                         
                         const encryptedJWT = enCrypt(email_verification, process.env.SecretKey_Cryptojs_EmailVerification);
@@ -982,7 +1016,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                             
                             
 
-                            const otp_identification = jwt.sign({ user_name: rows[0].user_name, user_email: rows[0].user_email }, process.env.SecretKey_JWT_OTP,{expiresIn: "2m"})
+                            const otp_identification = jwt.sign({ user_name: rows[0].user_name, user_email: rows[0].user_email}, process.env.SecretKey_JWT_OTP,{expiresIn: "2m"})
 
                             console.log("forgot_password sign jwt")
 
@@ -1200,7 +1234,9 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                 console.log("verify_otp, otp is valid.")
 
                 try {
-                    const reset_password_identification = jwt.sign({ user_name: decoded.user_name, user_email: decoded.user_email }, process.env.SecretKey_JWT_Reset_Password,{expiresIn: "5m"})
+                    
+                    const csrfToken = generateRandomString()
+                    const reset_password_identification = jwt.sign({ user_name: decoded.user_name, user_email: decoded.user_email, csrfToken: csrfToken }, process.env.SecretKey_JWT_Reset_Password,{expiresIn: "5m"})
                 
                     const ciphertext = CryptoJS.AES.encrypt(reset_password_identification,process.env.SecretKey_Cryptojs_Reset_Password).toString();
                     
@@ -1423,9 +1459,9 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                        response.msg = "Login successfully.";
                        response.url = "/todo_items";
                        
-                       
+                       const csrfToken = generateRandomString()
                         
-                       const auth_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role, }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
+                       const auth_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role, csrfToken: csrfToken}, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
                        const refresh_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
                         
                        const encrypted_auth_token = enCrypt(auth_token,process.env.SecretKey_Cryptojs_JWT)
@@ -1435,6 +1471,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                         // res.cookie('auth_token', access_token, cookieOptions);
                        res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                        res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
+                       res.cookie('csrfToken', csrfToken, csrfToken_cookieOptions)
                         
 
                        response.url = "/todo_items";
@@ -1463,9 +1500,9 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
            
                                //console.log("userid in database",rows.insertId)
                                
-                               
+                                const csrfToken = generateRandomString()
                                 
-                                const auth_token = jwt.sign({ user_id: rows.insertId, user_name: payload.name, user_email: payload.email, role: null }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
+                                const auth_token = jwt.sign({ user_id: rows.insertId, user_name: payload.name, user_email: payload.email, role: null, csrfToken: csrfToken }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
                                 const refresh_token = jwt.sign({ user_id: rows.insertId, user_name: payload.name, user_email: payload.email, role: null }, process.env.SecretKey_RefreshToken,{expiresIn: "30d"})
                                     
                                 const encrypted_auth_token = enCrypt(auth_token,process.env.SecretKey_Cryptojs_JWT)
@@ -1475,6 +1512,8 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                                     // res.cookie('auth_token', access_token, cookieOptions);
                                 res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                                 res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
+                                res.cookie('csrfToken', csrfToken, csrfToken_cookieOptions)
+
                                 console.log("Successfully sign up user from sign in with google api!")
                                return response;
                                
