@@ -23,11 +23,11 @@ const ResetPassword = () => {
         }
       };
 
-      const cookieValue = ('; '+document.cookie).split(`; csrfToken=`).pop().split(';')[0];
+      const cookieValue = ('; '+document.cookie).split(`; csrfToken_rst_pwd=`).pop().split(';')[0];
 
 
       const customHeaders = {
-        'x-csrf-token': cookieValue,
+        'x-csrf-token-rst-pwd': cookieValue,
         
       };
 
