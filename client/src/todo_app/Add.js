@@ -18,7 +18,7 @@ const Add = ({  setData, isAddModalOpen, setAddModal, addRef, setError}) => {
 
 const cookieValue = ('; '+document.cookie).split(`; csrfToken=`).pop().split(';')[0];
 
-
+console.log("cokie value", cookieValue)
 const customHeaders = {
   'x-csrf-token': cookieValue,
   
@@ -31,7 +31,8 @@ const config = {
 };
 
   const handleClickAdd = async (e) => {
-    console.log("userInput",userInput)
+    //console.log("userInput",userInput)
+    console.log("cokie value", cookieValue)
     if (!userInput.title) {
       alert("Todo title must be filled.")
       e.preventDefault();

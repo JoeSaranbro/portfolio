@@ -127,7 +127,7 @@ app.get("/", (req,res)=>{
         httpOnly: true, // prevent client-side scripts from accessing the cookie
         secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
         sameSite: 'none', // restrict cross-site usage of cookie
-        //domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
+        domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
         path: "/"
     };
 
@@ -136,22 +136,24 @@ app.get("/", (req,res)=>{
         httpOnly: true, // prevent client-side scripts from accessing the cookie
         secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
         sameSite: 'none', // restrict cross-site usage of cookie
-        //domain: backend_URL,
+        domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
         path: "/",
     };
 
     const csrfToken_cookieOptions = {
         maxAge:  15 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
         secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
-        sameSite: 'lax', // restrict cross-site usage of cookie
-        //domain: backend_URL,
+        sameSite: 'none', // restrict cross-site usage of cookie 
+        domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
         path: "/",
     }
+
+    //ทำต่อ set cookie error samesite lax csrf token
 // ------------------------------ End cookies options -----------------------------------
 
         app.get("/authentication", async (req,res) => {
             
-           //ทำต่อ add csrf condition เหลือ authentication and reset password
+           
              
             
             if (!req.cookies["auth_token"] || !req.cookies["refresh_token"]) {
@@ -528,7 +530,7 @@ app.put("/todo_items/:todo_id", async (req, res) => {
     const csrfToken = req.headers['x-csrf-token'];
     
     if (!verified_auth || !verified_refresh || verified_refresh.csrfToken !== csrfToken) {
-        console.log(verified_refresh)
+        //console.log(verified_refresh)
         console.log("Update todo , You're not authenticated! ")
         return res.status(401).json("You're not authenticated!")
     } else {
@@ -820,24 +822,27 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                         console.log("user email has verified")
                       
 
-                      response.status = true;
-                      response.msg = "Login Success.";
-                      console.log("login success");
+                      
                     
                       const csrfToken = generateRandomString()
 
                       const auth_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
-                      
                       const refresh_token = jwt.sign({ user_id: rows[0].user_id, user_name: rows[0].user_name, user_email: rows[0].user_email, role: rows[0].user_role, csrfToken: csrfToken }, process.env.SecretKey_RefreshToken,{expiresIn: "15d"})
-                      
+                      console.log("signing jwt")
                       const encrypted_auth_token = enCrypt(auth_token,process.env.SecretKey_Cryptojs_JWT)
                       const encrypted_refresh_token = enCrypt(refresh_token,process.env.SecretKey_Cryptojs_JWT)
+                      console.log("encrypting jwt")
                         
                       
                      
                       res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                       res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
                       res.cookie('csrfToken', csrfToken, csrfToken_cookieOptions)
+                      console.log("send cookie encrypted jwt")
+
+                      response.status = true;
+                      response.msg = "Login Success.";
+                      console.log("login success");
                       
                         
                       response.url = "/todo_items";
@@ -897,8 +902,8 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                               to: rows[0].user_email,
                               subject: 'Email verification ToDoApp',
                               text: 'Please confirm your email by clicking the link we give you.',
-                              html: htmlContent.replaceAll('{{dynamicLink}}',`${backend_URL}/todo_app/email_verification?token=${encryptedJWT}`) , // html body
-                            };
+                              html: htmlContent.replaceAll('{{dynamicLink}}',`https://www${backend_URL}/todo_app/email_verification?token=${encryptedJWT}`) ,// on test, remove https://www. 
+                            };                                                                                                      //on production add https://www.
                           
                             transporter.sendMail(mailOptions, (error, info) => {
                               if (error) {
@@ -1034,7 +1039,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                         console.log("pass test")
                         
                         //search for email in database
-                        const query_user_info = "SELECT * FROM users WHERE user_name = ? AND user_email = ?"
+                        const query_user_info = "SELECT user_name,user_email FROM users WHERE user_name = ? AND user_email = ?"
                         
                         const [rows] = await db.execute(query_user_info, [user_name,user_email]);
                         if (rows.length === 1) {
@@ -1056,7 +1061,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                                 console.log("forgot_password encrypt jwt ")
                                 
                                 //Note when set cookie, don't forget to add {withCredentials: true} in request header
-                                res.cookie('otp_fgtp', ciphertext, {maxAge:  3 * 60 * 1000, httpOnly: true, secure: true, sameSite: "none", path: "/"}); // add domain: backend_URL if on production
+                                res.cookie('otp_fgtp', ciphertext, {maxAge:  3 * 60 * 1000, httpOnly: true, secure: true, sameSite: "none", path: "/", domain: backend_URL}); // add domain: backend_URL if on production
                                 console.log("forgot_password set otp cookie ")
 
                                 } catch (error) {
@@ -1126,7 +1131,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                                       //Note If on production, we will use dynamic email which is rows[0].user_email in "to:" below
                                         const mailOptions = {
                                           from: 'u6111011940013@gmail.com',
-                                          to: "sarankunsutha@gmail.com",//rows[0].user_email,
+                                          to: rows[0].user_email,//rows[0].user_email, fortest sarankunsutha@gmail.com
                                           subject: 'Forgot Password ToDoApp',
                                           text: 'Forgor Password Confirmation',
                                           html: htmlContent.replaceAll('{{dynamicOTP}}',otp_numbers) , // html body
@@ -1271,12 +1276,12 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                     console.log("encrypt jwt reset password")
                     //Note when set cookie, don't forget to add {withCredentials: true} in request header
                     
-                    res.cookie('rst_pwd', ciphertext, {maxAge:  5 * 60 * 1000, httpOnly: true, secure: true, sameSite: "none", path: "/"}); // add domain: backend_URL if on production
+                    res.cookie('rst_pwd', ciphertext, {maxAge:  5 * 60 * 1000, httpOnly: true, secure: true, sameSite: "none", path: "/", domain: backend_URL}); // add domain: backend_URL if on production
                     
                     res.cookie('csrfToken_rst_pwd', csrfToken, {maxAge:  5 * 60 * 1000, 
                     secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
                     sameSite: 'lax', // restrict cross-site usage of cookie
-                    //domain: backend_URL,
+                    domain: backend_URL, //add domain: backend_URL if on production
                     path: "/",})
 
                     
@@ -1690,11 +1695,11 @@ app.get("/todo_app/email_verification",async (req,res)=> {
 //----------------------Start Logout  -------------------------------------------------
 app.get("/todo_app/logout",async (req,res)=> {
     //sameSite: "none", httpOnly: true, secure: true
-
+    //cookie option if on production, add domain: backend_URL
     try {
         res.cookie("auth_token", "", { sameSite: "none", httpOnly: true, secure: true, domain: backend_URL, path: "/", expires: new Date(0)  });
         res.cookie("refresh_token", "", { sameSite: "none", httpOnly: true, secure: true, domain: backend_URL, path: "/", expires: new Date(0) });
-        res.cookie("fortest","555", {sameSite: "none", httpOnly: true, secure: true, domain: backend_URL, path: "/"} )
+       
         console.log("logout success")
         return res.json("Logout Success")
         
