@@ -32,7 +32,7 @@ const Todo_items = () => {
 
   const cookieValue = ('; '+document.cookie).split(`; csrfToken=`).pop().split(';')[0];
 
-
+  
   const customHeaders = {
     'x-csrf-token': cookieValue,
     
@@ -94,7 +94,8 @@ const Todo_items = () => {
   },[])
 
   
- 
+  const cv = Object.fromEntries(document.cookie.split('; ').map(c => c.split('=')))
+  console.log(cv)
   
   
   const handleThreedots = (index) => {
