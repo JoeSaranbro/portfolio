@@ -30,11 +30,11 @@ const Todo_items = () => {
   const [isLoading, setLoading] = useState(false)
   const [error, setError] = useState(false)
 
-  const cookieValue = ('; '+document.cookie).split(`; csrfToken=`).pop().split(';')[0];
-
   
+
+  const csrf = localStorage.getItem('csrfToken');
   const customHeaders = {
-    'x-csrf-token': cookieValue,
+    'x-csrf-token': csrf,
     
   };
 

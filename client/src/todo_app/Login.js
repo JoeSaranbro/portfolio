@@ -485,7 +485,9 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
               const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_app/verify_otp`,
               {otp: string_otp}, {withCredentials: true}
               );
-              console.log(res.data)
+              
+              localStorage.setItem("csrfToken_rst_pwd", res.data.csrf)
+
               alert(res.data.msg)
 
               if (res.data.url) {

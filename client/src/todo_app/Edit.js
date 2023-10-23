@@ -58,11 +58,11 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
     
  
 
-  const cookieValue = ('; '+document.cookie).split(`; csrfToken=`).pop().split(';')[0];
-
+  
+  const csrf = localStorage.getItem('csrfToken');
 
   const customHeaders = {
-    'x-csrf-token': cookieValue,
+    'x-csrf-token': csrf,
     
   };
 
