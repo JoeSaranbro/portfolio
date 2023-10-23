@@ -148,7 +148,7 @@ app.get("/", (req,res)=>{
         path: "/",
     }
 
-    //ทำต่อ set cookie error samesite lax csrf token
+    //ทำต่อ can't get cookie value in front-end
 // ------------------------------ End cookies options -----------------------------------
 
         app.get("/authentication", async (req,res) => {
@@ -212,14 +212,14 @@ app.get("/", (req,res)=>{
                                     
                                     res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                                     res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
-                                    res.cookie('csrfToken', csrfToken, csrfToken_cookieOptions)
+                                    
                                     
 
                                     //fetch todo items from user_id
                                     try {
                                     const q = "SELECT * FROM todo_item WHERE user_id = ?"
                                     const [rows] = await db.execute(q, [decoded.user_id]);
-                                    const result = [{user_name: decoded.user_name}, rows]
+                                    const result = [{user_name: decoded.user_name}, rows, {csrfToken: csrfToken}]
                                    
                                     db.unprepare(q);
                                     return res.json(result)
@@ -837,7 +837,8 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                      
                       res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                       res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
-                      res.cookie('csrfToken', csrfToken, csrfToken_cookieOptions)
+                      
+                      
                       console.log("send cookie encrypted jwt")
 
                       response.status = true;
@@ -846,6 +847,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                       
                         
                       response.url = "/todo_items";
+                      response.csrf = csrfToken;
                       db.unprepare(query_user_info);
                       
                       return res.json(response);
@@ -1278,13 +1280,9 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                     
                     res.cookie('rst_pwd', ciphertext, {maxAge:  5 * 60 * 1000, httpOnly: true, secure: true, sameSite: "none", path: "/", domain: backend_URL}); // add domain: backend_URL if on production
                     
-                    res.cookie('csrfToken_rst_pwd', csrfToken, {maxAge:  5 * 60 * 1000, 
-                    secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
-                    sameSite: 'lax', // restrict cross-site usage of cookie
-                    domain: backend_URL, //add domain: backend_URL if on production
-                    path: "/",})
-
                     
+
+                    response.csrf = csrfToken;
                     response.status = "success"
                     response.msg = "OTP is valid, we will navigate you to set your new password."
                     response.url = "/resetpassword"
@@ -1504,9 +1502,8 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                     //2.if user has already signed up by sign in with google, navigate user to todo_items
                     else if (rows.length === 1 && rows[0].user_password === null) {
                          
-                       response.status = true;
-                       response.msg = "Login successfully.";
-                       response.url = "/todo_items";
+                       
+                       
                        
                        const csrfToken = generateRandomString()
                         
@@ -1520,18 +1517,21 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                         // res.cookie('auth_token', access_token, cookieOptions);
                        res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                        res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
-                       res.cookie('csrfToken', csrfToken, csrfToken_cookieOptions)
-                        
-
+                       
+                       response.status = true;
+                       response.msg = "Login successfully.";
+                       response.csrf = csrfToken;
                        response.url = "/todo_items";
+
                        console.log("logging in through Sign in with google.")
                        return response;
                        
            
                     } 
-                    //3.If user has not signed up yet, add user information to database and navigate user to todo_items
+                    //3.If user has not signed up yet, add user to database and navigate user to todo_items
                     else if (rows.length === 0) {
-           
+
+                       console.log("login_google, user hasn't register yet")
                        const addUser = "INSERT INTO users (`user_name`,`user_email`,`user_verification`) VALUES (?,?,?)";
            
                            try {
@@ -1542,10 +1542,9 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                                     1
                            ]       
                                const [rows] = await db.execute(addUser,values);
-                               response.status = true;
-                               response.msg = "Login successfully.";
-                               response.url = "/todo_items";
+                               
                                db.unprepare(addUser);
+                               console.log("login_google,add new user to database")
            
                                //console.log("userid in database",rows.insertId)
                                
@@ -1553,15 +1552,24 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                                 
                                 const auth_token = jwt.sign({ user_id: rows.insertId, user_name: payload.name, user_email: payload.email, role: null }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
                                 const refresh_token = jwt.sign({ user_id: rows.insertId, user_name: payload.name, user_email: payload.email, role: null, csrfToken: csrfToken }, process.env.SecretKey_RefreshToken,{expiresIn: "15d"})
-                                    
+                                
+                                console.log("login_google, sign auth jwt ")
                                 const encrypted_auth_token = enCrypt(auth_token,process.env.SecretKey_Cryptojs_JWT)
                                 const encrypted_refresh_token = enCrypt(refresh_token,process.env.SecretKey_Cryptojs_JWT)
+                                console.log("login_google, encrypt jwt.")
                                         
                                     
                                     // res.cookie('auth_token', access_token, cookieOptions);
                                 res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                                 res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
-                                res.cookie('csrfToken', csrfToken, csrfToken_cookieOptions)
+                                
+                                console.log("login_google, set cookie to user.")
+                                
+                                response.csrf = csrfToken;
+                                response.status = true;
+                                response.msg = "Login successfully.";
+                                response.url = "/todo_items";
+                                
 
                                 console.log("Successfully sign up user from sign in with google api!")
                                return response;

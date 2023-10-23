@@ -16,11 +16,11 @@ const Add = ({  setData, isAddModalOpen, setAddModal, addRef, setError}) => {
     setAddModal(false);
 }
 
-const cookieValue = ('; '+document.cookie).split(`; csrfToken=`).pop().split(';')[0];
+const csrf = localStorage.getItem('csrfToken');
 
-console.log("cokie value", cookieValue)
+
 const customHeaders = {
-  'x-csrf-token': cookieValue,
+  'x-csrf-token': csrf,
   
 };
 

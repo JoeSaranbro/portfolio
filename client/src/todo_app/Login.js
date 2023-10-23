@@ -284,7 +284,7 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
       e.preventDefault()
       const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_app/login`,inputLogin, {withCredentials: true}
       );
-
+      localStorage.setItem("csrfToken", res.data.csrf)
       setLoading(false)
       console.log("res.data",res.data)
       alert(res.data.msg)
