@@ -54,17 +54,17 @@ const Todo_items = () => {
         console.log("check")
         const res = await axios.get(`${process.env.REACT_APP_backend_URL}/authentication`, config)
 
-        console.log(res.data)
-        if (res.data[0].user_name) {
-          setUsername(res.data[0].user_name)
+        console.log("res.data", res.data)
+        if (res.data.user_name) {
+          setUsername(res.data.user_name)
         }
           //if there is no todo item.
-          if(res.data[1].length === 0){
+          if(res.data.data.length === 0){
             setError("There is no todo item.")
           } 
           //if there are items
           else  {
-            setData(res.data[1])
+            setData(res.data.data)
           } 
       } catch (err) {
         if (err.response) {

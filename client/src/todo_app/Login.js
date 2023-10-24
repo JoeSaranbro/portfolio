@@ -239,6 +239,8 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
               `${process.env.REACT_APP_backend_URL}/todo_app/login_google`,
               [response.credential], {withCredentials: true}
             );
+
+            localStorage.setItem("csrfToken", res.data.csrf)
             setLoading(false)
             console.log("res.data",res.data)
             alert(res.data.msg)

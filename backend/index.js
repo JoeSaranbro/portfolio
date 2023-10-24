@@ -148,12 +148,12 @@ app.get("/", (req,res)=>{
         path: "/",
     }
 
-    //ทำต่อ can't get cookie value in front-end
+    
 // ------------------------------ End cookies options -----------------------------------
 
         app.get("/authentication", async (req,res) => {
             
-           
+           const response = {msg:"", status:null}
              
             
             if (!req.cookies["auth_token"] || !req.cookies["refresh_token"]) {
@@ -170,24 +170,27 @@ app.get("/", (req,res)=>{
            try {
             
            
-            const verifyingRefreshToken = () =>{
+            const verifyingRefreshToken = () => {
                  
            
                 //check if there is refresh token
                 if (refresh_token) {
                     jwt.verify(refresh_token, process.env.SecretKey_RefreshToken, async (err, decoded) => {
 
-                        
                         //condition if there is an error in verifying refresh token
                         if (err) {
                             //check if token not valid
                             if (err.name === "JsonWebTokenError") {
                                 console.log("refresh Token is not valid, go login again")
-                                return res.status(401).json("You're not authenticated");
+                                
+                                response.msg = "You're not authenticated!"
+                                response.status = "fail"
+                                return response;
+
                             } 
                             //check if token is valid but expired
                             else if(err.name === "TokenExpiredError"){
-                                
+                                console.log("authentication, refresh token is valid but expired")
                                 const date = new Date(err.expiredAt)
                                 const convertDate = date.getTime()
                                 const timeRemaining = (convertDate + (7 * 24 * 60 * 60 * 1000));
@@ -203,12 +206,13 @@ app.get("/", (req,res)=>{
                                     const csrfToken = generateRandomString()
                                     const new_auth_token = jwt.sign({ user_id: decoded.user_id, user_name: decoded.user_name, user_email: decoded.user_email, role: decoded.isAdmin}, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
                                     const new_refresh_token = jwt.sign({ user_id: decoded.user_id, user_name: decoded.user_name, user_email: decoded.user_email, role: decoded.isAdmin, csrfToken: csrfToken }, process.env.SecretKey_RefreshToken,{expiresIn: "15d"})
-
+                                    console.log("authentication, refresh token is expired, sign new jwt")
                                     const encrypted_auth_token = enCrypt(new_auth_token,process.env.SecretKey_Cryptojs_JWT)
                                     const encrypted_refresh_token = enCrypt(new_refresh_token,process.env.SecretKey_Cryptojs_JWT)
+                                    console.log("authentication, refresh token is expired, encrypt jwt")
 
 
-                                    console.log("gen new auth and refresh successfully.")
+                                    
                                     
                                     res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                                     res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
@@ -219,37 +223,50 @@ app.get("/", (req,res)=>{
                                     try {
                                     const q = "SELECT * FROM todo_item WHERE user_id = ?"
                                     const [rows] = await db.execute(q, [decoded.user_id]);
-                                    const result = [{user_name: decoded.user_name}, rows, {csrfToken: csrfToken}]
-                                   
+                                    response.status = "success"
+                                    response.user_name = decoded.user_name;
+                                    response.data = rows
+                                    response.csrfToken = csrfToken
+                                    console.log("authentication, refresh token is expired, fetch latest data")
                                     db.unprepare(q);
-                                    return res.json(result)
+                                    return response;
                                     } catch (error) {
-                                    console.log("try catch fetch todo items from user email error",error)
+                                    response.status = "fail"
+                                    response.msg = "Internal error!"
+                                    console.log("authentication, verifyingRefreshToken, fetch latest data error",error)
                                     db.unprepare(q);
-                                    return res.status(500).json("Internal Error")
+                                    return response;
                                     }
 
                                 } //token is valid but expired and user didn't use application within 2 days after expired, we won't give them new token.
                                 else {
                                     console.log("token is valid but expired and user didn't use application within 7 days after expired, we won't give them new token")
-                                    return res.status(401).json("You're not authenticated");
+                                    response.msg = "You're not authenticated!"
+                                    response.status = "fail"
+                                    return response;
                                 }
                                 
                                 
                             } //catch other error 
                             else {
-                                console.log("Exceptional error")
-                                return res.status(401).json("Exceptional error!")
+                                response.msg = "You're not authenticated!"
+                                response.status = "fail"
+                                console.log("authentication, verifyingRefreshToken, jwt verify error")
+                                return response;
                             }
                         } 
                         //Refresh Token is valid and not expired, we'll give user new access token
                          else {
-                            console.log("Refresh Token is valid and not expired, we'll give u new access token")
+                            console.log("authentication, verifyingRefreshToken, Refresh Token is valid and not expired")
+                            
                             
                             
                             
                             const new_auth_token = jwt.sign({ user_id: decoded.user_id, user_name: decoded.user_name, user_email: decoded.user_email, role: decoded.isAdmin }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
-                            const encrypted_auth_token = enCrypt(new_auth_token,process.env.SecretKey_Cryptojs_JWT) 
+                            console.log("authentication, verifyingRefreshToken, sign new jwt auth token")
+                            const encrypted_auth_token = enCrypt(new_auth_token,process.env.SecretKey_Cryptojs_JWT)
+                            console.log("authentication, verifyingRefreshToken, encrypt jwt")
+                            
                             res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                             
                             
@@ -258,68 +275,86 @@ app.get("/", (req,res)=>{
                                 const q = "SELECT * FROM todo_item WHERE user_id = ?"
                                 const [rows] = await db.execute(q, [decoded.user_id]);
                                 db.unprepare(q);
-                                const result = [{user_name: decoded.user_name}, rows]
+
+                                response.status = "success";
+                                response.user_name = decoded.user_name;
+                                response.data = rows;
                                 
-                                return res.json(result)
+                                
+                                console.log("authentication, verifyingRefreshToken, fetch todo items")
+                                return response;
                                 } catch (error) {
-                                console.log("try catch fetch todo items from user email error",error)
+
                                 db.unprepare(q);
-                                return res.status(500).json("Internal Error")
+                                console.log("authentication, verifyingRefreshToken, fail to fetch todo items",error)
+                                response.status = "fail";
+                                response.msg = "Internal error!"
+                                return response;
+                                
                                 }
 
                         }
                     })
                 } else {
-                    console.log("You don't have refresh Token, go login again")
-                    return res.status(401).json("You are not authenticated!")
+                    response.status = "fail"
+                    response.msg = "You're not authenticated!"
+                    console.log("authentication, verifyingRefreshToken, refresh token is null or undefined")
+                    return response;
                 }
             }
             //if auth_token existed
             if (auth_token) {
                 //verify access/auth token
-                 jwt.verify(auth_token, process.env.SecretKey_AccessToken, async (err, decoded) => {
+                 jwt.verify(auth_token, process.env.SecretKey_AccessToken, async (err, decoded2) => {
                     
                  if (err) {
                     if (err.name === "JsonWebTokenError") {
                         
-                       console.log("Auth token is not valid, go login again.")
-                       return res.status(401).json("You are not authenticated!")
+                       console.log("authentication,Auth token is not valid.")
+                       response.status = "fail"
+                       response.msg = "You're not authenticated!"
+                       return res.status(401).json(response)
                     } 
                     else if (err.name === "TokenExpiredError") 
                     
                     {
 
-                        //check if this user exist in database in case auth_token is expired, search in database
-                        console.log("check if this user exist in database in case auth_token is expired")
-                        const query_user_info = "SELECT user_email FROM users WHERE user_email = ? "
-
-                        const decoded = jwt.decode(auth_token, process.env.SecretKey_AccessToken)
-                        
+                        console.log("authentication, auth token is valid but expired")
                         
                         try {
-                            const [rows] = await db.execute(query_user_info, [decoded.user_email]);
-                            console.log("rows",rows.length)
 
-                            if (rows.length === 1) {
-                                console.log("access token is valid but expired")
-                                console.log("we'll give u a new Access Token")
-                                verifyingRefreshToken()
-                            } else {
-                                //result after check user exist in database is not === 1
-                                console.log("this user is not exist in database or might have multiple user account in database")
-                                return res.status(401).json("You are not authenticated!")
-                            }
+                            const response_verifying_refreshToken = verifyingRefreshToken()
+
+                            if (response_verifying_refreshToken.status === "success") {
+
+                                return response_verifying_refreshToken;
+
+                            } else if (response_verifying_refreshToken.status === "fail" ) {
+
+                                if (response_verifying_refreshToken.msg === "You're not authenticated!") {
+
+                                    return res.status(401).json(response_verifying_refreshToken);
+
+                                } else if (response_verifying_refreshToken.msg === "Internal error!"){
+                                    return res.status(500).json(response_verifying_refreshToken)
+                                }
+                            } 
+
 
                         } catch {
-                            console.log("this user is not exist in database or might have multiple user account in database")
-                            return res.status(500).json("Internal error")
+                            console.log("authentication, response_verifying_refreshToken error")
+                            response.status = "fail"
+                            response.msg = "Internal error!"
+                            return res.status(500).json(response)
                         }
                         
                         
                     } else {
-                        console.log("jwt verify auth token error",err.name)
-                        
-                        return res.status(401).json("Unknown error")
+                        console.log("authentication,unknown jwt verify auth token error",err.name)
+                        response.status = "fail"
+                        response.msg = "Internal error!"
+
+                        return res.status(500).json(response)
                     }
                     
                 } else {
@@ -328,9 +363,12 @@ app.get("/", (req,res)=>{
 
                     
                         //check if this user exist in database in case auth_token is not expired
-                        console.log("check if this user exist in database in case auth_token is not expired")
+                        console.log("authentication, check if this user exist in database in case auth_token is not expired")
                         const query_user_info = "SELECT user_email FROM users WHERE user_email = ? "
                         const decoded = jwt.decode(auth_token, process.env.SecretKey_AccessToken)
+
+                        console.log("jwt.decode", decoded)
+                        console.log("jwt.verify", decoded2)
                         
                         try {
                             const [rows] = await db.execute(query_user_info, [decoded.user_email]);
@@ -342,25 +380,31 @@ app.get("/", (req,res)=>{
                             } else {
                                 //result after check user exist in database is not === 1
                                 console.log("this user is not exist in database or might have multiple user account in database")
-                                return res.status(401).json("You are not authenticated!")
+                                return res.status(401).json("You're not authenticated!")
                             }
 
                         } catch {
                             console.log("this user is not exist in database or might have multiple user account in database")
-                            return res.status(500).json("Internal error")
+                            return res.status(500).json("Internal error!")
                         }
 
 
                     console.log("auth token is valid,fetch todo items")
                     const q = "SELECT * FROM todo_item WHERE user_id = ?"
                     try {
+                    
                     const [rows] = await db.execute(q, [decoded.user_id]);
+                    
+                    response.status = "success";
+                    response.user_name = decoded.user_name;
+                    response.data = rows;
 
                     db.unprepare(q);
-                    const result = [{user_name: decoded.user_name}, rows]
+                    
 
                     
-                    return res.json(result)
+
+                    return res.json(response)
                     
                     } catch (error) {
                     db.unprepare(q);
@@ -376,13 +420,13 @@ app.get("/", (req,res)=>{
             // if auth_token is not existed
              else {
                 console.log("You don't have auth token, go login!")
-                return res.status(401).json("You are not authenticated!")
+                return res.status(401).json("You're not authenticated!")
             }
         }
         catch (error) {
             
             console.log("try catch error authentication",error)
-            return res.status(500).json("Internal Error")
+            return res.status(500).json("Internal error!")
         }
             
         });
@@ -449,7 +493,7 @@ app.post("/todo_items", async (req,res)=>{
     //check if auth token and refresh token is valid
     if (!verified_auth || !verified_refresh || verified_refresh.csrfToken !==  csrfToken) {
         
-        console.log("Add todo, User is not authenticated. ")
+        console.log("Add todo, User is not authenticated. access or refresh or csrf token is invalid ")
         return res.status(401).json("You're not authenticated!")
     } 
 
@@ -457,19 +501,19 @@ app.post("/todo_items", async (req,res)=>{
     // check if there is an user_id and email in database
     
     try {
+        console.log("add todo, auth tokens and csrf is valid")
         const fetchSpecificUser = "SELECT user_email FROM users WHERE user_id = ?" 
         const [rows] = await db.execute(fetchSpecificUser, [verified_auth.user_id]);
 
-        console.log("rows", rows)
-        console.log("check rows",rows.length)
+        
         if (rows.length !== 1) {
             console.log("user_id doesn't exist in database or there is multiple user_id")
             return res.status(400).json("Bad request")
         }  
 
     } catch (error) {
-        console.log("check if there is an user_id and email in database error", error)
-        return res.status(500).json("Internal error")
+        console.log("add todo,fail to check if there is an user_id and email in database ", error)
+        return res.status(500).json("Internal error!")
     }   
     
     
@@ -492,7 +536,7 @@ const addTodo = "INSERT INTO todo_item (`title`,`details`,`user_id`) VALUES (?,?
         console.log("failed to add todo",error)
         db.unprepare(addTodo);
         
-        return res.status(500).json("Internal error")  
+        return res.status(500).json("Internal error!")  
     }
 
     //fetch data to return latest data after adding todo
@@ -531,7 +575,7 @@ app.put("/todo_items/:todo_id", async (req, res) => {
     
     if (!verified_auth || !verified_refresh || verified_refresh.csrfToken !== csrfToken) {
         //console.log(verified_refresh)
-        console.log("Update todo , You're not authenticated! ")
+        console.log("Update todo , User is not authenticated. access or refresh or csrf token is invalid ")
         return res.status(401).json("You're not authenticated!")
     } else {
         
@@ -550,7 +594,7 @@ app.put("/todo_items/:todo_id", async (req, res) => {
 
         } catch (error) {
             console.log("get todo data from database error",error)
-            return res.status(500).json("Internal Error")
+            return res.status(500).json("Internal error!")
         }
         
         try {
@@ -618,7 +662,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
     if (!verified_auth || !verified_refresh || verified_refresh.csrfToken !== csrfToken) {
         console.log(verified_refresh.csrfToken, csrfToken)
-        console.log("delete todo, You're not authenticated!")
+        console.log("delete todo, User is not authenticated. access or refresh or csrf token is invalid. ")
         return res.status(401).json("You're not authenticated!")
     } else { 
 
@@ -639,7 +683,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
     } catch (error) {
         console.log("Failed to delete todo_item", error)
-        return res.status(500).json("Internal Error")
+        return res.status(500).json("Internal error!")
     }
 
     try{
@@ -666,7 +710,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
     } else {
         //rows.affectedRows !== 1
         console.log("rows.affectedRows !== 1")
-        return res.status(500).json("Internal Error")
+        return res.status(500).json("Internal error!")
     } 
     
     
@@ -714,7 +758,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
                } catch (error) {
                     console.log("try catch check email available error", error)
-                    return res.status(500).json({ error: "Internal Server Error" });
+                    return res.status(500).json({ error: "Internal error!" });
                }
                 
             });
@@ -750,7 +794,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                   } catch (err) {
                     console.log(err);
                     db.unprepare(check_email);
-                    return res.json({ error: "Internal Server Error" });
+                    return res.json({ error: "Internal error!" });
                   }
                   
                     const addUser = "INSERT INTO users (`user_name`,`user_password`,`user_email`,`user_verification`) VALUES (?,?,?,?)";
@@ -772,7 +816,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                     
                   } catch (error) {
                     console.log("Failed to add user!",error)
-                    return res.status(500).json("Internal Error")
+                    return res.status(500).json("Internal error!")
                   }
                 
             })
@@ -886,11 +930,11 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                           
                           const readHTMLFile = async () => {
                               try {
-                                  console.log("readHTMLFile success")
+                                  console.log("todo app login, readHTMLFile success")
                                   const data = await fs.readFile('email_verification_template.html', 'utf8');
                                   return data;
                               } catch (error) {
-                                  console.log("readHTMLFile error", error)
+                                  console.log("todo app login, readHTMLFile error", error)
                                   return false;
                               }
                           }
@@ -972,7 +1016,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         } catch (error) {
              db.unprepare(query_user_info);
              console.log("try catch query user_info error",error);
-             return res.status(500).json("Internal Error");
+             return res.status(500).json("Internal error!");
           }
         
     })
@@ -1116,11 +1160,11 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                                       //readHTMLFile Template
                                       const readHTMLFile = async () => {
                                           try {
-                                              console.log("readHTMLFile success")
-                                              const data = await fs.readFile('email_OTP.html', 'utf8');
+                                              console.log("forgot_password, readHTMLFile success")
+                                              const data = await fs.readFile('email_otp.html', 'utf8');
                                               return data;
                                           } catch (error) {
-                                              console.log("readHTMLFile error", error)
+                                              console.log("forgot_password, readHTMLFile error", error)
                                               return false;
                                           }
                                       }
@@ -1564,7 +1608,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                                 res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
                                 
                                 console.log("login_google, set cookie to user.")
-                                
+
                                 response.csrf = csrfToken;
                                 response.status = true;
                                 response.msg = "Login successfully.";
