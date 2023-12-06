@@ -18,6 +18,7 @@ import Email_Verification_Page from './todo_app/Email_Verification_Page';
 import Email_Verification_Success from './todo_app/Email_Verification_Success';
 import Error_Page from './Error_Page';
 import ResetPassword from './todo_app/ResetPassword';
+import EditProfile from './todo_app/EditProfile';
 
 
 function App() {
@@ -40,7 +41,8 @@ function App() {
             <Route path='Email_Verification_Page' element={<Email_Verification_Page />} />  
             <Route path='Email_Verification_Success' element={<Email_Verification_Success />} />
 
-            <Route path='resetpassword' element={<ResetPassword />} />  
+            <Route path='resetpassword' element={<ResetPassword />} />
+            <Route path='editprofile' element={<EditProfile />} />    
             
 
             <Route path='prac_home' element={<Prac_React_App />} />

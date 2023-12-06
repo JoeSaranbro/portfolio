@@ -247,7 +247,7 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
 
             if (res.data.url) {
               return navigate(res.data.url)
-            }
+            } 
             
           } catch (error) {
             alert("Sign in with google Error")
@@ -397,6 +397,8 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
       </div>
   </div> 
   )}
+
+  
   
   // <-------------------------Start forgot password ----------------------------------->      
 
@@ -459,6 +461,7 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
 
       } else {
         alert("Please match the requested format, check your username and email again!")
+        setLoading(false);
     }
 
     }
@@ -681,6 +684,7 @@ const Login = () => {
   const [isSignup, setIsSignup] = useState(false);
   const [isModalOpen, setModal] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [usernameGAUTH, setUsernameGAUTH] = useState(false)
   
   
   
@@ -737,7 +741,7 @@ const Login = () => {
 
 
 
-const navigate = useNavigate();
+
 
 
 
@@ -758,6 +762,8 @@ const navigate = useNavigate();
       {isModalOpen && isForgotPassword && ( <ForgotPasswordForm refModal={refModal} isModalOpen={isModalOpen} 
       setIsForgotPassword={setIsForgotPassword} setModal={setModal} isForgotPassword={isForgotPassword} /> )
       }
+
+      
       
      
         </div>

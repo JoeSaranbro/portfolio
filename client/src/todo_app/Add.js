@@ -1,10 +1,23 @@
 import React from 'react'
 import { useState } from 'react'
 import axios from 'axios'
+import { useDispatch } from 'react-redux'
+import { addTodo } from '../features/todo/todoSlice'
+
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import duration from 'dayjs/plugin/duration'
+
+
+dayjs.extend(duration)
+dayjs.extend(relativeTime)
+
 
 const Add = ({  setData, isAddModalOpen, setAddModal, addRef, setError}) => {
   
-  const [userInput , setUserInput] = useState({title: "", details: ""})
+  const [userInput , setUserInput] = useState({title: "", details: "", date_start: null, date_end: null})
+  const dispatch = useDispatch()
+
   console.log(userInput)
   const handleInputOnchange = (e) => {
     setUserInput((prev)=> ({...prev , [e.target.name]: e.target.value}))
@@ -39,19 +52,25 @@ const config = {
     } else {
         try {
           e.preventDefault();
-          const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_items`, userInput, config);
+          const data = {...userInput,date_start: userInput.date_start ? dayjs(userInput.date_start).format('YYYY-MM-DDTHH:mm') : userInput.date_start, 
+          date_end:  userInput.date_end ? dayjs(userInput.date_end).format('YYYY-MM-DDTHH:mm') : userInput.date_end }
 
-          if(Array.isArray(res.data) && res.data.length !== 0){
-            setData(res.data)
+          const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_app/add_todo`, data, config);
+          
+          const newSortedData = {todo_id: res.data, ...data}
+          
+          if(res.data){
+            
+            dispatch(addTodo(newSortedData))
+            setData((prev) => [...prev, newSortedData])
+            //แก้บัค delete todo แล้ว
+            //fixed render new data after added
+            //next is to fix render new data upter updating and deleting
             alert("Added Successfully!")
           } //Catch there is no todo item.
-          else if (res.data.length === 0) {
-            alert("There is no todo item.")
-            setError("There is no todo item.")
-            
-          } //Catch if res.data === normal string, etc.
           else{
             setError("Error!")
+            alert("Failed to add item!")
           }
           setAddModal(false);
         } catch (err) {
@@ -94,7 +113,7 @@ const config = {
             
           />
         </div>
-        <div className="h-[26rem]">
+        <div className="h-[20rem]">
           <div className="flex flex-col border-2 border-white focus-within:border-blue-600 rounded-lg mt-2 px-2 py-1.5 h-full">
             <label htmlFor="firstName" className="text-white text-md font-bold">Details</label>
             <textarea  
@@ -108,7 +127,35 @@ const config = {
             ></textarea>
           </div>
         </div>
-        <div className="flex">
+        <div className="flex gap-2 pt-4  w-full max-w-[17rem]">
+            <div className="start_date font-bold">
+              <p className="bg-green-700 rounded-md text-center "> Date Start</p>
+              <input 
+              type="datetime-local"
+              value={userInput.date_start ? dayjs(userInput.date_start).format('YYYY-MM-DDTHH:mm'): ""}
+              
+              
+              onChange={(e)=> setUserInput({...userInput,date_start: e.target.value})} 
+              className="text-black mt-4 text-center  text-sm input_date:text-lg input_date:w-full"
+                />
+            </div>
+            <div className="end_date font-bold">
+              <p className="bg-red-700 rounded-md text-center"> Date End</p>
+              <input 
+              type="datetime-local" 
+              
+              value={userInput.date_end ? dayjs(userInput.date_end).format('YYYY-MM-DDTHH:mm'): ""}
+              onChange={(e)=> setUserInput({...userInput,date_end: e.target.value})} 
+              className="text-black mt-4 text-center   text-sm input_date:text-lg input_date:w-full"
+              
+              />
+            </div>
+                      
+                      
+                
+        </div>
+
+        <div className="flex pt-1">
            <div className="w-1/2 my-auto text-xl font-bold"><p className={Object.keys(userInput.details).length === 500 ? "text-red-700":""}>{Object.keys(userInput.details).length}/500</p>
            </div> 
             <div className="flex justify-end pt-2 w-1/2">
@@ -116,6 +163,7 @@ const config = {
                 <button onClick={handleClickAdd}  className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 w-26 font-medium rounded-lg text-l px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"><p>Add</p></button>
             </div>
         </div>
+        
       </div>
     </form>
       </div>
@@ -126,61 +174,3 @@ const config = {
 export default Add
 
 
-// const AddForm2 = () => {
-
-    
-//   return (
-//   <div id="signupModal" className="modal" style={isAddModalOpen === true ? {display: "block"}:{display: "none"}}>
-//     <div ref={addRef} className="h-full max-h-[39rem] w-10/12 max-w-[34rem] absolute left-1/2 -translate-x-1/2 bg-zinc-900 rounded-lg m-auto p-3">
-//       <div id="header" className='text-center'>
-//       <span className='text-2xl font-bold'>New Todo<span className="close rounded-lg" onClick={closeAddModal} >&times;</span></span>
-      
-//       <hr className='mt-4 border-2'/>
-//       </div>
-      
-//       <div className=' '>
-//       <form className='form'>
-//         <div className=' '>
-//         <div className='form-col border-2 border-white focus-within:border-blue-600 rounded-lg mt-2 px-2 py-1.5 h-full'>
-//           <label htmlFor='todoname' className='form-label'>
-//             Todo Name
-//           </label>
-//           <input
-//             type='text'
-//             id='todoname'
-//             className='form-input'
-//             name="title"
-//             maxLength="20"
-//            // value={userInput.title}
-//             onChange={handleInputOnchange}
-            
-//           />
-//         </div>
-//         <div className="h-[26rem]">
-//           <div className="flex flex-col border-2 border-white focus-within:border-blue-600 rounded-lg mt-2 px-2 py-1.5 h-full">
-//             <label htmlFor="firstName" className="text-white text-md font-bold">Details</label>
-//             <textarea  
-//             id="TodoDetails"
-//             type="text"
-//             name="details"
-//            // value={userInput.details}
-//             onChange={handleInputOnchange}
-//             maxLength="500"
-//             className="form-input h-full"
-//             ></textarea>
-//           </div>
-//         </div>
-//         <div className="flex">
-//            <div className="w-1/2 my-auto text-xl font-bold"><p className={Object.keys(userInput.details).length === 500 ? "text-red-700":""}>{Object.keys(userInput.details).length}/500</p>
-//            </div> 
-//             <div className="flex justify-end pt-2 w-1/2">
-//                 <button type='button' className="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-blue-300 w-26 font-medium rounded-lg text-l px-5 py-2.5 mr-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 focus:outline-none dark:focus:ring-red-800" onClick={closeAddModal}><p>Cancle</p></button>
-//                 <button onClick={handleClickAdd}  className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 w-26 font-medium rounded-lg text-l px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"><p>Add</p></button>
-//             </div>
-//         </div>
-//       </div>
-//     </form>
-//       </div>
-//     </div>
-// </div>
-// )}

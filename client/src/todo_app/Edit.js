@@ -3,6 +3,8 @@ import axios from "axios"
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import duration from 'dayjs/plugin/duration'
+import { useDispatch } from 'react-redux'
+import { updateTodo } from '../features/todo/todoSlice'
 
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
@@ -13,6 +15,7 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
 
 
   const [updateInfo, setUpdateInfo] = useState(currentTodo)
+  const dispatch = useDispatch()
   
   useEffect(()=> {
     console.log(currentTodo)
@@ -77,6 +80,7 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
   
   const handleUpdate = async (e) => {
     
+    //convert 2023-11-24T23:05:00.000Z to 2023-11-25T06:05 << the correct timestamp pattern to sql
     const data = {...updateInfo,date_start: updateInfo.date_start ? dayjs(updateInfo.date_start).format('YYYY-MM-DDTHH:mm') : updateInfo.date_start  , 
         date_end:  updateInfo.date_end ? dayjs(updateInfo.date_end).format('YYYY-MM-DDTHH:mm') : updateInfo.date_end }
 
@@ -86,10 +90,11 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
       alert("Title can't be empty!")
     } else {
       try {
-        const res = await axios.put(`${process.env.REACT_APP_backend_URL}/todo_items/` + currentTodo.todo_id, data , config);
+        const res = await axios.put(`${process.env.REACT_APP_backend_URL}/todo_app/update_todo/` + currentTodo.todo_id, data , config);
         if (res.data.length !== 0) {
           setData(res.data)
         } 
+        dispatch(updateTodo(data))
         alert("Updated Successfully!")
         
       } catch (error) {
@@ -162,7 +167,7 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
                         
                         />
                       </div>
-                      {/* {dayjs(updateInfo.date_end).fromNow } {dayjs(new Date()).diff(updateInfo.date_end,"dd:hh:mm")} */ }
+                      
                       <div>
                          <RemainingTime /> 
                       </div>

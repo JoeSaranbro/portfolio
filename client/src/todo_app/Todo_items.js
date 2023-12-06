@@ -5,16 +5,23 @@ import axios from 'axios'
 import { IoMdAddCircleOutline } from "react-icons/io"
 import { GiNotebook } from "react-icons/gi"
 import { BsThreeDots } from "react-icons/bs"
+import { CgProfile } from "react-icons/cg"
 
 import { useNavigate } from 'react-router-dom';
 import Add from "./Add"
 import Edit from "./Edit"
+import { Link } from 'react-router-dom'
+
+import { useDispatch } from 'react-redux'
+import { fetchTodo } from '../features/todo/todoSlice'
+import { useSelector } from 'react-redux'
 
 
 const Todo_items = () => {
 
   const navigate = useNavigate();
-  
+  const dispatch = useDispatch()
+
   const [username, setUsername] = useState("")
   const [data, setData] = useState(null);
 
@@ -24,6 +31,14 @@ const Todo_items = () => {
 
   const [threeDotsModal, setThreeDotsModal] = useState(false);
   const threeDotsRef = useRef([]);
+
+  const [profileButton, setProfileButton] = useState(false);
+  const profileBtnRef = useRef([]);
+
+  
+  
+  const selector_todos = useSelector(state=> state.todos)
+  console.log("selector_todos",selector_todos)
 
   const [isAddModalOpen, setAddModal] = useState(false);
   const addRef = useRef();
@@ -49,12 +64,18 @@ const Todo_items = () => {
   
   useEffect(() => {
            
-    const authentication = async() => {
+    const authentication = async () => {
       try {
         console.log("check")
         const res = await axios.get(`${process.env.REACT_APP_backend_URL}/authentication`, config)
-
+        if (res.data.csrf) {
+          localStorage.setItem("csrfToken", res.data.csrf)
+        }
+        const data = {user_name: res.data.user_name, todos:res.data.data}
         console.log("res.data", res.data)
+        dispatch(fetchTodo(data))
+
+        
         if (res.data.user_name) {
           setUsername(res.data.user_name)
         }
@@ -64,6 +85,7 @@ const Todo_items = () => {
           } 
           //if there are items
           else  {
+            
             setData(res.data.data)
           } 
       } catch (err) {
@@ -91,11 +113,14 @@ const Todo_items = () => {
       }
   }
   authentication()
+  
   },[])
 
   
-  const cv = Object.fromEntries(document.cookie.split('; ').map(c => c.split('=')))
-  console.log(cv)
+
+  
+
+  
   
   
   const handleThreedots = (index) => {
@@ -167,7 +192,7 @@ const Todo_items = () => {
     console.log(todo_id)
    
     try {
-      const res = await axios.delete(`${process.env.REACT_APP_backend_URL}/todo_items/`+todo_id, config)
+      const res = await axios.delete(`${process.env.REACT_APP_backend_URL}/todo_app/delete_todo/`+todo_id, config)
       
       
       setThreeDotsModal(false)
@@ -195,6 +220,10 @@ const Todo_items = () => {
     }
         
   }
+
+  const handleProfileButton = () => {
+    setProfileButton(true)
+  }
  
 
   const logout = async() => {
@@ -211,7 +240,7 @@ const Todo_items = () => {
   }
 
  
-  
+console.log("what in data", data)
 
   
 
@@ -220,14 +249,24 @@ const Todo_items = () => {
   return (
     <div className='content'>
       <div className='flex text-4xl bg-black leading-relaxed font-bold relative'>Welcome, {username} 
-        <div className='absolute right-0 pr-2'> 
+        {/* <div className='absolute right-0 pr-2'> 
           <button onClick={()=> logout()} className='bg-slate-700 hover:bg-slate-700 px-4 rounded py-1'>
             <p className='text-3xl'>Logout</p>
           </button>
+        </div> */}
+        
+
+        <div className="absolute right-0 px-2 py-2"  onClick={()=> setProfileButton((prev)=> !prev)} >
+           <CgProfile size={48} className='h-full hover:bg-zinc-800 cursor-pointer'/>
+          
+          <div className ="hidden absolute -left-36 bg-zinc-900 text-xl rounded-lg" style={(profileButton) ?  {display:"block"}:{}} >
+            <ul className="w-44">
+            <li className="pt-2 pl-2 hover:bg-slate-700 cursor-pointer rounded-lg" ><Link to="/editprofile">Edit Profile</Link></li>
+            <li className="pt-2 pl-2 hover:bg-slate-700 cursor-pointer rounded-lg" onClick={()=> logout()} > Logout</li>
+            </ul>
+          </div>
         </div>
-        <div className='absolute right-0'>
-          Icon
-        </div>
+
       </div>
       <div className='flex mt-1'>
         

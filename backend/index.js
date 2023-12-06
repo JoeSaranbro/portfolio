@@ -124,18 +124,18 @@ app.get("/", (req,res)=>{
     const access_token_cookieOptions = {
         maxAge:  365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
         httpOnly: true, // prevent client-side scripts from accessing the cookie
-        secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
-        sameSite: 'none', // restrict cross-site usage of cookie, if you're using localhost http, don't use this line of code.
-        domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
+        //secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
+        //sameSite: 'none', // restrict cross-site usage of cookie, if you're using localhost http, don't use this line of code.
+        //domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
         path: "/"
     };
 
     const refresh_token_cookieOptions = {
         maxAge:  365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)  
         httpOnly: true, // prevent client-side scripts from accessing the cookie
-        secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
-        sameSite: 'none', // restrict cross-site usage of cookie, if you're using localhost http, don't use this line of code.
-        domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
+        //secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
+        //sameSite: 'none', // restrict cross-site usage of cookie, if you're using localhost http, don't use this line of code.
+        //domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
         path: "/",
     };
 
@@ -182,7 +182,7 @@ app.get("/", (req,res)=>{
                                         response.msg = "You're not authenticated!"
                                         response.status = "fail"
                                         resolve(response)
-                                    //แก้ return response;
+                                    
 
                                     } 
                                     //check if token is valid but expired
@@ -218,12 +218,12 @@ app.get("/", (req,res)=>{
 
                                             //fetch todo items from user_id
                                             try {
-                                            const q = "SELECT * FROM todo_item WHERE user_id = ?"
+                                            const q = "SELECT todo_id, title, details, date_start, date_end FROM todo_item WHERE user_id = ?"
                                             const [rows] = await db.execute(q, [decoded.user_id]);
                                             response.status = "success"
                                             response.user_name = decoded.user_name;
                                             response.data = rows
-                                            response.csrfToken = csrfToken
+                                            response.csrf = csrfToken
                                             console.log("authentication, refresh token is expired, fetch latest data")
                                             db.unprepare(q);
                                             resolve(response) 
@@ -264,13 +264,13 @@ app.get("/", (req,res)=>{
                                     const encrypted_auth_token = enCrypt(new_auth_token,process.env.SecretKey_Cryptojs_JWT)
                                     console.log("authentication, verifyingRefreshToken, encrypt jwt")
                                     
-                                    console.log("do", encrypted_auth_token)
+                                    
                                     res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                                     
                                     
                                     //fetch todo items from user_id
                                     try {
-                                        const q = "SELECT * FROM todo_item WHERE user_id = ?"
+                                        const q = "SELECT todo_id, title, details, date_start, date_end FROM todo_item WHERE user_id = ?"
                                         const [rows] = await db.execute(q, [decoded.user_id]);
                                         db.unprepare(q);
 
@@ -398,7 +398,7 @@ app.get("/", (req,res)=>{
 
 
                     console.log("auth token is valid,fetch todo items")
-                    const q = "SELECT * FROM todo_item WHERE user_id = ?"
+                    const q = "SELECT todo_id, title, details, date_start, date_end FROM todo_item WHERE user_id = ?"
                     try {
                     
                     const [rows] = await db.execute(q, [decoded.user_id]);
@@ -489,7 +489,7 @@ const verifyTokens =  (encryptedAuthToken, encryptedRefreshToken) => {
 
 
 
-app.post("/todo_items", async (req,res)=>{
+app.post("/todo_app/add_todo", async (req,res)=>{
     
     const csrfToken = req.headers['x-csrf-token'];
     let verified_auth;
@@ -505,6 +505,9 @@ app.post("/todo_items", async (req,res)=>{
     
     //check if auth token and refresh token is valid
     if (!verified_auth || !verified_refresh || verified_refresh.csrfToken !==  csrfToken) {
+        console.log("verified_refresh.csrfToken", verified_refresh.csrfToken)
+
+        console.log("csrfToken",csrfToken)
         
         console.log("Add todo, User is not authenticated. access or refresh or csrf token is invalid ")
         return res.status(401).json("You're not authenticated!")
@@ -533,17 +536,23 @@ app.post("/todo_items", async (req,res)=>{
     
 //add new todo item
 //Note insert into จะต่างจากคำสั่งอื่นในการใช้ execute, ตรง values ต้องเอา [] ออก
-const addTodo = "INSERT INTO todo_item (`title`,`details`,`user_id`) VALUES (?,?,?)";
+const addTodo = "INSERT INTO todo_item (`title`,`details`, date_start, date_end,`user_id`) VALUES (?,?,?,?,?)";
     try {
         const values = [req.body.title,
             req.body.details,
+            req.body.date_start,
+            req.body.date_end,
             verified_auth.user_id
             ];
             
         //console.log(values)
         const [rows] = await db.execute(addTodo, values)
+        
+        
         db.unprepare(addTodo);  
         console.log("added data successfully")
+        return res.json(rows.insertId)
+        
         
     } catch (error) {
         console.log("failed to add todo",error)
@@ -553,25 +562,25 @@ const addTodo = "INSERT INTO todo_item (`title`,`details`,`user_id`) VALUES (?,?
     }
 
     //fetch data to return latest data after adding todo
-    const fetchTodo = "SELECT * FROM todo_item WHERE user_id = ?"
-                try {
-               console.log("fetch data to return updated data after adding")
-               const [rows] = await db.execute(fetchTodo, [verified_auth.user_id]);
-               console.log("fetch latest data after adding successfully")
-                    db.unprepare(fetchTodo);
-                    return res.json(rows);
+    // const fetchTodo = "SELECT todo_id, title, details, date_start, date_end FROM todo_item WHERE user_id = ?"
+    //             try {
+    //            console.log("fetch data to return updated data after adding")
+    //            const [rows] = await db.execute(fetchTodo, [verified_auth.user_id]);
+    //            console.log("fetch latest data after adding successfully")
+    //                 db.unprepare(fetchTodo);
+    //                 return res.json(rows);
                 
-                } catch (error) {
-                    db.unprepare(fetchTodo);
-                    console.log("failed to fetch data after adding todo",error)
-                    return res.status(500).json("Failed to fetch items!")
-                }
+    //             } catch (error) {
+    //                 db.unprepare(fetchTodo);
+    //                 console.log("failed to fetch data after adding todo",error)
+    //                 return res.status(500).json("Failed to fetch items!")
+    //             }
     
-    });
+     });
     
 
 
-app.put("/todo_items/:todo_id", async (req, res) => {
+app.put("/todo_app/update_todo/:todo_id", async (req, res) => {
     let verified_auth;
     let verified_refresh;
 
@@ -596,7 +605,7 @@ app.put("/todo_items/:todo_id", async (req, res) => {
     try {
     // get a todo data from database
         
-        const fetchSpecificTodo = "SELECT * FROM todo_item WHERE todo_id = ?"
+        const fetchSpecificTodo = "SELECT user_id FROM todo_item WHERE todo_id = ?"
         const [rows] = await db.execute(fetchSpecificTodo, [req.params.todo_id]);
         //check if payload user_id and authToken user_id is match?
         
@@ -615,7 +624,7 @@ app.put("/todo_items/:todo_id", async (req, res) => {
         const todoId = req.params.todo_id;
         const updateTodo = "UPDATE todo_item SET `title`= ?, `details`= ?, `date_start` = ?, `date_end` = ?, `user_id` = ? WHERE todo_id = ?";
     
-        //แก้
+        
         const values = [
             req.body.title,
             req.body.details,
@@ -637,7 +646,7 @@ app.put("/todo_items/:todo_id", async (req, res) => {
             db.unprepare(updateTodo);
 
             //fetch data to return updated data after updating
-            const fetchTodo = "SELECT * FROM todo_item WHERE user_id = ?"
+            const fetchTodo = "SELECT todo_id, title, details, date_start, date_end FROM todo_item WHERE user_id = ?"
                 try {
                console.log("fetch data to return updated data after updating")
                const [rows] = await db.execute(fetchTodo, [verified_auth.user_id]);
@@ -659,7 +668,7 @@ app.put("/todo_items/:todo_id", async (req, res) => {
     }
   });
 
-app.delete("/todo_items/:todo_id", async (req,res)=>{
+app.delete("/todo_app/delete_todo/:todo_id", async (req,res)=>{
 
     let verified_auth;
     let verified_refresh;
@@ -685,11 +694,12 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
     const deleteTodo = "DELETE FROM todo_item WHERE todo_id = ?"; 
   try {
 
-    const fetchSpecificTodo = "SELECT * FROM todo_item WHERE todo_id = ?"
+    const fetchSpecificTodo = "SELECT user_id FROM todo_item WHERE todo_id = ?"
         const [rows] = await db.execute(fetchSpecificTodo, [req.params.todo_id]);
         //check if payload user_id and authToken user_id is match?
         
         if (rows[0].user_id !== verified_auth.user_id) {
+            
             console.log("You're not allowed to delete!")
             db.unprepare(fetchSpecificTodo);
             return res.status(400).json("Bad request")
@@ -708,7 +718,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
     if (rows.affectedRows === 1) {
         //fetch data to return latest after delete
-        const fetchTodo = "SELECT * FROM todo_item WHERE user_id = ?"
+        const fetchTodo = "SELECT todo_id, title, details, date_start, date_end FROM todo_item WHERE user_id = ?"
         try {
        console.log("fetch data to return latest after delete")
        const [rows] = await db.execute(fetchTodo, [verified_auth.user_id]);
@@ -1028,7 +1038,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
             
         } catch (error) {
              db.unprepare(query_user_info);
-             console.log("try catch query user_info error",error);
+             console.log("login, try catch query user_info error",error);
              return res.status(500).json("Internal error!");
           }
         
@@ -1088,7 +1098,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
         const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
         const response = {msg:"", status: "" }
 
-        console.log(req.body)
+        
 
         
         
@@ -1291,9 +1301,7 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
 
         //regex test user_otp
         if (otp_pattern.test(user_otp)) {
-            
             console.log("user_otp pass a regex test")
-            
 
         } else {
             console.log("user_otp doesn't pass a regex test")
@@ -1577,17 +1585,53 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                 } 
                 //3.If user has not signed up yet, add user to database and navigate user to todo_items
                 else if (rows.length === 0) {
-
+                    
                    console.log("login_google, user hasn't register yet")
+
+                   
+                   async function generateUsername() {
+                    
+                        
+                    
+                    let result = '';
+                    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                    const charactersLength = characters.length;
+                    let counter = 0;
+                    while (counter < 20) {
+                      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+                      counter += 1;
+                    }
+
+                    
+                    return result;
+                    
+                 }
+                let checkNameAvailable = false;
+                let GAUTHusername;
+                const checkUser = "SELECT user_name FROM users WHERE user_name = ?"
+                while (!checkNameAvailable) {
+                    GAUTHusername = await generateUsername()
+                    const [rows] = await db.execute(checkUser,[GAUTHusername]);
+                    if (rows.length === 0) {
+                        db.unprepare(rows);
+                        break;
+                    }
+                    
+                }
+                
+                
+
+                    
+
                    const addUser = "INSERT INTO users (`user_name`,`user_email`,`user_verification`) VALUES (?,?,?)";
        
                        try {
-                           
+                           console.log("GAUTHusername", GAUTHusername)
                            const values = [
-                                payload.name,
+                                GAUTHusername,
                                 payload.email,
                                 1
-                       ]       
+                            ]       
                            const [rows] = await db.execute(addUser,values);
                            
                            db.unprepare(addUser);
@@ -1597,8 +1641,8 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                            
                             const csrfToken = generateRandomString()
                             
-                            const auth_token = jwt.sign({ user_id: rows.insertId, user_name: payload.name, user_email: payload.email, role: null }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
-                            const refresh_token = jwt.sign({ user_id: rows.insertId, user_name: payload.name, user_email: payload.email, role: null, csrfToken: csrfToken }, process.env.SecretKey_RefreshToken,{expiresIn: "15d"})
+                            const auth_token = jwt.sign({ user_id: rows.insertId, user_name: GAUTHusername, user_email: payload.email, role: null }, process.env.SecretKey_AccessToken,{expiresIn: "15m"})
+                            const refresh_token = jwt.sign({ user_id: rows.insertId, user_name: GAUTHusername, user_email: payload.email, role: null, csrfToken: csrfToken }, process.env.SecretKey_RefreshToken,{expiresIn: "15d"})
                             
                             console.log("login_google, sign auth jwt ")
                             const encrypted_auth_token = enCrypt(auth_token,process.env.SecretKey_Cryptojs_JWT)
@@ -1606,15 +1650,18 @@ app.delete("/todo_items/:todo_id", async (req,res)=>{
                             console.log("login_google, encrypt jwt.")
                                     
                                 
-                                // res.cookie('auth_token', access_token, cookieOptions);
+                                
                             res.cookie('auth_token', encrypted_auth_token, access_token_cookieOptions);
                             res.cookie('refresh_token', encrypted_refresh_token, refresh_token_cookieOptions);
                             
                             console.log("login_google, set cookie to user.")
 
+                            
+
+
                             response.csrf = csrfToken;
                             response.status = true;
-                            response.msg = "Login successfully.";
+                            response.msg = `Login successfully, Your username is ${GAUTHusername} , you can change it later.`;
                             response.url = "/todo_items";
                             
 
@@ -1710,8 +1757,8 @@ app.get("/todo_app/email_verification",async (req,res)=> {
 
         
         
-        console.log("bytes",bytes)
-        console.log("originalText",originalText)
+        
+        
         jwt.verify(originalText, process.env.SecretKey_JWT_EmailVerification, async (err, decoded) => {
             
             if (err) {
@@ -1774,6 +1821,117 @@ app.get("/todo_app/logout",async (req,res)=> {
         return res.status(400).json("Logout Error")
     }
     
+
+})
+
+//ทำต่อ edit profile
+app.post("/todo_app/edit_profile", async (req,res) => {
+    let verified_auth;
+    let verified_refresh;
+
+    const response = {msg:"", status: ""}
+
+    try {
+        [verified_auth, verified_refresh] = verifyTokens(req.cookies["auth_token"],req.cookies["refresh_token"])
+        
+    } catch (error) {
+        console.log("edit_profile, verifyTokens error", error)
+        return res.status(400).json("Bad request!")
+    }
+    
+
+
+    const csrfToken = req.headers['x-csrf-token'];
+    
+    if (!verified_auth || !verified_refresh || verified_refresh.csrfToken !== csrfToken) {
+        //console.log(verified_refresh)
+        console.log("edit_profile, User is not authenticated. access or refresh or csrf token is invalid ")
+        return res.status(401).json("You're not authenticated!")
+    } else {
+    
+        const regexTest = async (type,data) => {
+            // Perform your regex test here
+            const pattern = new RegExp(type)
+            if (pattern.test(data)) {
+              return true;
+            } else {
+              return false;
+            }
+          };
+
+        
+        
+        const action = req.body.action
+        if (action === "username") {
+            const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$");
+            const user_name = req.body.username
+            const isRegexPass = await regexTest(username_pattern,user_name);
+            
+            
+            if (isRegexPass) {
+                response.msg = "Pass a regex test!"
+                response.status = "success"
+            } else {
+                response.msg = "Please match the requested format!"
+                response.status = "fail"
+            }
+            
+
+        } else if (action === "email") {
+            const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
+            const user_email = req.body.email
+            const isRegexPass = await regexTest(email_pattern,user_email);
+            
+            
+            if (isRegexPass) {
+                response.msg = "Pass a regex test!"
+                response.status = "success"
+            } else {
+                response.msg = "Please match the requested format!"
+                response.status = "fail"
+            }
+            
+        }
+          else if (action === "password") {
+            console.log("pwd function")
+            const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
+            const old_password = req.body.old_password
+            const new_password = req.body.new_password
+            const confirm_password = req.body.confirm_password
+            
+
+            const isOldPWD_RegexPass = await regexTest(password_pattern,old_password);
+            const isNewPWD_RegexPass = await regexTest(password_pattern,new_password);
+            
+            
+            if (isOldPWD_RegexPass && isNewPWD_RegexPass && confirm_password === new_password) {
+                response.msg = "Pass a regex test!"
+                response.status = "success"
+            } else {
+                response.msg = "Please match the requested format!"
+                response.status = "fail"
+            }
+            
+            
+            
+            return res.json(response)
+
+        } else {
+            response.msg = "Bad request."
+            response.status = "fail"
+            return res.json(response)
+        }
+
+
+    }
+        
+        
+
+        
+        
+       
+
+
 
 })
 
