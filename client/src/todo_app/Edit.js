@@ -81,7 +81,7 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
   const handleUpdate = async (e) => {
     
     //convert 2023-11-24T23:05:00.000Z to 2023-11-25T06:05 << the correct timestamp pattern to sql
-    const data = {...updateInfo,date_start: updateInfo.date_start ? dayjs(updateInfo.date_start).format('YYYY-MM-DDTHH:mm') : updateInfo.date_start  , 
+    const update_data = {...updateInfo,date_start: updateInfo.date_start ? dayjs(updateInfo.date_start).format('YYYY-MM-DDTHH:mm') : updateInfo.date_start  , 
         date_end:  updateInfo.date_end ? dayjs(updateInfo.date_end).format('YYYY-MM-DDTHH:mm') : updateInfo.date_end }
 
     
@@ -90,23 +90,23 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
       alert("Title can't be empty!")
     } else {
       try {
-        const res = await axios.put(`${process.env.REACT_APP_backend_URL}/todo_app/update_todo/` + currentTodo.todo_id, data , config);
-        if (res.data.length !== 0) {
-          setData(res.data)
-        } 
+        const res = await axios.put(`${process.env.REACT_APP_backend_URL}/todo_app/update_todo/` + currentTodo.todo_id, update_data , config);
+
+        setData(prev => prev.map(item => item.todo_id === currentTodo.todo_id ? { ...item, ...update_data } : item )) 
         dispatch(updateTodo(data))
         alert("Updated Successfully!")
         
       } catch (error) {
+        
         console.log(error)
+        
         alert("There is an error, please refresh the page!")
       }
       setEditing(false)
       
+      
     }
 
-   
-    
   }
     
     if (currentTodo) {

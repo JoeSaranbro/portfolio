@@ -23,9 +23,11 @@ export const todoSlice = createSlice({
         updateTodo: (state, action) => {
             
             const findIndex = state.todos[0].todos.findIndex((obj) => obj.todo_id === action.payload.todo_id)
-            console.log(JSON.stringify(state.todos[0].todos[findIndex], null, 2))
-            
+            //console.log("clg from todoslice",JSON.stringify(state.todos[0].todos[findIndex], null, 2))
+            console.log("clg todo action.pay",action.payload)
             state.todos[0].todos[findIndex] = action.payload
+
+            
             
         },
         removeTodo: (state, action) => {

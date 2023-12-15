@@ -631,6 +631,7 @@ app.post("/todo_app/add_todo", async (req, res) => {
 });
 
 app.put("/todo_app/update_todo/:todo_id", async (req, res) => {
+  const response = { msg: "", status: null };
   let verified_auth;
   let verified_refresh;
 
@@ -641,7 +642,10 @@ app.put("/todo_app/update_todo/:todo_id", async (req, res) => {
     );
   } catch (error) {
     console.log("update todo, verifyTokens error", error);
-    return res.status(400).json("Bad request!");
+    response.status = "fail";
+    response.msg = "You're not authenticated!"
+    return res.status(401).json(response);
+
   }
 
   const csrfToken = req.headers["x-csrf-token"];
@@ -652,33 +656,36 @@ app.put("/todo_app/update_todo/:todo_id", async (req, res) => {
     verified_refresh.csrfToken !== csrfToken
   ) {
     //console.log(verified_refresh)
-    console.log(
-      "Update todo , User is not authenticated. access or refresh or csrf token is invalid "
-    );
-    return res.status(401).json("You're not authenticated!");
+    console.log("Update todo , User is not authenticated. access or refresh or csrf token is invalid");
+    response.status = "fail";
+    response.msg = "You're not authenticated!"
+    return res.status(401).json(response);
+
   } else {
     try {
       // get a todo data from database
 
-      const fetchSpecificTodo =
-        "SELECT user_id FROM todo_item WHERE todo_id = ?";
+      const fetchSpecificTodo = "SELECT user_id FROM todo_item WHERE todo_id = ?";
       const [rows] = await db.execute(fetchSpecificTodo, [req.params.todo_id]);
-      //check if payload user_id and authToken user_id is match?
-
+      //check if todo's user_id and authToken user_id is match?
+      
       if (rows[0].user_id !== verified_auth.user_id) {
         console.log("You're not allowed to update!");
         db.unprepare(fetchSpecificTodo);
-        return res.status(400).json("Bad request");
+        response.status = "fail";
+        response.msg = "You're not allowed to update!"
+        return res.status(400).json(response);
       }
     } catch (error) {
-      console.log("get todo data from database error", error);
-      return res.status(500).json("Internal error!");
+      console.log("get todo data from database error, todo item might be deleted.", error);
+      response.status = "fail";
+      response.msg = "There's something wrong!"
+      return res.status(500).json(response);
     }
 
     try {
       const todoId = req.params.todo_id;
-      const updateTodo =
-        "UPDATE todo_item SET `title`= ?, `details`= ?, `date_start` = ?, `date_end` = ?, `user_id` = ? WHERE todo_id = ?";
+      const updateTodo = "UPDATE todo_item SET `title`= ?, `details`= ?, `date_start` = ?, `date_end` = ?, `user_id` = ? WHERE todo_id = ?";
 
       const values = [
         req.body.title,
@@ -693,33 +700,29 @@ app.put("/todo_app/update_todo/:todo_id", async (req, res) => {
 
       if (rows.affectedRows === 0) {
         db.unprepare(updateTodo);
-        return res.status(400).json("Bad request, user not found.");
+        console.log("todo might be deleted")
+        response.status = "fail";
+        response.msg = "Can't update, there's something wrong!"
+        return res.status(500).json(response);
+        
       } else {
         db.unprepare(updateTodo);
-
-        //fetch data to return updated data after updating
-        const fetchTodo =
-          "SELECT todo_id, title, details, date_start, date_end FROM todo_item WHERE user_id = ?";
-        try {
-          console.log("fetch data to return updated data after updating");
-          const [rows] = await db.execute(fetchTodo, [verified_auth.user_id]);
-          console.log("fetch updated data successfully");
-          db.unprepare(fetchTodo);
-          return res.json(rows);
-        } catch (error) {
-          db.unprepare(fetchTodo);
-          console.log("failed to fetch data after updating ", error);
-          return res.status(500).json("Failed to fetch items!");
-        }
+        response.status = "success"
+        response.msg = "Updated successfully!"
+        return res.json(response)
+        
       }
     } catch (error) {
+      response.status = "fail";
+      response.msg = "There's something wrong!"
       console.log("try catch Update Todo Error!", error);
-      return res.status(400).json("Bad Request");
+      return res.status(500).json(response);
     }
   }
 });
 
 app.delete("/todo_app/delete_todo/:todo_id", async (req, res) => {
+  //แก้update data เสร็จแล้ว เหลือ แก้ delete และ ใส่ const response.status && response.msg ใน add todo 
   let verified_auth;
   let verified_refresh;
 

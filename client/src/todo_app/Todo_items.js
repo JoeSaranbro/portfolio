@@ -239,8 +239,8 @@ const Todo_items = () => {
     
   }
 
- 
-console.log("what in data", data)
+  console.log("data now", data)
+
 
   
 
