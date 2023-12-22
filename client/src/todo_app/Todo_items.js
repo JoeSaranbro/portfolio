@@ -13,8 +13,11 @@ import Edit from "./Edit"
 import { Link } from 'react-router-dom'
 
 import { useDispatch } from 'react-redux'
-import { fetchTodo } from '../features/todo/todoSlice'
 import { useSelector } from 'react-redux'
+import { fetchTodo } from '../features/todo/todoSlice'
+import { removeTodo } from '../features/todo/todoSlice'
+
+
 
 
 const Todo_items = () => {
@@ -184,42 +187,32 @@ const Todo_items = () => {
   },[threeDotsModal,isAddModalOpen]);
   
  
-  
-  
-  console.count("all")
-  // Delete function
+  // Delete section
   const handleClickDelete = async (todo_id) => {
     console.log(todo_id)
    
     try {
-      const res = await axios.delete(`${process.env.REACT_APP_backend_URL}/todo_app/delete_todo/`+todo_id, config)
+      const res = await axios.delete(`${process.env.REACT_APP_backend_URL}/todo_app/delete_todo/`+ todo_id, config)
       
       
+      dispatch(removeTodo(todo_id))
+      const updatedData = data.filter(item => item.todo_id !== todo_id);
+      setData(updatedData);
+      alert("Deleted Successfully!")
+
       setThreeDotsModal(false)
       setEditing(false)
-      if(Array.isArray(res.data) && res.data.length !== 0){
-        setData(res.data)
-        alert("Deleted Successfully!")
-      } //Catch there is no todo item.
-      else if (res.data.length === 0) {
-        setData(null)
-        alert("Deleted Successfully!")
-        setError("There is no todo item.")
-        console.log("data",data)
-        
-      } //Catch if res.data === normal string, etc.
-      else{
-        alert("Error!")
-        setError("Error!")
-      }
+      
 
     } catch (err) {
       console.log("try catch delete error",err)
-      alert("Error!")
+      alert(err.response.data.msg)
       setEditing(false)
     }
         
   }
+
+  
 
   const handleProfileButton = () => {
     setProfileButton(true)
@@ -239,7 +232,7 @@ const Todo_items = () => {
     
   }
 
-  console.log("data now", data)
+
 
 
   

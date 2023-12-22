@@ -614,20 +614,7 @@ app.post("/todo_app/add_todo", async (req, res) => {
     return res.status(500).json("Internal error!");
   }
 
-  //fetch data to return latest data after adding todo
-  // const fetchTodo = "SELECT todo_id, title, details, date_start, date_end FROM todo_item WHERE user_id = ?"
-  //             try {
-  //            console.log("fetch data to return updated data after adding")
-  //            const [rows] = await db.execute(fetchTodo, [verified_auth.user_id]);
-  //            console.log("fetch latest data after adding successfully")
-  //                 db.unprepare(fetchTodo);
-  //                 return res.json(rows);
-
-  //             } catch (error) {
-  //                 db.unprepare(fetchTodo);
-  //                 console.log("failed to fetch data after adding todo",error)
-  //                 return res.status(500).json("Failed to fetch items!")
-  //             }
+  
 });
 
 app.put("/todo_app/update_todo/:todo_id", async (req, res) => {
@@ -722,32 +709,30 @@ app.put("/todo_app/update_todo/:todo_id", async (req, res) => {
 });
 
 app.delete("/todo_app/delete_todo/:todo_id", async (req, res) => {
-  //แก้update data เสร็จแล้ว เหลือ แก้ delete และ ใส่ const response.status && response.msg ใน add todo 
+  //แก้update data เสร็จแล้ว เหลือ แก้ delete และ ใส่ const response.status && response.msg ใน add todo
+  
+  //แก้ update latest dataของusestate after delete usestate แล้ว เหลือไล่แก้ไม่ mutate array, ใช้ map, filter, ...spread operater แทน Mutate
+  const response = { msg: "", status: null };
   let verified_auth;
   let verified_refresh;
 
   try {
-    [verified_auth, verified_refresh] = verifyTokens(
-      req.cookies["auth_token"],
-      req.cookies["refresh_token"]
-    );
+    [verified_auth, verified_refresh] = verifyTokens(req.cookies["auth_token"],req.cookies["refresh_token"]);
   } catch (error) {
     console.log("delete todo, verifyTokens error", error);
-    return res.status(400).json("Bad request!");
+    response.msg = "Bad request!"
+    response.status = "fail"
+    return res.status(400).json(response);
   }
 
   const csrfToken = req.headers["x-csrf-token"];
 
-  if (
-    !verified_auth ||
-    !verified_refresh ||
-    verified_refresh.csrfToken !== csrfToken
-  ) {
+  if (!verified_auth || !verified_refresh || verified_refresh.csrfToken !== csrfToken) {
     console.log(verified_refresh.csrfToken, csrfToken);
-    console.log(
-      "delete todo, User is not authenticated. access or refresh or csrf token is invalid. "
-    );
-    return res.status(401).json("You're not authenticated!");
+    console.log("delete todo, User is not authenticated. access or refresh or csrf token is invalid.");
+    response.msg = "You're not authenticated!"
+    response.status = "fail"
+    return res.status(401).json(response);
   } else {
     const todoId = req.params.todo_id;
 
@@ -755,48 +740,38 @@ app.delete("/todo_app/delete_todo/:todo_id", async (req, res) => {
     try {
       const fetchSpecificTodo =
         "SELECT user_id FROM todo_item WHERE todo_id = ?";
-      const [rows] = await db.execute(fetchSpecificTodo, [req.params.todo_id]);
+      const [query_rows] = await db.execute(fetchSpecificTodo, [req.params.todo_id]);
       //check if payload user_id and authToken user_id is match?
 
-      if (rows[0].user_id !== verified_auth.user_id) {
+      if (query_rows[0].user_id !== verified_auth.user_id) {
         console.log("You're not allowed to delete!");
         db.unprepare(fetchSpecificTodo);
-        return res.status(400).json("Bad request");
+        response.msg = "You're not authenticated!"
+        response.status = "fail"
+        return res.status(401).json(response);
       }
+
+      const [delete_rows] = await db.execute(deleteTodo, [todoId]);
+      
+      console.log("delete_rows.affectedRows",delete_rows.affectedRows)
+      db.unprepare(deleteTodo);
+      if (delete_rows.affectedRows === 1) {
+        console.log("deleted todo successfully")
+        response.msg = "Deleted todo successfully!"
+        response.status = "success"
+        
+        return res.status(200).json(response);
+      }
+      
     } catch (error) {
       console.log("Failed to delete todo_item", error);
-      return res.status(500).json("Internal error!");
+      
+      response.msg = "Failed to delete todo item, the todo item might be deleted or not existed"
+      response.status = "fail"
+      return res.status(500).json(response);
     }
 
-    try {
-      const [rows] = await db.execute(deleteTodo, [todoId]);
-      db.unprepare(deleteTodo);
-
-      if (rows.affectedRows === 1) {
-        //fetch data to return latest after delete
-        const fetchTodo =
-          "SELECT todo_id, title, details, date_start, date_end FROM todo_item WHERE user_id = ?";
-        try {
-          console.log("fetch data to return latest after delete");
-          const [rows] = await db.execute(fetchTodo, [verified_auth.user_id]);
-          console.log("fetch latest data after deleting successfully");
-          db.unprepare(fetchTodo);
-          return res.json(rows);
-        } catch (error) {
-          db.unprepare(fetchTodo);
-          console.log("failed to fetch latest data after deleting", error);
-          return res.status(500).json("Failed to fetch items!");
-        }
-      } else {
-        //rows.affectedRows !== 1
-        console.log("rows.affectedRows !== 1");
-        return res.status(500).json("Internal error!");
-      }
-    } catch (error) {
-      db.unprepare(deleteTodo);
-      console.log("try catch delete todo error", error);
-      return res.status(400).json("Bad Request");
-    }
+    
   }
 });
 //----------------------Start Login/Sign up TodoApp -------------------------------------------------

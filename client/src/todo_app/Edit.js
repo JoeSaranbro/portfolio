@@ -91,7 +91,7 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
     } else {
       try {
         const res = await axios.put(`${process.env.REACT_APP_backend_URL}/todo_app/update_todo/` + currentTodo.todo_id, update_data , config);
-
+        console.log("data what", data)
         setData(prev => prev.map(item => item.todo_id === currentTodo.todo_id ? { ...item, ...update_data } : item )) 
         dispatch(updateTodo(data))
         alert("Updated Successfully!")

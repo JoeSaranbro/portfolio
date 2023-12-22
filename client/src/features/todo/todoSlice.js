@@ -11,14 +11,18 @@ export const todoSlice = createSlice({
     initialState,
     reducers: {
         fetchTodo: (state, action) => {
-            //console.log('state:', JSON.stringify(state, null, 2));
-            //console.log("action",action)
-            //console.log("state", state)
-            state.todos.push(action.payload)
+            //console.log('state:', JSON.stringify(state.todos, null, 2));
+            // state.todos.push(action.payload)
+            return {
+                ...state, todos: [...state.todos, action.payload]
+            }
         },
         addTodo: (state, action) => {
-            //bug redux addกับupdate
-            state.todos[0].todos.push(action.payload)
+            
+            return {
+                ...state, todos: [...state.todos[0].todos, action.payload]
+            }
+            //state.todos[0].todos.push(action.payload)
         },
         updateTodo: (state, action) => {
             
@@ -26,12 +30,17 @@ export const todoSlice = createSlice({
             //console.log("clg from todoslice",JSON.stringify(state.todos[0].todos[findIndex], null, 2))
             console.log("clg todo action.pay",action.payload)
             state.todos[0].todos[findIndex] = action.payload
-
-            
             
         },
         removeTodo: (state, action) => {
-            state.todos = state.todos.filter((todo) => todo.id !== action.payload)
+            const findIndex = state.todos[0].todos.findIndex((obj) => obj.todo_id === action.payload)
+            console.log("action.payload", action.payload)
+
+            if (findIndex !== -1) {
+                state.todos[0].todos.splice(findIndex , 1)
+            }
+            
+            
         }
     }
 })
