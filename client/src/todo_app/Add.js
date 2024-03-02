@@ -58,14 +58,12 @@ const config = {
           const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_app/add_todo`, data, config);
           
           const newSortedData = {todo_id: res.data, ...data}
-          
+          console.log("res.data", res.data)
+          console.log("newSortedData", newSortedData)
           if(res.data){
             
             dispatch(addTodo(newSortedData))
             setData((prev) => [...prev, newSortedData])
-            //แก้บัค delete todo แล้ว
-            //fixed render new data after added
-            //next is to fix render new data upter updating and deleting
             alert("Added Successfully!")
           } //Catch there is no todo item.
           else{

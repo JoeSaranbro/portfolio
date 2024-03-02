@@ -606,6 +606,7 @@ app.post("/todo_app/add_todo", async (req, res) => {
 
     db.unprepare(addTodo);
     console.log("added data successfully");
+    console.log("rows.insertId",rows.insertId)
     return res.json(rows.insertId);
   } catch (error) {
     console.log("failed to add todo", error);
@@ -697,7 +698,6 @@ app.put("/todo_app/update_todo/:todo_id", async (req, res) => {
         response.status = "success"
         response.msg = "Updated successfully!"
         return res.json(response)
-        
       }
     } catch (error) {
       response.status = "fail";
@@ -709,9 +709,9 @@ app.put("/todo_app/update_todo/:todo_id", async (req, res) => {
 });
 
 app.delete("/todo_app/delete_todo/:todo_id", async (req, res) => {
-  //แก้update data เสร็จแล้ว เหลือ แก้ delete และ ใส่ const response.status && response.msg ใน add todo
   
-  //แก้ update latest dataของusestate after delete usestate แล้ว เหลือไล่แก้ไม่ mutate array, ใช้ map, filter, ...spread operater แทน Mutate
+  
+  
   const response = { msg: "", status: null };
   let verified_auth;
   let verified_refresh;
@@ -1111,9 +1111,10 @@ async function checkOTP(enteredOTP, user_email, user_name) {
   try {
     const q =
       "SELECT otp, time_start FROM otp WHERE user_email = ? AND user_name = ? ORDER BY time_start DESC LIMIT 1";
-
+      
     const [rows] = await db.execute(q, [user_email, user_name]);
-
+    console.log(user_email, user_name)
+    console.log("otp rows", rows)
     if (rows.length === 1) {
       console.log("checkOTP, check if user_email exist in database");
       const storedOTP = rows[0].otp;
@@ -1129,6 +1130,7 @@ async function checkOTP(enteredOTP, user_email, user_name) {
         return true;
       }
     }
+
     console.log("checkOTP, otp or time_start is invalid");
     db.unprepare(q);
     return false;
@@ -1187,7 +1189,7 @@ app.post("/todo_app/forgot_password", async (req, res) => {
             secure: true,
             sameSite: "none",
             path: "/",
-            domain: backend_URL,
+            //domain: backend_URL,
           }); // add domain: backend_URL if on production
           console.log("forgot_password set otp cookie ");
         } catch (error) {
@@ -1375,7 +1377,7 @@ app.post("/todo_app/verify_otp", async (req, res) => {
           secure: true,
           sameSite: "none",
           path: "/",
-          domain: backend_URL,
+          //domain: backend_URL,
         }); // add domain: backend_URL if on production
 
         response.csrf = csrfToken;
@@ -1694,7 +1696,8 @@ app.post("/todo_app/login_google", async (req, res) => {
                 process.env.SecretKey_Cryptojs_JWT
               );
               console.log("login_google, encrypt jwt.");
-
+              
+              
               res.cookie(
                 "auth_token",
                 encrypted_auth_token,
@@ -1832,7 +1835,7 @@ app.get("/todo_app/logout", async (req, res) => {
       sameSite: "none",
       httpOnly: true,
       secure: true,
-      domain: backend_URL,
+      //domain: backend_URL,
       path: "/",
       expires: new Date(0),
     });
@@ -1840,7 +1843,7 @@ app.get("/todo_app/logout", async (req, res) => {
       sameSite: "none",
       httpOnly: true,
       secure: true,
-      domain: backend_URL,
+      //domain: backend_URL,
       path: "/",
       expires: new Date(0),
     });
@@ -1877,7 +1880,7 @@ app.post("/todo_app/edit_profile", async (req, res) => {
     !verified_refresh ||
     verified_refresh.csrfToken !== csrfToken
   ) {
-    //console.log(verified_refresh)
+    
     console.log(
       "edit_profile, User is not authenticated. access or refresh or csrf token is invalid "
     );
@@ -1894,33 +1897,81 @@ app.post("/todo_app/edit_profile", async (req, res) => {
     };
 
     const action = req.body.action;
+    console.log("req.body", req.body)
+    //Start Edit username Section
     if (action === "username") {
       const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$");
       const user_name = req.body.username;
       const isRegexPass = await regexTest(username_pattern, user_name);
 
       if (isRegexPass) {
-        response.msg = "Pass a regex test!";
-        response.status = "success";
-      } else {
-        response.msg = "Please match the requested format!";
-        response.status = "fail";
-      }
-    } else if (action === "email") {
-      const email_pattern = new RegExp(
-        /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
-      );
-      const user_email = req.body.email;
-      const isRegexPass = await regexTest(email_pattern, user_email);
+        try {
+          
+        const q = "UPDATE users SET `user_name`= ? WHERE user_id = ? AND user_email = ? ";
 
-      if (isRegexPass) {
-        response.msg = "Pass a regex test!";
+      const values = [req.body.username, verified_auth.user_id, verified_auth.user_email];
+      
+      
+      console.log("updating new username");
+      const [rows] = await db.execute(q, values);
+      
+      
+      if (rows.affectedRows === 1) {
+        console.log("updated username successfully.")
+        db.unprepare(q);
         response.status = "success";
+        response.msg = "Username updated successfully.";
+        response.url = "/todo_items"
+        
+
+        const new_auth_token = jwt.sign(
+          {
+            user_id: verified_auth.user_id,
+            user_name: req.body.username,
+            user_email: verified_auth.user_email,
+          },
+          process.env.SecretKey_AccessToken,
+          { expiresIn: "15m" }
+          
+        );
+        const encrypted_auth_token = enCrypt(
+          new_auth_token,
+          process.env.SecretKey_Cryptojs_JWT
+        );
+
+        res.cookie(
+          "auth_token",
+          encrypted_auth_token,
+          access_token_cookieOptions
+        );
+        return res.json(response)
+        
       } else {
-        response.msg = "Please match the requested format!";
+        console.log("rows.affectedRows === 0 , no rows affected.")
+        db.unprepare(q);
         response.status = "fail";
+        response.msg = "Oops, there is something wrong, please try again later.";
+        return res.json(response)
       }
-    } else if (action === "password") {
+        } catch (error) {
+          response.msg = "updating username error."
+          response.status = "fail"
+          console.log("updating username error.", error)
+          return res.json(response)
+        }
+        
+      } else {
+        console.log("username doesn't pass regex test on backend.")
+        response.msg = "Oops.";
+        response.status = "fail";
+        return res.json(response)
+      }
+    } 
+    //End Edit username Section
+
+    //ต่อ change password
+    //Start Edit Password Section
+    else if (action === "password") {
       console.log("pwd function");
       const password_pattern = new RegExp(
         /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/
@@ -1951,7 +2002,9 @@ app.post("/todo_app/edit_profile", async (req, res) => {
       }
 
       return res.json(response);
-    } else {
+    } 
+    //End Edit Password Section
+    else {
       response.msg = "Bad request.";
       response.status = "fail";
       return res.json(response);

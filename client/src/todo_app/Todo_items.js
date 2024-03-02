@@ -26,7 +26,7 @@ const Todo_items = () => {
   const dispatch = useDispatch()
 
   const [username, setUsername] = useState("")
-  const [data, setData] = useState(null);
+  const [data, setData] = useState([]);
 
   const [isEditing, setEditing] = useState(false)
   const [currentTodo, setCurrentTodo] = useState(null)
@@ -36,12 +36,12 @@ const Todo_items = () => {
   const threeDotsRef = useRef([]);
 
   const [profileButton, setProfileButton] = useState(false);
-  const profileBtnRef = useRef([]);
+  
 
   
   
-  const selector_todos = useSelector(state=> state.todos)
-  console.log("selector_todos",selector_todos)
+  const selector_todos = useSelector(state=> state)
+  
 
   const [isAddModalOpen, setAddModal] = useState(false);
   const addRef = useRef();
@@ -69,7 +69,7 @@ const Todo_items = () => {
            
     const authentication = async () => {
       try {
-        console.log("check")
+        console.count("rendered")
         const res = await axios.get(`${process.env.REACT_APP_backend_URL}/authentication`, config)
         if (res.data.csrf) {
           localStorage.setItem("csrfToken", res.data.csrf)
@@ -78,19 +78,21 @@ const Todo_items = () => {
         console.log("res.data", res.data)
         dispatch(fetchTodo(data))
 
-        
+        console.log("res.data.user_name", res.data.user_name)
         if (res.data.user_name) {
           setUsername(res.data.user_name)
         }
           //if there is no todo item.
-          if(res.data.data.length === 0){
+          
+          if(Array.isArray(res.data.data) && res.data.data.length === 0){
             setError("There is no todo item.")
+            console.log("no item")
           } 
           //if there are items
           else  {
-            
             setData(res.data.data)
           } 
+          
       } catch (err) {
         if (err.response) {
           // The request was made and the server responded with a status code
@@ -189,10 +191,10 @@ const Todo_items = () => {
  
   // Delete section
   const handleClickDelete = async (todo_id) => {
-    console.log(todo_id)
+    
    
     try {
-      const res = await axios.delete(`${process.env.REACT_APP_backend_URL}/todo_app/delete_todo/`+ todo_id, config)
+      await axios.delete(`${process.env.REACT_APP_backend_URL}/todo_app/delete_todo/`+ todo_id, config)
       
       
       dispatch(removeTodo(todo_id))
@@ -200,6 +202,7 @@ const Todo_items = () => {
       setData(updatedData);
       alert("Deleted Successfully!")
 
+      
       setThreeDotsModal(false)
       setEditing(false)
       
@@ -212,11 +215,9 @@ const Todo_items = () => {
         
   }
 
-  
+  console.log("selector_todos, state",selector_todos)
 
-  const handleProfileButton = () => {
-    setProfileButton(true)
-  }
+  
  
 
   const logout = async() => {
@@ -254,7 +255,7 @@ const Todo_items = () => {
           
           <div className ="hidden absolute -left-36 bg-zinc-900 text-xl rounded-lg" style={(profileButton) ?  {display:"block"}:{}} >
             <ul className="w-44">
-            <li className="pt-2 pl-2 hover:bg-slate-700 cursor-pointer rounded-lg" ><Link to="/editprofile">Edit Profile</Link></li>
+            <Link to="/editprofile"> <li className="pt-2 pl-2 hover:bg-slate-700 cursor-pointer rounded-lg" >Edit Profile</li></Link>
             <li className="pt-2 pl-2 hover:bg-slate-700 cursor-pointer rounded-lg" onClick={()=> logout()} > Logout</li>
             </ul>
           </div>
@@ -277,7 +278,7 @@ const Todo_items = () => {
               </div>
             </div>
           : null } 
-          {data ? 
+          {data.length > 0 ? 
           <div className="items " >
             {data.map((todo , index)=> (
               
@@ -317,7 +318,7 @@ const Todo_items = () => {
         
           {isEditing &&
             (
-            <Edit currentTodo={currentTodo}  data={data}  setData={setData} setEditing={setEditing}  />
+            <Edit key={currentTodo.todo_id} currentTodo={currentTodo}  data={data}  setData={setData} setEditing={setEditing}  />
             )
             
           

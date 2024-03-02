@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AiOutlineArrowLeft } from 'react-icons/ai'
+import { useSelector } from 'react-redux'
 
 const ChangePasswordForm = ({ setIsChangePasswordOpen}) => {
   const [inputProfile, setInputProfile] = useState({action:"password", old_password:"", new_password:"", confirm_password:""})
@@ -51,7 +52,7 @@ const ChangePasswordForm = ({ setIsChangePasswordOpen}) => {
 
         
 
-        if (res.data.status == "success") {
+        if (res.data.status === "success") {
           alert(res.data.msg)
         } else {
           alert(res.data.msg)
@@ -68,12 +69,6 @@ const ChangePasswordForm = ({ setIsChangePasswordOpen}) => {
   
 }
     
-
-
-    
-
-
-
   }
   
 //ทำต่อ input height ไม่เท่ากัน
@@ -158,7 +153,74 @@ const ChangePasswordForm = ({ setIsChangePasswordOpen}) => {
 }
 
 const Username_EmailForm = ({ isChangePasswordOpen, setIsChangePasswordOpen}) => {
-  const [inputProfile, setInputProfile] = useState({username:"", email:""})
+
+  const selector_todos_username = useSelector(state=> state.todo[0]?.user_name)
+  
+  const [inputProfile, setInputProfile] = useState({action:"username",username: selector_todos_username ? selector_todos_username: "" })
+
+  const csrf = localStorage.getItem('csrfToken');
+    const customHeaders = {
+    'x-csrf-token': csrf,
+    
+  };
+  const navigate = useNavigate();
+
+
+    const config = {
+      headers: customHeaders,
+      withCredentials: true, // Set withCredentials to true
+    };
+
+
+  const regexTest = async () => {
+    // Perform your regex test here
+    
+
+    const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$")
+    
+    
+    if ( username_pattern.test(inputProfile.username)) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const handleChangeUsernameSubmit = async (e) => {
+    e.preventDefault()
+    const isRegexPass = await regexTest();
+    if (isRegexPass) {
+      
+            
+      try {
+        e.preventDefault()
+        console.log(inputProfile)
+        const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_app/edit_profile`,
+        inputProfile, config
+        );
+        console.log(res.data)
+
+        
+
+        if (res.data.status === "success" && res.data.url) {
+          alert(res.data.msg)
+          return navigate(res.data.url)
+        } else {
+          alert(res.data.msg)
+        }
+      
+      } catch (error) {
+        console.log("handleChangePasswordSubmit",error)
+        alert("There is an error!")
+
+      }
+
+} else {
+  alert("Please match the requested format!")
+  
+}
+    
+  }
 
   return (
     <>
@@ -177,12 +239,12 @@ const Username_EmailForm = ({ isChangePasswordOpen, setIsChangePasswordOpen}) =>
                           className="form-input grow"
                           id='username'
                           value={inputProfile.username}
-                          onChange={(e) => setInputProfile({username:e.target.value})}
+                          onChange={(e) => setInputProfile({...inputProfile, username:e.target.value})}
                           required
                           maxLength={20}
                           />
                           
-                          <button className='w-14 h-8 bg-sky-600 hover:bg-sky-400 mt-2  rounded font-bold'>Save</button>
+                          <button className='w-14 h-8 bg-sky-600 hover:bg-sky-400 mt-2  rounded font-bold' onClick={handleChangeUsernameSubmit}>Save</button>
                         </div>
                         
                         
@@ -212,18 +274,15 @@ const Username_EmailForm = ({ isChangePasswordOpen, setIsChangePasswordOpen}) =>
 
 
 const EditProfile = () => {
-    const navigate = useNavigate();
     
-    const [inputProfile, setInputProfile] = useState({username: "", password: "", email: ""})
-    const [isLoading, setLoading] = useState(false)
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
     
-    const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$")
-
     
 
     
-   console.log(isChangePasswordOpen)
+
+    
+
 
     return (
       <div className='m-0 flex flex-col items-center justify-center min-h-[80vh]'>

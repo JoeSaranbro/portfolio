@@ -1,4 +1,4 @@
-import { createSlice, nanoid } from "@reduxjs/toolkit"
+import { createSlice } from "@reduxjs/toolkit"
 
 const initialState = {
     todos: [],
@@ -11,34 +11,50 @@ export const todoSlice = createSlice({
     initialState,
     reducers: {
         fetchTodo: (state, action) => {
-            //console.log('state:', JSON.stringify(state.todos, null, 2));
-            // state.todos.push(action.payload)
+            
             return {
-                ...state, todos: [...state.todos, action.payload]
+                 todo: [action.payload]
             }
         },
         addTodo: (state, action) => {
-            
             return {
-                ...state, todos: [...state.todos[0].todos, action.payload]
+                
+                todo: state.todo.map(obj => ({
+                    ...obj,
+                    todos: [...obj.todos, action.payload]
+                }))
             }
-            //state.todos[0].todos.push(action.payload)
+            
         },
         updateTodo: (state, action) => {
-            
-            const findIndex = state.todos[0].todos.findIndex((obj) => obj.todo_id === action.payload.todo_id)
-            //console.log("clg from todoslice",JSON.stringify(state.todos[0].todos[findIndex], null, 2))
-            console.log("clg todo action.pay",action.payload)
-            state.todos[0].todos[findIndex] = action.payload
+            //code to see whole console.log object in state redux
+            //console.log('state.todo:', JSON.stringify(state.todo, null, 2));
+            return {
+                    todo: state.todo.map(obj => ({
+                    ...obj,
+                    todos:obj.todos.map((todo_item) => { if (todo_item.todo_id === action.payload.todo_id) {
+                        return action.payload;
+                    } else {
+                        return todo_item;
+                    }})
+                }))
+            }
+
+        
             
         },
         removeTodo: (state, action) => {
-            const findIndex = state.todos[0].todos.findIndex((obj) => obj.todo_id === action.payload)
-            console.log("action.payload", action.payload)
-
-            if (findIndex !== -1) {
-                state.todos[0].todos.splice(findIndex , 1)
-            }
+            
+            //console.log("todo ", JSON.stringify(state, null, 2))
+            return {
+                
+                todo: state.todo.map(obj => ({
+                  ...obj,
+                  todos: obj.todos.filter(todo => todo.todo_id !== action.payload),
+                })),
+              };
+            
+            
             
             
         }

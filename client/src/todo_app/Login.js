@@ -1,6 +1,6 @@
 import { useState ,useRef, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from "react-router-dom";
+
 import { useNavigate } from 'react-router-dom';
 
 
@@ -57,7 +57,7 @@ const SignUpForm = ( { refModal, isModalOpen,setModal ,setIsSignup, isSignup} ) 
 const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$")
     
 const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
-const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
+const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
 
 //<-------------------------Regex Section ----------------------------------->  
 
@@ -228,11 +228,7 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
     //<-------------------------Start Login Section ----------------------------------->
 
       // <-------------------------Start Sign in with google ----------------------------------->
-        const handleCallbackResponse = async (response) => { 
-          //console.log("qwqwqwq",response)
-
-          //console.log(response.credential)
-
+        const handleCallbackGoogleResponse = async (response) => { 
           try {
             setLoading(true)
             const res = await axios.post(
@@ -258,22 +254,25 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
           
           
         }
+        
       
+
         useEffect(() => {
       
           /* global google */
-            
             google.accounts.id.initialize({
               client_id: process.env.REACT_APP_GoogleOauthClientID,
-              callback: handleCallbackResponse
+              callback: handleCallbackGoogleResponse
             })
       
             google.accounts.id.renderButton(
-              document.getElementById("signInDiv"),
+              document.getElementById("g_id_onload"),
               { theme: "outline", size: "large"}
             );
           
-        }, [])
+        }, )
+
+        
       // <-------------------------End Sign in with google ----------------------------------->  
 
 
@@ -364,12 +363,36 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]
             <p onClick={()=> {setIsForgotPassword(true)}} className='mt-2 font-bold text-blue-500 underline underline-offset-4'>Forgot Password?</p>
           
           {/* start sign in with google button */}
-          <div id="signInDiv" className='mt-3' ></div>
           
 
-          {/* <div className="g-signin2" data-onsuccess="onSignIn"></div> */}
+          
+          {/* ต้องแก้ ขึ้น production แก้ data-login_uri*/}
+
+          
+          <div id="g_id_onload"
+            data-client_id="1076594326626-psi2cngubehu4pklo1jdqbho9ocgvcs1.apps.googleusercontent.com"
+            data-context="signin"
+            data-ux_mode="popup"
+            data-callback="handleCallbackGoogleResponse"
+            data-login_uri="http://localhost:3000"
+            data-auto_prompt="false"
+            className='pt-2'
+            >
+          </div>
+
+          <div className="g_id_signin"
+            data-type="standard"
+            data-shape="rectangular"
+            data-theme="outline"
+            data-text="signin_with"
+            data-size="large"
+            data-logo_alignment="left">
+          </div>
+          
+          
 
           {/* end sign in with google button */}
+          
           
           <div className='mt-4 flex relative'>
           <button type='submit' className='form-button-login'>
@@ -686,16 +709,12 @@ const Login = () => {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [usernameGAUTH, setUsernameGAUTH] = useState(false)
   
-  
-  
+ 
   console.count("Login count")
 
   
   
-  
-
-
-
+ 
 
    
 //<------------------------- Start Handle Click Outside Section -----------------------------------> 
@@ -767,6 +786,7 @@ const Login = () => {
       
      
         </div>
+        
         
       
 
