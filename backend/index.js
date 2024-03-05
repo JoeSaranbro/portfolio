@@ -783,12 +783,10 @@ app.post("/is-email-available", async (req, res) => {
   const q = "SELECT user_email FROM users WHERE user_email = ?";
 
   const values = req.body[0];
-  const email_pattern = new RegExp(
-    /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
-  );
+  const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/);
   const response = { emailValidation: null, isEmailAvailable: null };
 
-  if (email_pattern.test(values)) {
+  if (email_pattern.test(values) && typeof values === "string") {
     response.emailValidation = true;
   } else {
     response.emailValidation = false;
@@ -826,17 +824,32 @@ app.post("/todo_app/signup", async (req, res) => {
     /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
   );
 
-  const signupResponse = {
-    signupSuccessfully: null,
-    inputValidation: null,
+  const response = {
+    msg: null,
+    status: null,
     isEmailAvailable: null,
   };
 
+  const data = [req.body.username, req.body.password, req.body.confirm_password, req.body.email];
+  const allStrings = data.every(value => typeof value === 'string');
+
+  if (!allStrings) {
+    console.log("todo_app/signup, inputs aren't string")
+    response.isEmailAvailable = false;
+    
+    response.status = "fail";
+    response.msg = "Error!"
+    return res.json(response);
+  } 
+  
+  //check if there is already have an email in database.
   const check_email = "SELECT user_email FROM users WHERE user_email = ?";
 
   try {
     const [rows] = await db.execute(check_email, [req.body.email]);
     console.log("sign rows", rows.length);
+
+
 
     if (
       rows.length > 0 ||
@@ -845,21 +858,25 @@ app.post("/todo_app/signup", async (req, res) => {
       !email_pattern.test(req.body.email) ||
       req.body.password !== req.body.confirm_password
     ) {
-      signupResponse.isEmailAvailable = false;
-      signupResponse.inputValidation = false;
+      response.isEmailAvailable = false;
+      
+      response.status = "fail"
+      response.msg = "Please check your input again."
       db.unprepare(check_email);
       console.log("Signup failed, email is not available or input is invalid!");
-      return res.json(signupResponse);
+      return res.json(response);
     } else {
       db.unprepare(check_email);
       console.log("Input validation: Pass");
-      signupResponse.isEmailAvailable = true;
-      signupResponse.inputValidation = true;
+      response.isEmailAvailable = true;
+      
     }
   } catch (err) {
-    console.log(err);
+    console.log("todo_app/signup",err);
     db.unprepare(check_email);
-    return res.json({ error: "Internal error!" });
+    response.status = "fail"
+    response.msg = "There is an error!"
+    return res.json(response);
   }
 
   const addUser =
@@ -870,13 +887,17 @@ app.post("/todo_app/signup", async (req, res) => {
 
     const values = [req.body.username, hash, req.body.email, 0];
     const [rows] = await db.execute(addUser, values);
-    signupResponse.signupSuccessfully = true;
+    response.status = "success";
+    response.msg = "Sign up successfully!";
     db.unprepare(addUser);
-    console.log("Successfully add user!");
-    return res.json(signupResponse);
+    
+    console.log("todo_app/signup Successfully add user!");
+    return res.json(response);
   } catch (error) {
-    console.log("Failed to add user!", error);
-    return res.status(500).json("Internal error!");
+    console.log("todo_app/signup Failed to add user!", error);
+    response.status = "fail";
+    response.msg = "Oops, there is an error!";
+    return res.json(response)
   }
 });
 
@@ -892,26 +913,27 @@ app.post("/todo_app/login", async (req, res) => {
     /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
   );
 
-  const response = { status: null, inputValidation: null, msg: null };
+  const response = { status: null, msg: null };
+  if (typeof req.body.email !== "string" || typeof req.body.password !== "string") {
+    console.log("todo_app/login, inputs aren't string")
+    response.status = "fail"
+    response.msg = "Error"
+    return res.json(response)
+  } 
+
   //check if email and password pass a test
-  if (
-    email_pattern.test(req.body.email) &&
-    password_pattern.test(req.body.password)
-  ) {
-    response.inputValidation = true;
-  } else {
+  if (!email_pattern.test(req.body.email) || !password_pattern.test(req.body.password)) {
     console.log("email or password is not pass the regex test");
-    response.inputValidation = false;
     response.status = "fail";
     response.msg = "Username or Password is incorrect!";
     return res.json(response);
-  }
+  } 
 
   const query_user_info = "SELECT * FROM users WHERE user_email = ? ";
 
   try {
     const [rows] = await db.execute(query_user_info, [req.body.email]);
-
+    console.log("todo_app/login, check users from email")
     if (rows.length === 1) {
       //if there is an email in database
 
@@ -970,7 +992,7 @@ app.post("/todo_app/login", async (req, res) => {
 
             console.log("send cookie encrypted jwt");
 
-            response.status = true;
+            response.status = "success";
             response.msg = "Login Success.";
             console.log("login success");
 
@@ -1079,6 +1101,7 @@ app.post("/todo_app/login", async (req, res) => {
       }
     } else if (rows.length === 0) {
       //ถ้าuser ใส่ email หรือ password ผิด
+      console.log("todo_app/login, Username or Password is incorrect!")
       response.status = "fail";
       response.msg = "Username or Password is incorrect!";
       db.unprepare(query_user_info);
@@ -1146,14 +1169,21 @@ async function checkOTP(enteredOTP, user_email, user_name) {
 
 app.post("/todo_app/forgot_password", async (req, res) => {
   //test email pattern
-  const user_email = req.body.email;
   const user_name = req.body.username;
+  const user_email = req.body.email;
+  
 
   const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$");
   const email_pattern = new RegExp(
     /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
   );
   const response = { msg: "", status: "" };
+
+  if (typeof user_name !== "string" || typeof user_email !== "string") {
+    response.status = "fail"
+    response.msg = "error"
+    return res.json(response)
+  }
 
   try {
     //regex test username and email
@@ -1320,6 +1350,13 @@ app.post("/todo_app/verify_otp", async (req, res) => {
 
   const otp_pattern = new RegExp("^[0-9]{1,6}$");
 
+  if (typeof user_otp !== "string") {
+    response.status = "fail"
+    response.msg = "Error!"
+    response.url = "/error_page";
+    return res.json(response)
+  }
+
   //regex test user_otp
   if (otp_pattern.test(user_otp)) {
     console.log("user_otp pass a regex test");
@@ -1419,14 +1456,9 @@ app.post("/todo_app/reset_password", async (req, res) => {
   const regexTest = async () => {
     // Perform your regex test here
 
-    const password_pattern = new RegExp(
-      /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/
-    );
+    const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/);
 
-    if (
-      password_pattern.test(user_password) &&
-      user_password === user_confirm_password
-    ) {
+    if ((password_pattern.test(user_password)) && (user_password === user_confirm_password) && (typeof user_password === "string")) {
       return true;
     } else {
       return false;
@@ -1613,7 +1645,7 @@ app.post("/todo_app/login_google", async (req, res) => {
               refresh_token_cookieOptions
             );
 
-            response.status = true;
+            response.status = "success";
             response.msg = "Login successfully.";
             response.csrf = csrfToken;
             response.url = "/todo_items";
@@ -1715,7 +1747,7 @@ app.post("/todo_app/login_google", async (req, res) => {
               console.log("login_google, set cookie to user.");
 
               response.csrf = csrfToken;
-              response.status = true;
+              response.status = "success";
               response.msg = `Login successfully, Your username is ${GAUTHusername} , you can change it later.`;
               response.url = "/todo_items";
 
@@ -1859,7 +1891,9 @@ app.get("/todo_app/logout", async (req, res) => {
   }
 });
 
-//ทำต่อ edit profile
+//ทำต่อ edit profile change password
+
+
 app.post("/todo_app/edit_profile", async (req, res) => {
   let verified_auth;
   let verified_refresh;
@@ -1892,7 +1926,7 @@ app.post("/todo_app/edit_profile", async (req, res) => {
     const regexTest = async (type, data) => {
       // Perform your regex test here
       const pattern = new RegExp(type);
-      if (pattern.test(data)) {
+      if (pattern.test(data) && typeof data === "string") {
         return true;
       } else {
         return false;
@@ -1900,7 +1934,7 @@ app.post("/todo_app/edit_profile", async (req, res) => {
     };
 
     const action = req.body.action;
-    console.log("req.body", req.body)
+    
     //Start Edit username Section
     if (action === "username") {
       const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$");
@@ -1972,7 +2006,7 @@ app.post("/todo_app/edit_profile", async (req, res) => {
     } 
     //End Edit username Section
 
-    //ต่อ change password
+    
     //Start Edit Password Section
     else if (action === "password") {
       console.log("pwd function");

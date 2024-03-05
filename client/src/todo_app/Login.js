@@ -28,19 +28,19 @@ const SignUpForm = ( { refModal, isModalOpen,setModal ,setIsSignup, isSignup} ) 
       if (inputSignup.email.length > 0) {
         
         try {
-          const response = await axios.post(
+          const res = await axios.post(
             `${process.env.REACT_APP_backend_URL}/is-email-available`,
             [inputSignup.email]
           );
           
-          if (response.data.emailValidation) {
+          if (res.data.emailValidation) {
             setinputValidation((prev) => ({...prev, email: true}))
             setIsLoading((prev) => ({...prev, isEmailAvailable: false}))
           } else {
             setinputValidation((prev) => ({...prev, email: false}))
             setIsLoading((prev) => ({...prev, isEmailAvailable: false}))
           }
-          setEmailAvailable(response.data.isEmailAvailable)
+          setEmailAvailable(res.data.isEmailAvailable)
         } catch (error) {
           console.log(error)
         } 
@@ -62,11 +62,12 @@ const regexTest = async () => {
   const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
   const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
   
-  if ((typeof inputSignup.username !== "string") || (!username_pattern.test(inputSignup.username)) ) {
+  if ((typeof inputSignup.password !== "string") || (!username_pattern.test(inputSignup.username))) {
+
     setinputValidation((prev)=>({...prev,username: false}))
     passTest.push(false)
   }
-
+  
   if ((typeof inputSignup.password !== "string") || (!password_pattern.test(inputSignup.password))) {
     setinputValidation((prev)=>({...prev,password: false}))
     passTest.push(false)
@@ -81,7 +82,7 @@ const regexTest = async () => {
     setinputValidation((prev)=>({...prev,email: false}))
     passTest.push(false)
   } 
-
+  
   if (passTest.length === 0 && isEmailAvailable) {
     return true;
   } else {
@@ -108,11 +109,9 @@ const regexTest = async () => {
           inputSignup
         );
 
-        if (res.data.signupSuccessfully) {
-          alert("Signup Successfully.")
-        } else {
-          alert("Signup not Success!")
-        }
+        if (res.data.msg) {
+          alert(res.data.msg)
+        } 
         handleCloseSignUpForm()
       } catch (error) {
         alert("Something went wrong!")
@@ -268,12 +267,7 @@ const regexTest = async () => {
             setLoading(false)
             console.log("Sign in with google Error ",error)
           } 
-      
-          
-          
         }
-        
-      
 
         useEffect(() => {
       
@@ -513,18 +507,13 @@ const regexTest = async () => {
       e.preventDefault()
       const otp_pattern = new RegExp('^[0-9]+$')
       const string_otp = otp.toString().replaceAll(",","")
-      const isRegexPass = await regexTest();
+      
 
       
       console.log("string_otp",string_otp)
       
-      if (isRegexPass && otp_pattern.test(string_otp)) {
+      if ((otp_pattern.test(string_otp)) && (typeof otp === "string")) {
 
-          
-        
-          
-            //username_pattern.test(inputForgotPassword.username) ? setinputValidation((prev)=>({...prev,username: true})) : setinputValidation((prev)=>({...prev,username: false}))
-            //email_pattern.test(inputForgotPassword.email) ? setinputValidation((prev)=>({...prev,email: true})) : setinputValidation((prev)=>({...prev,email: false}))
             
             try {
                 
