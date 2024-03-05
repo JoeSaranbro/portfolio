@@ -18,10 +18,10 @@ app.use(cookieParser());
 const client = new OAuth2Client();
 
 const db = await mysql2.createConnection({
-  host: process.env.MYSQL_deploy_HOST,
-  user: process.env.MYSQL_deploy_USER,
-  password: process.env.MYSQL_deploy_PASSWORD,
-  database: process.env.MYSQL_deploy_DATABASE,
+  host: process.env.MYSQL_HOST,
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE,
   waitForConnections: true,
   connectionLimit: 10,
   maxIdle: 10, // max idle connections, the default value is the same as `connectionLimit`
@@ -657,10 +657,12 @@ app.put("/todo_app/update_todo/:todo_id", async (req, res) => {
       const [rows] = await db.execute(fetchSpecificTodo, [req.params.todo_id]);
       //check if todo's user_id and authToken user_id is match?
       
-      if (rows[0].user_id !== verified_auth.user_id) {
-        console.log("You're not allowed to update!");
+      
+      console.log(typeof rows[0].user_id , typeof verified_auth.user_id)
+      if (rows[0].user_id != verified_auth.user_id) {
+        console.log("update_todo,You're not allowed to update!");
         db.unprepare(fetchSpecificTodo);
-        response.status = "fail";
+        response.status = "fail"; 
         response.msg = "You're not allowed to update!"
         return res.status(400).json(response);
       }
@@ -743,7 +745,7 @@ app.delete("/todo_app/delete_todo/:todo_id", async (req, res) => {
       const [query_rows] = await db.execute(fetchSpecificTodo, [req.params.todo_id]);
       //check if payload user_id and authToken user_id is match?
 
-      if (query_rows[0].user_id !== verified_auth.user_id) {
+      if (query_rows[0].user_id != verified_auth.user_id) {
         console.log("You're not allowed to delete!");
         db.unprepare(fetchSpecificTodo);
         response.msg = "You're not authenticated!"
@@ -834,7 +836,7 @@ app.post("/todo_app/signup", async (req, res) => {
 
   try {
     const [rows] = await db.execute(check_email, [req.body.email]);
-    console.log("song rows", rows.length);
+    console.log("sign rows", rows.length);
 
     if (
       rows.length > 0 ||
@@ -917,6 +919,7 @@ app.post("/todo_app/login", async (req, res) => {
         if (await argon2.verify(rows[0].user_password, req.body.password)) {
           //Password does match
           //if user email has verified
+          console.log("user_verification", rows[0].user_verification)
           if (rows[0].user_verification === 1) {
             console.log("user email has verified");
 

@@ -24,11 +24,13 @@ const ChangePasswordForm = ({ setIsChangePasswordOpen}) => {
   const regexTest = async () => {
     // Perform your regex test here
     
-
+    //ต่อ
     const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
     
     
-    if ( password_pattern.test(inputProfile.old_password) && password_pattern.test(inputProfile.new_password) ) {
+    if ((password_pattern.test(inputProfile.old_password)) && 
+    (password_pattern.test(inputProfile.new_password)) &&
+    (typeof inputProfile.old_password === "string" && typeof inputProfile.new_password === "string")) {
       return true;
     } else {
       return false;
@@ -179,7 +181,7 @@ const Username_EmailForm = ({ isChangePasswordOpen, setIsChangePasswordOpen}) =>
     const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$")
     
     
-    if ( username_pattern.test(inputProfile.username)) {
+    if ((username_pattern.test(inputProfile.username)) && (typeof inputProfile.username === "string")) {
       return true;
     } else {
       return false;

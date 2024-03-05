@@ -16,7 +16,9 @@ const ResetPassword = () => {
         const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
         
         
-        if ( password_pattern.test(inputResetPassword.password) &&  inputResetPassword.password === inputResetPassword.confirm_password) {
+        if ((password_pattern.test(inputResetPassword.password)) &&
+         (inputResetPassword.password === inputResetPassword.confirm_password) &&
+         (typeof inputResetPassword.password === "string" && typeof inputResetPassword.password === "string" )) {
           return true;
         } else {
           return false;

@@ -54,10 +54,42 @@ const SignUpForm = ( { refModal, isModalOpen,setModal ,setIsSignup, isSignup} ) 
   
 
 //<-------------------------Regex Section ----------------------------------->
-const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$")
-    
-const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
-const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
+
+const regexTest = async () => {
+  // Perform your regex test here
+  const passTest = []
+  const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$")
+  const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
+  const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
+  
+  if ((typeof inputSignup.username !== "string") || (!username_pattern.test(inputSignup.username)) ) {
+    setinputValidation((prev)=>({...prev,username: false}))
+    passTest.push(false)
+  }
+
+  if ((typeof inputSignup.password !== "string") || (!password_pattern.test(inputSignup.password))) {
+    setinputValidation((prev)=>({...prev,password: false}))
+    passTest.push(false)
+  } 
+
+  if ((inputSignup.password !== inputSignup.confirm_password)) {
+    setinputValidation((prev)=>({...prev,confirm_password: false}));
+    passTest.push(false)
+  }
+
+  if ((typeof inputSignup.email !== "string") || (!email_pattern.test(inputSignup.email))) {
+    setinputValidation((prev)=>({...prev,email: false}))
+    passTest.push(false)
+  } 
+
+  if (passTest.length === 0 && isEmailAvailable) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+
 
 //<-------------------------Regex Section ----------------------------------->  
 
@@ -65,24 +97,16 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+=?^_`{|}~-]+@[a-zA-Z0-9](?
   const handleSignupSubmit = async (e) => {
     e.preventDefault()
 
-
-    username_pattern.test(inputSignup.username) ? setinputValidation((prev)=>({...prev,username: true})) : setinputValidation((prev)=>({...prev,username: false}))
+    const regex_result = await regexTest()
     
-    password_pattern.test(inputSignup.password) ? setinputValidation((prev)=>({...prev,password: true})) : setinputValidation((prev)=>({...prev,password: false}))
 
-    email_pattern.test(inputSignup.email) ? setinputValidation((prev)=>({...prev,email: true})) : setinputValidation((prev)=>({...prev,email: false}))
-    
-    inputSignup.password !== inputSignup.confirm_password ? setinputValidation((prev)=>({...prev,confirm_password: false})) : setinputValidation((prev)=>({...prev,confirm_password: true}))
-
-    if ( (username_pattern.test(inputSignup.username)&& password_pattern.test(inputSignup.password)) && isEmailAvailable === true && isLoading.isEmailAvailable === false) {
-      
+    if (regex_result) {
+      console.log("sent")
       try {
         e.preventDefault()
         const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_app/signup`,
           inputSignup
         );
-
-        
 
         if (res.data.signupSuccessfully) {
           alert("Signup Successfully.")
@@ -101,12 +125,6 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+=?^_`{|}~-]+@[a-zA-Z0-9](?
     
   }
   
-
-
-  
-  
-  
-  ///////
   
     const handleCloseSignUpForm = () => {
       setModal(false);
@@ -444,7 +462,9 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+=?^_`{|}~-]+@[a-zA-Z0-9](?
       const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$");
       const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
       
-      if ( username_pattern.test(inputForgotPassword.username) && email_pattern.test(inputForgotPassword.email) ) {
+      if ((username_pattern.test(inputForgotPassword.username)) && 
+      (email_pattern.test(inputForgotPassword.email)) && 
+      (typeof inputForgotPassword.email === "string" && typeof inputForgotPassword.username === "string" )) {
         return true;
       } else {
         return false;
@@ -469,7 +489,7 @@ const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+=?^_`{|}~-]+@[a-zA-Z0-9](?
 
               setLoading(false);
 
-              if (res.data.status == "success") {
+              if (res.data.status === "success") {
                 alert(res.data.msg)
                 setStep("2")
               } else {
