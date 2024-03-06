@@ -13,7 +13,7 @@ const ChangePasswordForm = ({ setIsChangePasswordOpen}) => {
     'x-csrf-token': csrf,
     
   };
-
+  const navigate = useNavigate();
 
     const config = {
       headers: customHeaders,
@@ -28,9 +28,7 @@ const ChangePasswordForm = ({ setIsChangePasswordOpen}) => {
     const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
     
     
-    if ((password_pattern.test(inputProfile.old_password)) && 
-    (password_pattern.test(inputProfile.new_password)) &&
-    (typeof inputProfile.old_password === "string" && typeof inputProfile.new_password === "string")) {
+    if ((password_pattern.test(inputProfile.old_password)) && (password_pattern.test(inputProfile.new_password))) {
       return true;
     } else {
       return false;
@@ -41,9 +39,12 @@ const ChangePasswordForm = ({ setIsChangePasswordOpen}) => {
   const handleChangePasswordSubmit = async (e) => {
     e.preventDefault()
     const isRegexPass = await regexTest();
-    if (isRegexPass) {
-      
-            
+    if ((isRegexPass) &&  (inputProfile.new_password === inputProfile.confirm_password)) {
+
+        if (inputProfile.old_password === inputProfile.new_password) {
+          return alert("New password can't be the same as your old password.")
+        }
+        
       try {
         e.preventDefault()
         console.log(inputProfile)
@@ -51,25 +52,29 @@ const ChangePasswordForm = ({ setIsChangePasswordOpen}) => {
         inputProfile, config
         );
         console.log(res.data)
-
-        
-
-        if (res.data.status === "success") {
+        //กรณี update password success จะredirectไปที่ login
+        if (res.data.status === "success" && res.data.url) {
           alert(res.data.msg)
-        } else {
+          return navigate(res.data.url)
+        }
+        //กรณี update password fail อาจจะ auth token หมดอายุพอดี จะredirectไปที่ todo_items เพื่อรับ auth token ใหม่
+        else if (res.data.status === "fail" && res.data.url) {
+          alert(res.data.msg)
+          return navigate(res.data.url)
+        }
+        //กรณี old password ผิด, ไม่ต้อง redirect แค่แสดง alertแล้วให้กรอกpasswordใหม่
+        else if(res.data.msg) {
           alert(res.data.msg)
         }
-      
+        
       } catch (error) {
         console.log("handleChangePasswordSubmit",error)
         alert("There is an error!")
-
       }
 
-} else {
-  alert("Please match the requested format!")
-  
-}
+    } else {
+      alert("Please match the requested format!")
+    }
     
   }
   
@@ -154,7 +159,7 @@ const ChangePasswordForm = ({ setIsChangePasswordOpen}) => {
   )
 }
 
-const Username_EmailForm = ({ isChangePasswordOpen, setIsChangePasswordOpen}) => {
+const UnameEmailForm = ({ isChangePasswordOpen, setIsChangePasswordOpen}) => {
 
   const selector_todos_username = useSelector(state=> state.todo[0]?.user_name)
   
@@ -181,7 +186,7 @@ const Username_EmailForm = ({ isChangePasswordOpen, setIsChangePasswordOpen}) =>
     const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$")
     
     
-    if ((username_pattern.test(inputProfile.username)) && (typeof inputProfile.username === "string")) {
+    if ((username_pattern.test(inputProfile.username))) {
       return true;
     } else {
       return false;
@@ -278,18 +283,11 @@ const Username_EmailForm = ({ isChangePasswordOpen, setIsChangePasswordOpen}) =>
 const EditProfile = () => {
     
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
-    
-    
-
-    
-
-    
-
 
     return (
       <div className='m-0 flex flex-col items-center justify-center min-h-[80vh]'>
-        {/* {(!isChangePasswordOpen) && (<Username_EmailForm isChangePasswordOpen={isChangePasswordOpen} setIsChangePasswordOpen={setIsChangePasswordOpen} />)} */}
-        {(isChangePasswordOpen ? (<ChangePasswordForm setIsChangePasswordOpen={setIsChangePasswordOpen} />): (<Username_EmailForm isChangePasswordOpen={isChangePasswordOpen} setIsChangePasswordOpen={setIsChangePasswordOpen} />) )}
+        {/* {(!isChangePasswordOpen) && (<UnameEmailForm isChangePasswordOpen={isChangePasswordOpen} setIsChangePasswordOpen={setIsChangePasswordOpen} />)} */}
+        {(isChangePasswordOpen ? (<ChangePasswordForm setIsChangePasswordOpen={setIsChangePasswordOpen} />): (<UnameEmailForm isChangePasswordOpen={isChangePasswordOpen} setIsChangePasswordOpen={setIsChangePasswordOpen} />) )}
         
 
     </div>

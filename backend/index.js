@@ -589,7 +589,7 @@ app.post("/todo_app/add_todo", async (req, res) => {
   }
 
   //add new todo item
-  //Note insert into จะต่างจากคำสั่งอื่นในการใช้ execute, ตรง values ต้องเอา [] ออก
+  
   const addTodo =
     "INSERT INTO todo_item (`title`,`details`, date_start, date_end,`user_id`) VALUES (?,?,?,?,?)";
   try {
@@ -1500,8 +1500,7 @@ app.post("/todo_app/reset_password", async (req, res) => {
       const hashed_password = await argon2.hash(user_password);
       console.log("reset_password hashing the password");
 
-      const q =
-        "UPDATE users SET `user_password`= ? WHERE user_name = ? AND user_email = ? ";
+      const q = "UPDATE users SET `user_password`= ? WHERE user_name = ? AND user_email = ? ";
 
       const values = [hashed_password, decoded.user_name, decoded.user_email];
 
@@ -1559,12 +1558,6 @@ app.post("/todo_app/login_google", async (req, res) => {
             //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
           });
           const payload = ticket.getPayload();
-          //const userid = payload['sub'];
-          // If request specified a G Suite domain:
-          // const domain = payload['hd'];
-
-          // all user's data that google give
-          // console.log("payload ",payload)
           console.log("gmail is valid");
           const response_verifyingEmailinDatabase =
             await verifyingEmailinDatabase(payload);
@@ -1907,21 +1900,20 @@ app.post("/todo_app/edit_profile", async (req, res) => {
     );
   } catch (error) {
     console.log("edit_profile, verifyTokens error", error);
-    return res.status(400).json("Bad request!");
+    response.status = "fail"
+    response.msg = "You're not authenticated, click to refresh the page or try to login again."
+    response.url = "/todo_items"
+    return res.json(response)
   }
 
   const csrfToken = req.headers["x-csrf-token"];
 
-  if (
-    !verified_auth ||
-    !verified_refresh ||
-    verified_refresh.csrfToken !== csrfToken
-  ) {
-    
-    console.log(
-      "edit_profile, User is not authenticated. access or refresh or csrf token is invalid "
-    );
-    return res.status(401).json("You're not authenticated!");
+  if (!verified_auth || !verified_refresh || verified_refresh.csrfToken !== csrfToken) {
+    console.log("edit_profile, User is not authenticated. access or refresh or csrf token is invalid ");
+    response.status = "fail"
+    response.msg = "You're not authenticated, click to refresh the page or try to login again."
+    response.url = "/todo_items"
+    return res.json(response)
   } else {
     const regexTest = async (type, data) => {
       // Perform your regex test here
@@ -1935,7 +1927,7 @@ app.post("/todo_app/edit_profile", async (req, res) => {
 
     const action = req.body.action;
     
-    //Start Edit username Section
+    //Start Edit Profile username Section
     if (action === "username") {
       const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$");
       const user_name = req.body.username;
@@ -1949,20 +1941,19 @@ app.post("/todo_app/edit_profile", async (req, res) => {
       const values = [req.body.username, verified_auth.user_id, verified_auth.user_email];
       
       
-      console.log("updating new username");
+      console.log("edit_profile - change username, updating new username");
       const [rows] = await db.execute(q, values);
       
       
       if (rows.affectedRows === 1) {
-        console.log("updated username successfully.")
+        console.log("edit_profile - change username, updated username successfully.")
         db.unprepare(q);
         response.status = "success";
         response.msg = "Username updated successfully.";
         response.url = "/todo_items"
         
 
-        const new_auth_token = jwt.sign(
-          {
+        const new_auth_token = jwt.sign({
             user_id: verified_auth.user_id,
             user_name: req.body.username,
             user_email: verified_auth.user_email,
@@ -1984,7 +1975,7 @@ app.post("/todo_app/edit_profile", async (req, res) => {
         return res.json(response)
         
       } else {
-        console.log("rows.affectedRows === 0 , no rows affected.")
+        console.log("edit_profile - change username, rows.affectedRows === 0 , no rows affected.")
         db.unprepare(q);
         response.status = "fail";
         response.msg = "Oops, there is something wrong, please try again later.";
@@ -1993,52 +1984,96 @@ app.post("/todo_app/edit_profile", async (req, res) => {
         } catch (error) {
           response.msg = "updating username error."
           response.status = "fail"
-          console.log("updating username error.", error)
+          console.log("edit_profile - change username, updating username error.", error)
           return res.json(response)
         }
         
       } else {
-        console.log("username doesn't pass regex test on backend.")
+        console.log("edit_profile - change username, username doesn't pass regex test on backend.")
         response.msg = "Oops.";
         response.status = "fail";
         return res.json(response)
       }
     } 
-    //End Edit username Section
+    //End Edit Profile username Section
 
     
-    //Start Edit Password Section
+    //Start Edit Profile password Section
     else if (action === "password") {
-      console.log("pwd function");
-      const password_pattern = new RegExp(
-        /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/
-      );
-      const old_password = req.body.old_password;
+      try {
+      console.log("edit profile change password started")
+      const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/);
+      const old_password = req.body.old_password;;
       const new_password = req.body.new_password;
       const confirm_password = req.body.confirm_password;
 
-      const isOldPWD_RegexPass = await regexTest(
-        password_pattern,
-        old_password
-      );
-      const isNewPWD_RegexPass = await regexTest(
-        password_pattern,
-        new_password
-      );
-
-      if (
-        isOldPWD_RegexPass &&
-        isNewPWD_RegexPass &&
-        confirm_password === new_password
-      ) {
-        response.msg = "Pass a regex test!";
-        response.status = "success";
+      const isOldPWD_RegexPass = await regexTest(password_pattern,old_password);
+      const isNewPWD_RegexPass = await regexTest(password_pattern,new_password);
+      
+      if ((isOldPWD_RegexPass) && (isNewPWD_RegexPass) && (confirm_password === new_password) && (old_password !== new_password)) {
+        
+        //check if old password is correct
+        const q = "SELECT * FROM users WHERE user_id = ? ";
+        const [rows] = await db.execute(q, [verified_auth.user_id]);
+        console.log("edit profile change password, inputs pass a test")
+        console.log(rows[0].user_password, old_password)
+        //ต่อ decrypt password rows[0].user_password
+        //old password === null, reject it
+        if (rows[0].user_password === null) {
+          console.log("edit_profile - change password ,user_password === null, user logged in with google but try to change a password")
+          response.msg = "You logged in with sign in with google, you can't change a password."
+          response.status = "fail"
+          db.unprepare(q);
+          return res.json(response)
+        } 
+        // if old password correct
+        
+        else if (rows[0].user_password === old_password) {
+          
+          const update = "UPDATE users SET `user_password`= ? WHERE user_id = ?";
+          const [update_rows] = await db.execute(update, new_password, [verified_auth.user_id]);
+          if (update_rows.affectedRows === 1) {
+            console.log("edit_profile - change password, Updated password successfully")
+            response.msg = "Updated password successfully, you need to login again."
+            response.status = "success"
+            response.url = "/login"
+            db.unprepare(q);
+            db.unprepare(update);
+            return res.json(response)
+          } else {
+            console.log("edit_profile - change password, Updated password fail")
+            response.msg = "Updated fail, please try again later."
+            response.status = "fail"
+            db.unprepare(q);
+            db.unprepare(update);
+            return res.json(response)
+          }
+        } 
+        //if old password is not correct
+        else {
+          db.unprepare(q)
+          console.log("if old password is not correct")
+          response.msg = "Updated fail, please check your old password."
+          response.status = "fail"
+          return res.json(response)
+        } 
+        
       } else {
+        console.log("edit profile change password, inputs doesn't pass a test")
         response.msg = "Please match the requested format!";
         response.status = "fail";
+        return res.json(response);
       }
 
-      return res.json(response);
+      
+
+      } catch (error) {
+        console.log("edit_profile - change password error", error)
+        response.status = "fail"
+        response.msg = "Oops, there is an error!"
+        return res.json(response)
+      }
+      
     } 
     //End Edit Password Section
     else {

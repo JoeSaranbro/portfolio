@@ -62,13 +62,13 @@ const regexTest = async () => {
   const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
   const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
   
-  if ((typeof inputSignup.password !== "string") || (!username_pattern.test(inputSignup.username))) {
+  if ((!username_pattern.test(inputSignup.username))) {
 
     setinputValidation((prev)=>({...prev,username: false}))
     passTest.push(false)
   }
   
-  if ((typeof inputSignup.password !== "string") || (!password_pattern.test(inputSignup.password))) {
+  if ((!password_pattern.test(inputSignup.password))) {
     setinputValidation((prev)=>({...prev,password: false}))
     passTest.push(false)
   } 
@@ -78,7 +78,7 @@ const regexTest = async () => {
     passTest.push(false)
   }
 
-  if ((typeof inputSignup.email !== "string") || (!email_pattern.test(inputSignup.email))) {
+  if ((!email_pattern.test(inputSignup.email))) {
     setinputValidation((prev)=>({...prev,email: false}))
     passTest.push(false)
   } 
@@ -456,9 +456,7 @@ const regexTest = async () => {
       const username_pattern = new RegExp("^[a-zA-Z0-9_]{8,20}$");
       const email_pattern = new RegExp(/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/)
       
-      if ((username_pattern.test(inputForgotPassword.username)) && 
-      (email_pattern.test(inputForgotPassword.email)) && 
-      (typeof inputForgotPassword.email === "string" && typeof inputForgotPassword.username === "string" )) {
+      if ((username_pattern.test(inputForgotPassword.username)) && (email_pattern.test(inputForgotPassword.email))) {
         return true;
       } else {
         return false;
@@ -512,7 +510,7 @@ const regexTest = async () => {
       
       console.log("string_otp",string_otp)
       
-      if ((otp_pattern.test(string_otp)) && (typeof otp === "string")) {
+      if ((otp_pattern.test(string_otp))) {
 
             
             try {
