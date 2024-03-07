@@ -93,7 +93,7 @@ const Edit = ({ currentTodo , data, setData , setEditing}) => {
         
       } catch (error) {
         
-        console.log(error)
+        console.log("update err", error)
         
         alert("There is an error, please refresh the page!")
       }

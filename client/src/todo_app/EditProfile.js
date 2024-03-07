@@ -24,7 +24,7 @@ const ChangePasswordForm = ({ setIsChangePasswordOpen}) => {
   const regexTest = async () => {
     // Perform your regex test here
     
-    //ต่อ
+    
     const password_pattern = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,20}$/)
     
     
@@ -78,7 +78,7 @@ const ChangePasswordForm = ({ setIsChangePasswordOpen}) => {
     
   }
   
-//ทำต่อ input height ไม่เท่ากัน
+
   return(
         <>
           <form>
@@ -161,10 +161,11 @@ const ChangePasswordForm = ({ setIsChangePasswordOpen}) => {
 
 const UnameEmailForm = ({ isChangePasswordOpen, setIsChangePasswordOpen}) => {
 
-  const selector_todos_username = useSelector(state=> state.todo[0]?.user_name)
+  const selector_todos_username = useSelector(state=> state.todo?.[0]?.user_name)
+  
   
   const [inputProfile, setInputProfile] = useState({action:"username",username: selector_todos_username ? selector_todos_username: "" })
-
+  
   const csrf = localStorage.getItem('csrfToken');
     const customHeaders = {
     'x-csrf-token': csrf,

@@ -42,7 +42,7 @@ const SignUpForm = ( { refModal, isModalOpen,setModal ,setIsSignup, isSignup} ) 
           }
           setEmailAvailable(res.data.isEmailAvailable)
         } catch (error) {
-          console.log(error)
+          console.log("check email available error", error)
         } 
       }
     }, 1000);
@@ -102,7 +102,7 @@ const regexTest = async () => {
     
 
     if (regex_result) {
-      console.log("sent")
+      
       try {
         e.preventDefault()
         const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_app/signup`,
@@ -115,7 +115,7 @@ const regexTest = async () => {
         handleCloseSignUpForm()
       } catch (error) {
         alert("Something went wrong!")
-        console.log(error)
+        console.log("sign up submit error", error)
       }
     } else {
       alert("Please match the requested format!")
@@ -255,9 +255,7 @@ const regexTest = async () => {
 
             localStorage.setItem("csrfToken", res.data.csrf)
             setLoading(false)
-            console.log("res.data",res.data)
             alert(res.data.msg)
-
             if (res.data.url) {
               return navigate(res.data.url)
             } 
@@ -299,9 +297,7 @@ const regexTest = async () => {
       );
       localStorage.setItem("csrfToken", res.data.csrf)
       setLoading(false)
-      console.log("res.data",res.data)
       alert(res.data.msg)
-
       if (res.data.url) {
         return navigate(res.data.url)
       }
@@ -327,7 +323,7 @@ const regexTest = async () => {
     setInputLogin({email:"a@b.com", password:"Testid1234"})
   }
 
-  console.log("inputlogin",inputLogin)
+  
   
 //<-------------------------End Login Section ----------------------------------->
 
@@ -477,7 +473,7 @@ const regexTest = async () => {
               const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_app/forgot_password`,
               inputForgotPassword, {withCredentials: true}
               );
-              console.log(res.data)
+              
 
               setLoading(false);
 
@@ -508,7 +504,7 @@ const regexTest = async () => {
       
 
       
-      console.log("string_otp",string_otp)
+      
       
       if ((otp_pattern.test(string_otp))) {
 
@@ -532,7 +528,7 @@ const regexTest = async () => {
               
             
             } catch (error) {
-              console.log("ForgotPasswordSubmit",error)
+              console.log("ForgotPasswordSubmit error",error)
               alert("There is an error!")
 
             }

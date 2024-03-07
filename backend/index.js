@@ -1052,6 +1052,7 @@ app.post("/todo_app/login", async (req, res) => {
               const htmlContent = await readHTMLFile();
 
               //Note If on production, we will use dynamic email which is rows[0].user_email in "to:" below
+              //Note 2, If on Test server, don't forget to change https to http.
               const mailOptions = {
                 from: "u6111011940013@gmail.com",
                 to: rows[0].user_email,
@@ -1884,7 +1885,7 @@ app.get("/todo_app/logout", async (req, res) => {
   }
 });
 
-//ทำต่อ edit profile change password
+
 
 
 app.post("/todo_app/edit_profile", async (req, res) => {
@@ -2009,30 +2010,30 @@ app.post("/todo_app/edit_profile", async (req, res) => {
 
       const isOldPWD_RegexPass = await regexTest(password_pattern,old_password);
       const isNewPWD_RegexPass = await regexTest(password_pattern,new_password);
-      
+
+      //check if all inputs is valid
       if ((isOldPWD_RegexPass) && (isNewPWD_RegexPass) && (confirm_password === new_password) && (old_password !== new_password)) {
-        
-        //check if old password is correct
+        console.log("edit profile change password, inputs is valid")
         const q = "SELECT * FROM users WHERE user_id = ? ";
         const [rows] = await db.execute(q, [verified_auth.user_id]);
-        console.log("edit profile change password, inputs pass a test")
-        console.log(rows[0].user_password, old_password)
-        //ต่อ decrypt password rows[0].user_password
-        //old password === null, reject it
+        
         if (rows[0].user_password === null) {
+          //if user try to change password but they logged in by sign in with google
           console.log("edit_profile - change password ,user_password === null, user logged in with google but try to change a password")
           response.msg = "You logged in with sign in with google, you can't change a password."
           response.status = "fail"
           db.unprepare(q);
           return res.json(response)
-        } 
-        // if old password correct
-        
-        else if (rows[0].user_password === old_password) {
-          
-          const update = "UPDATE users SET `user_password`= ? WHERE user_id = ?";
-          const [update_rows] = await db.execute(update, new_password, [verified_auth.user_id]);
+        } else if (await argon2.verify(rows[0].user_password, old_password)) {
+          //if old password matches
+          console.log("updating new password")
+          const hashed_password = await argon2.hash(new_password);
+          const update = "UPDATE users SET `user_password` = ? WHERE `user_id` = ? ";
+          //if mysql errno 1835, Malformed communication packet, it's because sending more than two params on db.execute
+          // to fix, combine value into single array like below.
+          const [update_rows] = await db.execute(update, [hashed_password, verified_auth.user_id]);
           if (update_rows.affectedRows === 1) {
+            //if update success
             console.log("edit_profile - change password, Updated password successfully")
             response.msg = "Updated password successfully, you need to login again."
             response.status = "success"
@@ -2040,7 +2041,9 @@ app.post("/todo_app/edit_profile", async (req, res) => {
             db.unprepare(q);
             db.unprepare(update);
             return res.json(response)
-          } else {
+          } 
+          //if update is not success
+          else {
             console.log("edit_profile - change password, Updated password fail")
             response.msg = "Updated fail, please try again later."
             response.status = "fail"
@@ -2048,25 +2051,24 @@ app.post("/todo_app/edit_profile", async (req, res) => {
             db.unprepare(update);
             return res.json(response)
           }
-        } 
-        //if old password is not correct
-        else {
+
+        } else {
+          //if old password doesn't match
           db.unprepare(q)
           console.log("if old password is not correct")
           response.msg = "Updated fail, please check your old password."
           response.status = "fail"
           return res.json(response)
-        } 
+        }
         
-      } else {
+      }
+      //if inputs don't pass a test or pwd !== confirm pwd
+      else {
         console.log("edit profile change password, inputs doesn't pass a test")
         response.msg = "Please match the requested format!";
         response.status = "fail";
         return res.json(response);
       }
-
-      
-
       } catch (error) {
         console.log("edit_profile - change password error", error)
         response.status = "fail"

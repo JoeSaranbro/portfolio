@@ -40,7 +40,7 @@ const Todo_items = () => {
 
   
   
-  const selector_todos = useSelector(state=> state)
+  
   
 
   const [isAddModalOpen, setAddModal] = useState(false);
@@ -75,10 +75,10 @@ const Todo_items = () => {
           localStorage.setItem("csrfToken", res.data.csrf)
         }
         const data = {user_name: res.data.user_name, todos:res.data.data}
-        console.log("res.data", res.data)
+        //console.log("res.data", res.data)
         dispatch(fetchTodo(data))
 
-        console.log("res.data.user_name", res.data.user_name)
+        
         if (res.data.user_name) {
           setUsername(res.data.user_name)
         }
@@ -86,7 +86,6 @@ const Todo_items = () => {
           
           if(Array.isArray(res.data.data) && res.data.data.length === 0){
             setError("There is no todo item.")
-            console.log("no item")
           } 
           //if there are items
           else  {
@@ -102,7 +101,7 @@ const Todo_items = () => {
             alert("You're not authenticated!")
             navigate("/login")
           } else {
-            console.log("bad request")
+            //console.log("bad request")
             setError(err.code)
           }
         } else if (err.request) {
@@ -201,7 +200,7 @@ const Todo_items = () => {
       const updatedData = data.filter(item => item.todo_id !== todo_id);
       setData(updatedData);
       alert("Deleted Successfully!")
-
+      
       
       setThreeDotsModal(false)
       setEditing(false)
@@ -214,8 +213,9 @@ const Todo_items = () => {
     }
         
   }
+  
 
-  console.log("selector_todos, state",selector_todos)
+  //console.log("selector_todos, state",selector_todos)
 
   
  

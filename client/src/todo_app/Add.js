@@ -18,7 +18,7 @@ const Add = ({  setData, isAddModalOpen, setAddModal, addRef, setError}) => {
   const [userInput , setUserInput] = useState({title: "", details: "", date_start: null, date_end: null})
   const dispatch = useDispatch()
 
-  console.log(userInput)
+  
   const handleInputOnchange = (e) => {
     setUserInput((prev)=> ({...prev , [e.target.name]: e.target.value}))
     
@@ -58,8 +58,7 @@ const config = {
           const res = await axios.post(`${process.env.REACT_APP_backend_URL}/todo_app/add_todo`, data, config);
           
           const newSortedData = {todo_id: res.data, ...data}
-          console.log("res.data", res.data)
-          console.log("newSortedData", newSortedData)
+          
           if(res.data){
             
             dispatch(addTodo(newSortedData))
@@ -72,7 +71,7 @@ const config = {
           }
           setAddModal(false);
         } catch (err) {
-          console.log(err);
+          console.log("add err", err);
           alert("Failed to add item!")
           setAddModal(false);
           //setUserInput(initialTodoInput)
