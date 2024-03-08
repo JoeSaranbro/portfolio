@@ -10,13 +10,13 @@ import nodemailer from "nodemailer";
 import fs from "fs-extra";
 
 import { OAuth2Client } from "google-auth-library";
-
+console.log("first line")
 dotenv.config();
 const app = express();
 app.use(cookieParser());
 
 const client = new OAuth2Client();
-
+console.log("before db")
 const db = await mysql2.createConnection({
   host: process.env.MYSQL_HOST,
   user: process.env.MYSQL_USER,
