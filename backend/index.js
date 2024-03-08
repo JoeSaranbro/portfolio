@@ -15,6 +15,11 @@ dotenv.config();
 const app = express();
 app.use(cookieParser());
 
+console.log(process.env.MYSQL_HOST)
+console.log(process.env.MYSQL_USER)
+console.log(process.env.MYSQL_PASSWORD)
+console.log(process.env.MYSQL_DATABASE)
+
 const client = new OAuth2Client();
 console.log("before db")
 const db = await mysql2.createConnection({
