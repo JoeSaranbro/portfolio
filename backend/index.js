@@ -15,10 +15,7 @@ dotenv.config();
 const app = express();
 app.use(cookieParser());
 
-console.log(process.env.MYSQL_HOST)
-console.log(process.env.MYSQL_USER)
-console.log(process.env.MYSQL_PASSWORD)
-console.log(process.env.MYSQL_DATABASE)
+
 
 const client = new OAuth2Client();
 console.log("before db")
@@ -34,10 +31,10 @@ const db = await mysql2.createConnection({
   queueLimit: 0,
 });
 
-const aa = 5;
+
 
 //If there is a auth problem
-//ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'P0rtf0li0';
+
 
 app.use(express.json());
 
@@ -111,7 +108,7 @@ const access_token_cookieOptions = {
   maxAge: 365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)
   httpOnly: true, // prevent client-side scripts from accessing the cookie
   //secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
-  //sameSite: 'none', // restrict cross-site usage of cookie, if you're using localhost http, don't use this line of code.
+  sameSite: 'none', // restrict cross-site usage of cookie, if you're using localhost http, don't use this line of code.
   //domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
   path: "/",
 };
@@ -120,7 +117,7 @@ const refresh_token_cookieOptions = {
   maxAge: 365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)
   httpOnly: true, // prevent client-side scripts from accessing the cookie
   //secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
-  //sameSite: 'none', // restrict cross-site usage of cookie, if you're using localhost http, don't use this line of code.
+  sameSite: 'none', // restrict cross-site usage of cookie, if you're using localhost http, don't use this line of code.
   //domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
   path: "/",
 };
