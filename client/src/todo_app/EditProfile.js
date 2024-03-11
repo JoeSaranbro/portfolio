@@ -77,7 +77,6 @@ const ChangePasswordForm = ({ setIsChangePasswordOpen}) => {
     }
     
   }
-  
 
   return(
         <>

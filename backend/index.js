@@ -107,18 +107,18 @@ function generateRandomString() {
 const access_token_cookieOptions = {
   maxAge: 365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)
   httpOnly: true, // prevent client-side scripts from accessing the cookie
-  //secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
+  secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
   sameSite: 'none', // restrict cross-site usage of cookie, if you're using localhost http, don't use this line of code.
-  //domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
+  domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
   path: "/",
 };
 
 const refresh_token_cookieOptions = {
   maxAge: 365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)
   httpOnly: true, // prevent client-side scripts from accessing the cookie
-  //secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
+  secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
   sameSite: 'none', // restrict cross-site usage of cookie, if you're using localhost http, don't use this line of code.
-  //domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
+  domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
   path: "/",
 };
 
@@ -1225,7 +1225,7 @@ app.post("/todo_app/forgot_password", async (req, res) => {
             secure: true,
             sameSite: "none",
             path: "/",
-            //domain: backend_URL,
+            domain: backend_URL,
           }); // add domain: backend_URL if on production
           console.log("forgot_password set otp cookie ");
         } catch (error) {
@@ -1420,7 +1420,7 @@ app.post("/todo_app/verify_otp", async (req, res) => {
           secure: true,
           sameSite: "none",
           path: "/",
-          //domain: backend_URL,
+          domain: backend_URL,
         }); // add domain: backend_URL if on production
 
         response.csrf = csrfToken;
@@ -1866,7 +1866,7 @@ app.get("/todo_app/logout", async (req, res) => {
       sameSite: "none",
       httpOnly: true,
       secure: true,
-      //domain: backend_URL,
+      domain: backend_URL,
       path: "/",
       expires: new Date(0),
     });
@@ -1874,7 +1874,7 @@ app.get("/todo_app/logout", async (req, res) => {
       sameSite: "none",
       httpOnly: true,
       secure: true,
-      //domain: backend_URL,
+      domain: backend_URL,
       path: "/",
       expires: new Date(0),
     });
