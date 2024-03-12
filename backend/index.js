@@ -448,13 +448,13 @@ app.get("/authentication", async (req, res) => {
                 console.log(
                   "authentication, this user is not exist in database or might have multiple user account in database"
                 );
-                return res.status(500).json(response);
+                return res.status(401).json(response);
               }
             } catch {
               response.status = "fail";
               response.msg = "Internal error!";
               console.log(
-                "authentication, this user is not exist in database or might have multiple user account in database"
+                "authentication try catch,  this user is not exist in database or might have multiple user account in database"
               );
               return res.status(500).json(response);
             }
