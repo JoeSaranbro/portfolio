@@ -1,6 +1,5 @@
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useState } from 'react';
 import SharedLayout from './SharedLayout';
 import Login from './todo_app/Login';
 import Home from './Home';
@@ -24,7 +23,7 @@ import EditProfile from './todo_app/EditProfile';
 function App() {
   
    
-  const [user,setUser] =useState(null)
+  
   return (
     <div className="h-full w-full min-w-[48rem]">
        <BrowserRouter>

@@ -31,7 +31,7 @@ const db = await mysql2.createConnection({
   queueLimit: 0,
 });
 
-
+const isOnProduction = process.env.isOnProduction;
 
 //If there is a auth problem
 
@@ -103,24 +103,32 @@ function generateRandomString() {
 }
 
 // ------------------------------ Start cookies options -----------------------------------
+let access_token_cookieOptions = {
+  maxAge: 15 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)
+  httpOnly: true, // prevent client-side scripts from accessing the cookie
+  path: "/",
+}
 
-const access_token_cookieOptions = {
+if (isOnProduction === "production") {
+  access_token_cookieOptions.secure = true
+  access_token_cookieOptions.sameSite = "none"
+  access_token_cookieOptions.domain = backend_URL
+}
+
+let refresh_token_cookieOptions = {
   maxAge: 365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)
   httpOnly: true, // prevent client-side scripts from accessing the cookie
-  secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
-  sameSite: 'none', // restrict cross-site usage of cookie, if you're using localhost http, don't use this line of code.
-  domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
   path: "/",
-};
+}
 
-const refresh_token_cookieOptions = {
-  maxAge: 365 * 24 * 60 * 60 * 1000, // expires after 365 days // first number is how many day, second number is 1 day (60 minutes * 24 = 1440)
-  httpOnly: true, // prevent client-side scripts from accessing the cookie
-  secure: true, // only send cookie over HTTPS , if you're using localhost http, don't use this line of code.
-  sameSite: 'none', // restrict cross-site usage of cookie, if you're using localhost http, don't use this line of code.
-  domain: backend_URL, //if on production set domain: backend_URL, for test don't set domain - leave it blank
-  path: "/",
-};
+if (isOnProduction === "production") {
+  refresh_token_cookieOptions.secure = true
+  refresh_token_cookieOptions.sameSite = "none"
+  refresh_token_cookieOptions.domain = backend_URL
+}
+
+
+
 
 // ------------------------------ End cookies options -----------------------------------
 
@@ -1219,14 +1227,18 @@ app.post("/todo_app/forgot_password", async (req, res) => {
           console.log("forgot_password encrypt jwt ");
 
           //Note when set cookie, don't forget to add {withCredentials: true} in request header
-          res.cookie("otp_fgtp", ciphertext, {
+          let otp_cookie_options = {
             maxAge: 3 * 60 * 1000,
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
             path: "/",
-            domain: backend_URL,
-          }); // add domain: backend_URL if on production
+          }
+
+          if (isOnProduction === "production") {
+            otp_cookie_options.secure = true;
+            otp_cookie_options.sameSite = "none";
+            otp_cookie_options.domain = backend_URL;
+          }
+          res.cookie("otp_fgtp", ciphertext, otp_cookie_options); // add domain: backend_URL if on production
           console.log("forgot_password set otp cookie ");
         } catch (error) {
           console.log("try catch enCrypt otp_identification error", error);
@@ -1412,16 +1424,21 @@ app.post("/todo_app/verify_otp", async (req, res) => {
         ).toString();
 
         console.log("encrypt jwt reset password");
+        
         //Note when set cookie, don't forget to add {withCredentials: true} in request header
-
-        res.cookie("rst_pwd", ciphertext, {
+        let rst_pwd_cookie_options = {
           maxAge: 5 * 60 * 1000,
           httpOnly: true,
-          secure: true,
-          sameSite: "none",
           path: "/",
-          domain: backend_URL,
-        }); // add domain: backend_URL if on production
+        }
+
+        if (isOnProduction === "production") {
+          rst_pwd_cookie_options.secure = true;
+          rst_pwd_cookie_options.sameSite = "none";
+          rst_pwd_cookie_options.domain = backend_URL;
+        }
+
+        res.cookie("rst_pwd", ciphertext, rst_pwd_cookie_options); // add domain: backend_URL if on production
 
         response.csrf = csrfToken;
         response.status = "success";
@@ -1861,23 +1878,31 @@ app.get("/todo_app/email_verification", async (req, res) => {
 app.get("/todo_app/logout", async (req, res) => {
   //sameSite: "none", httpOnly: true, secure: true
   //cookie option if on production, add domain: backend_URL
+  let auth_cooke = {
+    httpOnly: true,
+    expires: new Date(0),
+    path: "/"
+  }
+  let refresh_cookie = {
+    httpOnly: true,
+    expires: new Date(0),
+    path: "/"
+  }
+
+  
+
+  if (isOnProduction === "production") {
+    auth_cooke.secure = true;
+    auth_cooke.sameSite = "none";
+    auth_cooke.domain = backend_URL;
+    refresh_cookie.secure = true;
+    refresh_cookie.sameSite = "none";
+    refresh_cookie.domain = backend_URL;
+  }
+
   try {
-    res.cookie("auth_token", "", {
-      sameSite: "none",
-      httpOnly: true,
-      secure: true,
-      domain: backend_URL,
-      path: "/",
-      expires: new Date(0),
-    });
-    res.cookie("refresh_token", "", {
-      sameSite: "none",
-      httpOnly: true,
-      secure: true,
-      domain: backend_URL,
-      path: "/",
-      expires: new Date(0),
-    });
+    res.cookie("auth_token", "", auth_cooke);
+    res.cookie("refresh_token", "", refresh_cookie);
 
     console.log("logout success");
     return res.json("Logout Success");

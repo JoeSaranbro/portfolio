@@ -227,7 +227,7 @@ export function CRUD(){
   
   
   const confirmEdit = (e) => {
-    if (newTask == "") {
+    if (newTask === "") {
       alert("This field can not be blank.")
       e.preventDefault()
     } else {
