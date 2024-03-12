@@ -1070,7 +1070,7 @@ app.post("/todo_app/login", async (req, res) => {
                 text: "Please confirm your email by clicking the link we give you.",
                 html: htmlContent.replaceAll(
                   "{{dynamicLink}}",
-                  `https://www${backend_URL}/todo_app/email_verification?token=${encryptedJWT}`
+                  `https://${backend_URL}/todo_app/email_verification?token=${encryptedJWT}`
                 ), // on test, remove https://www.
               }; //on production add https://www.
 
