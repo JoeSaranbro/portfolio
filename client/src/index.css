@@ -19,6 +19,7 @@ margin-right: 1rem;
 img {
   width: 100%;
   height: auto;
+  object-fit: contain;
 }
 
 
@@ -98,6 +99,26 @@ img {
   
 }
 
+
+.skills-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.skill-item {
+  width: 200px; /* Adjust width as needed */
+  margin: 10px; /* Add some spacing between items */
+  text-align: center;
+}
+
+.skill-item img {
+  max-width: 100%; /* Ensure image does not exceed container width */
+  height: auto; /* Maintain aspect ratio */
+}
+
+
+
 .fadingEffect {
   position:absolute;
   top:0; bottom:0; right:0;
@@ -148,13 +169,12 @@ img {
 
 /* Start Arrow Fade In Left Animation*/
 .fadein-left-arrow {
-  position:relative;
   animation:animateleft 2.2s ease-in alternate infinite;
 }
 @keyframes animateleft{
   0%{left:-100px;opacity:0} 
-  70%{left:50px;opacity:1}
-  100%{left:50px;opacity:1}
+  70%{left:35px;opacity:1}
+  100%{left:35px;opacity:1}
 }
 
 /* End Arrow Fade In Left Animation*/

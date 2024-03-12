@@ -25,7 +25,7 @@ function App() {
    
   
   return (
-    <div className="h-full w-full min-w-[48rem]">
+    <div className="container">
        <BrowserRouter>
       <Routes>
       <Route path='/'  element={<SharedLayout />} >
@@ -49,16 +49,6 @@ function App() {
             <Route path='blogs/:id' element={<Prac_BlogDetails />}/>
             <Route path='test' element={<Test />}/>
             
-            
-          
-          {/* <Route path='login' element={<Login setUser={setUser}></Login>} />
-          <Route path='dashboard' 
-          element={
-          <ProtectedRoute user={user}>
-          <Dashboard user={user} /> 
-          </ProtectedRoute> 
-          } />
-          <Route path='*'         element={<Error />} /> */}
          </Route>
          <Route path='*'         element={<NotFound />} />
          
