@@ -13,11 +13,35 @@ import mysql_logo from "./components/mysql.png";
 import car from "./components/car.PNG";
 import plate from "./components/plate.PNG";
 import result from "./components/result.PNG";
-import { useNavigate } from "react-router-dom";
 
 
 
 
+const Info = () => {
+  return ( 
+   <div className='flex flex-row'>
+     <div className=" w-1/2  mx-auto">
+         <div id="name" className="text-info ">Saran Kunsutha (Joe)
+           <div className="fadingEffect" style={{animationDelay:"1.2s"}}></div>
+         </div>
+         <div id="name" className="text-info ">22 years old
+           <div className="fadingEffect" style={{animationDelay:"2.5s"}}></div>
+         </div>
+         
+     </div>
+     <div className="w-1/2 mx-auto">
+         <div id="name" className="text-info ">Information Technology (IT) Student
+           <div className="fadingEffect" style={{animationDelay:"3.6s"}}></div>
+         </div>
+         <div id="name" className="text-info ">From Suan Dusit University <br/><span className='text-xl italic'>Fresh Graduate 2022</span>
+           <div className="fadingEffect" style={{animationDelay:"5.5s"}}></div>
+         </div>
+         
+     </div>
+   </div>
+   )
+
+ }
 
   
 
@@ -30,34 +54,10 @@ const clickMeBtn = () => {
 
   
   
-  const Info = () => {
-   return ( 
-    <div className='container flex flex-row'>
-      <div className=" w-1/2  mx-auto">
-          <div id="name" className="text-info ">Saran Kunsutha (Joe)
-            <div className="fadingEffect" style={{animationDelay:"1.2s"}}></div>
-          </div>
-          <div id="name" className="text-info ">22 years old
-            <div className="fadingEffect" style={{animationDelay:"2.5s"}}></div>
-          </div>
-          
-      </div>
-      <div className="w-1/2 mx-auto">
-          <div id="name" className="text-info ">Information Technology (IT) Student
-            <div className="fadingEffect" style={{animationDelay:"3.6s"}}></div>
-          </div>
-          <div id="name" className="text-info ">From Suan Dusit University <br/><span className='text-xl italic'>Fresh Graduate 2022</span>
-            <div className="fadingEffect" style={{animationDelay:"5.5s"}}></div>
-          </div>
-          
-      </div>
-    </div>
-    )
-
-  }
+  
 
   return (
-    <div className="container mx-10">
+    <div className="mx-10">
       
       <div className="header">
         <div className="text-welcome">Welcome to my Portfolio.
@@ -70,7 +70,7 @@ const clickMeBtn = () => {
             </div>
           </IconContext.Provider>
           <img src={profile_pic} className="h-auto w-48 max-h-48 ml-28 mt-6 fadein-bottom "></img>
-          <Info/>
+          <Info />
         </div>
           <div className='flex  mt-10 '>
             <p className='text-4xl font-bold fadein-top underline' style={{animationDelay:"7.5s"}}>Skills</p>

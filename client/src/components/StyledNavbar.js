@@ -1,6 +1,6 @@
 import {NavLink} from 'react-router-dom'
 import logo from './fb_profile.jpg';
-import reactIcon from './logo192.png'
+import reactIcon from './svg_logo192.svg'
 
 const StyledNavbar = () => {
   const checkIfActive = ({isActive}) => {
@@ -8,11 +8,11 @@ const StyledNavbar = () => {
   }
   return (
     
-    <nav className='flex container text-slate-900 dark:text-white text-xl font-medium tracking-tight '>
-      <div className='w-full'>
+    <nav className='flex w-full text-slate-900 dark:text-white text-xl font-medium tracking-tight '>
+      <div className=''>
         
           <ul className='flex gap-10 pt-3 ml-4' >
-            <li><img src={reactIcon} className='h-11 w-auto' alt="Logo"/></li>
+            <li><img src={reactIcon} className='h-11' alt="Logo"/></li>
             <li><NavLink to='/portfolio' className={checkIfActive}>Home</NavLink></li>
             <li><NavLink to='/portfolio_2' className={checkIfActive}>Portfolio_2</NavLink></li>
             <li><NavLink to='/functions' className={checkIfActive}>Functions</NavLink></li>
