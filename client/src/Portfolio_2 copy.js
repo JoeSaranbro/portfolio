@@ -4,7 +4,7 @@ import netsuite_pic from "./components/netsuite.jpg"
 //<img src={netsuite_pic} className="max-w-full h-auto w-1/4 min-w-[16rem] my-4 mx-auto"></img> 
 const Portfolio_2 = () => {
   return (
-    <div className='mx-10'>
+    <div className=''>
         <div className='flex flex-wrap '>
             <div className=''>
                 <p className='font-bold text-3xl underline'>Experience</p> 
