@@ -22,7 +22,7 @@ const StyledNavbar = () => {
           </ul>
           
         
-        <hr className='border-2'/>
+        <hr className='border-t-2 w-full'/>
       </div>
     </nav>
     

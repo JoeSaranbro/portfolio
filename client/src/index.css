@@ -2,19 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root, .App {
-  
-  scroll-behavior: smooth;
+
+#root {
+  width: 100%;
 }
 
-body{
-  @apply bg-zinc-900 text-white m-0 p-0; 
+body {
+  display: flex;
+  min-height: 100dvh;
+  height: 100%;
+  
+  --tw-bg-opacity: 1;
+  background-color: rgb(24 24 27 / var(--tw-bg-opacity));
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity));
+  margin: 0;
+  padding: 0; 
+  scroll-behavior: smooth;
+  
 }
+
+
+
+
 
 
 .content {
-margin-left: 4rem;
-margin-right: 4rem;
+margin-left: 2rem;
+margin-right: 2rem;
 }
 
 img {
@@ -31,7 +46,7 @@ img {
 } 
 .box p {
   font-size : clamp(0.85rem, 1.85vw, 1.25rem);
-  display: inline;
+  
 
 }
 .box h1 {
