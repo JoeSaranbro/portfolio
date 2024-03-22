@@ -11,7 +11,6 @@ body {
   display: flex;
   min-height: 100dvh;
   height: 100%;
-  
   --tw-bg-opacity: 1;
   background-color: rgb(24 24 27 / var(--tw-bg-opacity));
   --tw-text-opacity: 1;
@@ -28,6 +27,7 @@ body {
 
 
 .content {
+ 
 margin-left: 2rem;
 margin-right: 2rem;
 }
@@ -37,6 +37,50 @@ img {
   height: auto;
 }
 
+.top-navbar-desktop {
+  @apply flex w-full gap-4 text-slate-900 dark:text-white text-xl font-medium tracking-tight
+
+}
+
+
+
+.hamburger-nav {
+  display: none;
+  width: 100%;
+  flex-direction: row;
+  position: fixed;
+  z-index: 100;
+  background-color: #0F0F0F;
+  /* padding: 0.5rem 0.5rem 0.5rem 0.5rem; */
+
+}
+.hamburger-nav-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.hamburger-nav-ul {
+  @apply flex flex-col w-full gap-3 justify-center
+}
+
+.hamburger-nav-ul li {
+  @apply w-full flex justify-center
+}
+
+
+
+
+@media (width < 800px) { 
+  .top-navbar-desktop {
+    display: none;
+  }
+  .hamburger-nav {
+    display: flex;
+  }
+ }
+
+
 .box {
   display: flex;
   width: 100%;
@@ -44,21 +88,23 @@ img {
   
   
 } 
+
 .box p {
   font-size : clamp(0.85rem, 1.85vw, 1.25rem);
   
 
 }
+
 .box h1 {
+  
   font-size : clamp(1.25rem, 3.5vw, 1.75rem);
-  @apply  underline underline-offset-auto
+  @apply  underline underline-offset-auto 
 }
 .box h2 {
   font-size : clamp(1rem, 2.5vw, 1.5rem);
   display: inline;
   @apply  underline underline-offset-auto
 }
-
 
 /* font size*/
 .normal-text{

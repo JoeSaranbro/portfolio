@@ -8,7 +8,7 @@ const Portfolio_2 = () => {
         <div className='flex flex-col max-w-[1200px] relative'>
             <section className='flex flex-row gap-6'>
                 <div className='box relative bg-zinc-800/50 rounded-2xl px-4 py-2'>
-                <h1 className=''>Experience.</h1> 
+                <h1 className='text-xl sm:text-2xl md:text-3xl'>Experience.</h1> 
                 <div className='pl-4'>
                     <h1 className=''>Internship: Software Developer at TeibTo </h1>
                     <div className=''>
@@ -21,8 +21,9 @@ const Portfolio_2 = () => {
                     </div>
                 </div>
                 </div>
-                <div className='py-2'> <img src={netsuite_pic} className="max-w-[430px] w-full my-4 mx-auto rounded-2xl" alt="oracle netsuite's"></img> </div>
+                
             </section>
+            {/* <div className='py-2'> <img src={netsuite_pic} className="max-w-[430px] w-full my-4 mx-auto rounded-2xl" alt="oracle netsuite's"></img> </div> */}
             <section className='box relative bg-zinc-800/50 rounded-2xl px-4 py-2'>
                 <h1 className=''>More About Me.</h1> 
                 <div className='pl-4'>

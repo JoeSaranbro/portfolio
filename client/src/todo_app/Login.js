@@ -770,7 +770,7 @@ const Login = () => {
 
 
   return (
-    <div className='h-screen '>
+    <div className='h-screen content'>
       <div>
       <button id="openmodal" onClick={()=> setModal(true)} className="btnGray">Login</button>
       
