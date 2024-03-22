@@ -72,7 +72,7 @@ img {
 
 
 @media (width < 800px) { 
-  .top-navbar-desktop {
+  .div-navbar-desktop {
     display: none;
   }
   .hamburger-nav {

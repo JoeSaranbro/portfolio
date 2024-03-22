@@ -21,7 +21,7 @@ const StyledNavbar = () => {
     
     <nav className='top-navbar h-14'>
       
-      <div className='top-navbar h-full align-middle '>
+      <div className='div-navbar-desktop h-full align-middle '>
           
           <ul className='top-navbar-desktop h-full items-center' >
             {/* <li><img src={reactIcon} className='h-11' alt="Logo"/></li> */}
