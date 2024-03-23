@@ -51,7 +51,8 @@ img {
   position: fixed;
   z-index: 100;
   background-color: #0F0F0F;
-  /* padding: 0.5rem 0.5rem 0.5rem 0.5rem; */
+
+  
 
 }
 .hamburger-nav-list {
@@ -61,7 +62,7 @@ img {
 }
 
 .hamburger-nav-ul {
-  @apply flex flex-col w-full gap-3 justify-center
+  @apply flex flex-col w-full gap-3 justify-center text-slate-900 dark:text-white text-xl font-medium tracking-tight
 }
 
 .hamburger-nav-ul li {
@@ -77,6 +78,7 @@ img {
   }
   .hamburger-nav {
     display: flex;
+    justify-content: flex-end;
   }
  }
 
