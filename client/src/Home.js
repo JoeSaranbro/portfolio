@@ -3,16 +3,16 @@ import { Link } from "react-router-dom";
 import { IconContext } from "react-icons";
 import { FaArrowRight } from "react-icons/fa";
 import { ImArrowUp2 } from "react-icons/im";
-import profile_pic from "./components/profile_pic.jpg";
-import html5logo from "./components/html5.png";
-import csslogo from "./components/css.png";
-import javascriptlogo from "./components/javascript.png";
-import reactlogo from "./components/logo192.png";
-import tailwindlogo from "./components/tailwind_logo.png";
-import mysql_logo from "./components/mysql.png";
-import car from "./components/car.PNG";
-import plate from "./components/plate.PNG";
-import result from "./components/result.PNG";
+import profile_pic from "./components/images/profile_pic.jpg";
+import html5logo from "./components/images/html5.png";
+import csslogo from "./components/images/css.png";
+import javascriptlogo from "./components/images/javascript.png";
+import reactlogo from "./components/images/logo192.png";
+import tailwindlogo from "./components/images/tailwind_logo.png";
+import mysql_logo from "./components/images/mysql.png";
+import car from "./components/images/car.PNG";
+import plate from "./components/images/plate.PNG";
+import result from "./components/images/result.PNG";
 
 const Info = () => {
   return (
@@ -33,7 +33,7 @@ const Info = () => {
           ></div>
         </div>
       </div>
-      <div className="w-1/2 mx-auto">
+      <div className=" mx-auto">
         <div id="name" className="text-info ">
           Information Technology (IT) Student
           <div
@@ -84,24 +84,38 @@ const Home = () => {
   };
 
   return (
-    <div className="w-full ">
-      <div className="header flex flex-col">
+    <div className=" w-full">
+      <div className="header flex flex-col content">
         <div className="text-welcome">
           Welcome to my Portfolio.
           <div className="fadingEffect"></div>
         </div>
-        <div className="relative inline-block">
-          <IconContext.Provider value={{ size: "4em" }}>
-            <div id="arrow" className="pt-24 fadein-left-arrow absolute  ">
-              <FaArrowRight />
+        <div className="flex flex-row justify-center relative">
+          <div className="relative w-full left-0 right-0">
+            <div className="">
+              <div  className="text-info">
+                Saran Kunsutha (Joe) 
+                <br/>
+                24 years old
+                <div
+                  className="fadingEffect"
+                  style={{ animationDelay: "1.2s" }}
+                ></div>
+              </div>
+              
             </div>
-          </IconContext.Provider>
-          <img
+            <div></div>
+            
+          </div>
+          <div className="flex justify-end px-2 py-4">
+            <img
             src={profile_pic}
-            className="h-auto w-48 max-h-48 ml-28 mt-6 fadein-bottom"
+            className="w-[200px] min-w-[80px] h-auto mt-6 fadein-bottom"
             alt=""
-          ></img>
-          <Info />
+            ></img>
+          </div>
+          
+          
         </div>
         <div className="flex  mt-10 ">
           <p
@@ -114,7 +128,7 @@ const Home = () => {
             className="flex flex-wrap ml-10 justify-center gap-20 border-solid border-8 border-white rounded-3xl fadein-zoom text-center"
             style={{ animationDelay: "8s" }}
           >
-            {images.map((val) => (
+            {/* {images.map((val) => (
               <div className="my-5">
               <img
                 src={val.src}
@@ -129,7 +143,7 @@ const Home = () => {
                 {val.title}
               </p>
             </div>
-            ))}
+            ))} */}
           </div>
         </div>
         <div className="flex w-full mt-8">

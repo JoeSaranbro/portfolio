@@ -87,18 +87,38 @@ img {
   display: flex;
   width: 100%;
   margin-top: 1.5rem;
+  position: relative;
+  background-color: rgb(39 39 42 / 0.5);
+  border-radius: 1rem/* 16px */;
+  padding-left: 1rem/* 16px */;
+  padding-right: 1rem/* 16px */;
+  padding-top: 0.5rem/* 8px */;
+  padding-bottom: 0.5rem/* 8px */;
   
+}
+
+@media (width < 380px) { 
+  .box {
+    /* display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr)); */
+    flex-direction: column;
+    padding: 0.25rem 0.5rem 0.25rem 0.5rem;
+    
+  }
+  .box h1 {
+    text-align: center;
+  }
+  .box-div {
+    padding: 0px;
+  }
   
-} 
+ }
 
 .box p {
   font-size : clamp(0.85rem, 1.85vw, 1.25rem);
-  
-
 }
 
 .box h1 {
-  
   font-size : clamp(1.25rem, 3.5vw, 1.75rem);
   @apply  underline underline-offset-auto 
 }
@@ -107,6 +127,19 @@ img {
   display: inline;
   @apply  underline underline-offset-auto
 }
+
+.image-container {
+  display: inline-block;
+  vertical-align: middle; /* Aligns the image vertically with text */
+  margin-left: 10px; /* Adjust spacing between text and image */
+}
+
+.image-container img {
+  max-width: 200px; /* Set max-width to control image size */
+  height: auto; /* Maintain aspect ratio */
+}
+
+
 
 /* font size*/
 .normal-text{
@@ -183,19 +216,26 @@ img {
   font-size : clamp(2rem, 10vw, 5rem);
 }
 .text-info {
-  position:relative;
+  
   /* background-color: white; */
   overflow:hidden;
-  margin-top: 1cm;
-  margin-left: 3cm;
-  font-size : clamp(1rem, 5vw, 2.25rem); 
+  
+  font-size : clamp(0.5rem, 5vw, 2rem); 
   
 }
 
 /* to easily debug */
-/* * {
+
+* {
   border: 1px solid red;
-} */
+}
+
+.describing-application img {
+height: auto;
+max-width: 200px;
+display: none;
+}
+
 
 
 

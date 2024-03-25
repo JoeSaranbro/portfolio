@@ -1,7 +1,7 @@
 import { useState } from "react";
 import React from 'react';
 import Modal from 'react-modal';
-import editbtn from './components/edit.png';
+import editbtn from './components/images/edit.png';
 //---------------------------------------------------------------------------------------------------------------
 export function ButtonAddNums() {
     // const users = [
