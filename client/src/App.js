@@ -25,7 +25,7 @@ function App() {
    
   
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full flex flex-col box-border">
        <BrowserRouter>
       <Routes>
       <Route path='/'  element={<SharedLayout />} >

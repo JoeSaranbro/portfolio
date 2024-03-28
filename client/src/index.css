@@ -22,10 +22,6 @@ body {
 }
 
 
-
-
-
-
 .content {
  
 margin-left: 2rem;
@@ -51,6 +47,7 @@ img {
   position: fixed;
   z-index: 100;
   background-color: #0F0F0F;
+
 
   
 
@@ -139,14 +136,56 @@ img {
   height: auto; /* Maintain aspect ratio */
 }
 
+/* image carousel */
+.parallax {
+  
+  display: flex;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
 
+.parallax .scroller {
+  display: flex;
+}
 
-/* font size*/
-.normal-text{
-  font-size : clamp(2rem, 10vw, 5rem);
+.scroller img {
+  max-width: 200px;
+  width: 100%;
+  min-width: 100px;
+  height: auto;
+  
+   /* Prevent images from shrinking */
+}
+.parallax div {
+  display: flex;
+  margin-right: 30px;
+}
+
+.showproject-img img {
+  max-width: 200px;
+  width: 100%;
+  min-width: 100px;
+  height: auto;
 }
 
 
+/* font size*/
+.normal-text {
+  font-size : clamp(2rem, 10vw, 5rem);
+}
+.title-text {
+  font-size : clamp(1rem, 4vw, 2.5rem);
+  font-weight: 700;
+  text-decoration-line: underline;
+}
+
+.showproject {
+  width: 100%;
+}
+.showproject p {
+  font-size : clamp(1rem, 1vw, 2rem);
+}
 
 /* Modal */
 .modal {
@@ -226,9 +265,9 @@ img {
 
 /* to easily debug */
 
-* {
+/* * {
   border: 1px solid red;
-}
+} */
 
 .describing-application img {
 height: auto;

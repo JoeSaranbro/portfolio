@@ -54,7 +54,7 @@ const StyledNavbar = () => {
 
   return (
     
-    <nav className='top-navbar h-14'>
+    <nav className='top-navbar h-14 box-border'>
       
       <div className='div-navbar-desktop h-full align-middle '>
           
